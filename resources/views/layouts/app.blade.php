@@ -97,6 +97,15 @@
         .nav-link:not(.active) {
             @apply text-gray-700 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-white/5 dark:hover:text-white;
         }
+
+        /* High-contrast overrides for gray text in light mode */
+        body:not(.dark) .text-gray-400 {
+            color: #6b7280 !important;
+        }
+        body:not(.dark) .text-gray-555,
+        body:not(.dark) .text-gray-500 {
+            color: #4b5563 !important;
+        }
     </style>
     @livewireStyles
     @stack('styles')
