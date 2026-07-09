@@ -29,7 +29,7 @@ class AppServiceProvider extends ServiceProvider
 
         $this->app->bind(ICommonRepository::class, CommonRepository::class);
         $this->app->singleton(ManiobraRepositoryInterface::class, \App\Infrastructure\Repositories\SqlServerManiobraRepository::class);
-        $this->app->singleton(CuadrillaRepositoryInterface::class, MockCuadrillaRepository::class);
+        $this->app->singleton(CuadrillaRepositoryInterface::class, \App\Infrastructure\Repositories\SqlServerCuadrillaRepository::class);
         $this->app->singleton(TarifaAuditRepositoryInterface::class, MockTarifaAuditRepository::class);
         $this->app->singleton(RegistroManiobraRepositoryInterface::class, MockRegistroManiobraRepository::class);
         $this->app->singleton(CorteRepositoryInterface::class, MockCorteRepository::class);
