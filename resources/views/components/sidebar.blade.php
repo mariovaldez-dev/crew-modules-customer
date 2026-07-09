@@ -24,14 +24,14 @@
     @endphp
     <nav class="flex-1 overflow-y-auto py-6 px-4 space-y-1.5 custom-scrollbar">
         
-        <div class="px-4 text-[10px] font-black uppercase text-gray-400 dark:text-gray-500 tracking-widest mb-2 mt-4 first:mt-0">Principal</div>
+        <div class="px-4 text-[10px] font-black uppercase text-gray-550 dark:text-gray-455 tracking-widest mb-2 mt-4 first:mt-0">Principal</div>
         
         <a href="/dashboard" class="nav-link {{ request()->is('dashboard') ? 'active' : '' }}">
             <i class="fa-solid fa-house w-5 text-center"></i>
             <span>Inicio</span>
         </a>
         
-        <div class="px-4 text-[10px] font-black uppercase text-gray-400 dark:text-gray-500 tracking-widest mb-2 mt-6">Gestión</div>
+        <div class="px-4 text-[10px] font-black uppercase text-gray-550 dark:text-gray-455 tracking-widest mb-2 mt-6">Gestión</div>
 
         @if($rol === 'AM')
             <a href="/maniobras" class="nav-link {{ request()->is('maniobras*') ? 'active' : '' }}">
@@ -50,7 +50,7 @@
             <span>Tarifas</span>
         </a>
 
-        <div class="px-4 text-[10px] font-black uppercase text-gray-400 dark:text-gray-500 tracking-widest mb-2 mt-6">Operación</div>
+        <div class="px-4 text-[10px] font-black uppercase text-gray-550 dark:text-gray-455 tracking-widest mb-2 mt-6">Operación</div>
 
         <a href="/registro-maniobras" class="nav-link {{ request()->is('registro-maniobras*') ? 'active' : '' }}">
             <i class="fa-solid fa-clipboard-list w-5 text-center"></i>
