@@ -95,7 +95,7 @@
             @apply bg-green-600 text-white font-bold;
         }
         .nav-link:not(.active) {
-            @apply text-gray-750 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-white/5 dark:hover:text-white;
+            @apply text-gray-700 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-white/5 dark:hover:text-white;
         }
     </style>
     @livewireStyles
