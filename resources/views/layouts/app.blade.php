@@ -92,7 +92,7 @@
             @apply flex items-center gap-3 px-4 py-3.5 text-sm font-medium rounded-2xl transition-all duration-200;
         }
         .nav-link.active {
-            @apply bg-green-50 text-green-700 dark:bg-green-950/40 dark:text-green-300 font-bold;
+            @apply bg-green-600 text-white font-bold shadow-md shadow-green-650/10;
         }
         .nav-link:not(.active) {
             @apply text-gray-500 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-white;

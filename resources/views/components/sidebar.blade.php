@@ -64,19 +64,4 @@
             </a>
         @endif
     </nav>
-
-    <!-- User Footer -->
-    <div class="p-4 border-t border-gray-100 dark:border-white/5 shrink-0">
-        <div class="flex items-center gap-3 px-3 py-3 rounded-2xl bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/5 text-gray-900 dark:text-white">
-            <div class="w-9 h-9 rounded-full bg-green-600 text-white flex items-center justify-center font-bold text-sm shrink-0">
-                {{ substr(auth()->user()->name ?? 'U', 0, 1) }}
-            </div>
-            <div class="flex-1 min-w-0">
-                <p class="text-sm font-bold truncate">{{ auth()->user()->name ?? 'Usuario' }}</p>
-                <p class="text-xs text-gray-500 dark:text-gray-400 truncate">
-                    {{ auth()->user()->rol === 'AM' ? 'Admin. Maniobras' : (auth()->user()->rol === 'CO' ? 'Coord. Almacén' : 'Operador') }}
-                </p>
-            </div>
-        </div>
-    </div>
 </aside>
