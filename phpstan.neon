@@ -1,0 +1,23 @@
+includes:
+    - ./vendor/nunomaduro/larastan/extension.neon
+
+parameters:
+    paths:
+        - app
+        - database
+        - tests
+
+    # Level 9 is the highest level
+    level: 5
+
+    ignoreErrors:
+        - '#Unsafe usage of new static\(\)#'
+        - '#PHPDoc tag @var does not specify variable name#'
+        - '#PHPDoc tag @var above a method has no effect#'
+
+    reportUnmatchedIgnoredErrors: false
+
+    excludePaths:
+        - ./*/*/FileToBeExcluded.php
+
+    checkMissingIterableValueType: false

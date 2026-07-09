@@ -1,0 +1,375 @@
+name: Continuous Integration (Laravel Fullstack)
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+# Cancela runs anteriores del mismo PR para ahorrar minutos
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+
+  # ════════════════════════════════════════════════════════════════════════════
+  # JOB 1 — CODE STYLE (Pint)
+  # Falla inmediatamente si hay violaciones de estilo — no espera a los tests
+  # ════════════════════════════════════════════════════════════════════════════
+  code-style:
+    name: Code Style (Laravel Pint)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configurar PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          tools: composer:v2
+          coverage: none
+
+      - name: Cache Composer
+        uses: actions/cache@v4
+        with:
+          path: ~/.composer/cache
+          key: composer-${{ runner.os }}-${{ hashFiles('**/composer.lock') }}
+          restore-keys: composer-${{ runner.os }}-
+
+      - name: Instalar dependencias
+        run: composer install --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
+
+      - name: Ejecutar Laravel Pint
+        run: ./vendor/bin/pint --test
+
+
+  # ════════════════════════════════════════════════════════════════════════════
+  # JOB 2 — STATIC ANALYSIS (PHPStan)
+  # Corre en paralelo con code-style para reducir tiempo total
+  # ════════════════════════════════════════════════════════════════════════════
+  static-analysis:
+    name: Static Analysis (PHPStan)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configurar PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, xml, ctype, iconv, bcmath
+          tools: composer:v2
+          coverage: none
+
+      - name: Cache Composer
+        uses: actions/cache@v4
+        with:
+          path: ~/.composer/cache
+          key: composer-${{ runner.os }}-${{ hashFiles('**/composer.lock') }}
+          restore-keys: composer-${{ runner.os }}-
+
+      - name: Instalar dependencias
+        run: composer install --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
+
+      - name: Ejecutar PHPStan
+        run: ./vendor/bin/phpstan analyse --error-format=github
+
+      - name: Guardar reporte PHPStan (si falla)
+        if: failure()
+        run: ./vendor/bin/phpstan analyse --error-format=table > phpstan-report.txt || true
+
+      - name: Subir reporte PHPStan como artefacto
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phpstan-report
+          path: phpstan-report.txt
+          retention-days: 7
+
+
+  # ════════════════════════════════════════════════════════════════════════════
+  # JOB 3 — SECURITY AUDIT
+  # Composer audit + Enlightn — corre en paralelo
+  # ════════════════════════════════════════════════════════════════════════════
+  security-audit:
+    name: Security Audit (Composer + Enlightn)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configurar PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, xml, ctype, iconv, bcmath
+          tools: composer:v2
+          coverage: none
+
+      - name: Cache Composer
+        uses: actions/cache@v4
+        with:
+          path: ~/.composer/cache
+          key: composer-${{ runner.os }}-${{ hashFiles('**/composer.lock') }}
+          restore-keys: composer-${{ runner.os }}-
+
+      - name: Instalar dependencias
+        run: composer install --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
+
+      - name: Configurar entorno
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
+      - name: Auditoría Composer (vulnerabilidades de dependencias)
+        run: |
+          echo "=== COMPOSER AUDIT ===" > security-report.txt
+          composer audit --format=plain >> security-report.txt || true
+
+      - name: Escanear con Enlightn (SAST Laravel)
+        run: |
+          composer config --global policy.advisories.block false
+          composer global require enlightn/enlightn
+          echo -e "\n\n=== ENLIGHTN SECURITY ===" >> security-report.txt
+          ~/.composer/vendor/bin/enlightn --analyzer=security >> security-report.txt || true
+
+      - name: Subir reporte de seguridad como artefacto
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-report
+          path: security-report.txt
+          retention-days: 14
+
+
+  # ════════════════════════════════════════════════════════════════════════════
+  # JOB 4 — TESTS + COVERAGE
+  # Depende de code-style y static-analysis — no corre si alguno falla
+  # Gate de calidad: falla si coverage < 20% (Aumentar gradualmente conforme crezca el proyecto)
+  # ════════════════════════════════════════════════════════════════════════════
+  tests:
+    name: Tests & Coverage (≥20%)
+    runs-on: ubuntu-latest
+    needs: [ code-style, static-analysis ]
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ALLOW_EMPTY_PASSWORD: yes
+          MYSQL_DATABASE: testing
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configurar PHP con PCOV (coverage rápido, sin Xdebug)
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, xml, ctype, iconv, mysql, bcmath, pcov
+          tools: composer:v2
+          coverage: pcov
+
+      - name: Cache Composer
+        uses: actions/cache@v4
+        with:
+          path: ~/.composer/cache
+          key: composer-${{ runner.os }}-${{ hashFiles('**/composer.lock') }}
+          restore-keys: composer-${{ runner.os }}-
+
+      - name: Instalar dependencias
+        run: composer install --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
+
+      - name: Configurar entorno de testing
+        run: |
+          cp .env.example .env.testing
+          php artisan key:generate --env=testing
+        env:
+          APP_ENV: testing
+
+      - name: Ejecutar tests con coverage
+        run: |
+          set -o pipefail
+          php artisan test \
+            --coverage-text \
+            --coverage-clover=coverage.xml \
+            --coverage-html=coverage-html \
+            --colors=never \
+            2>&1 | tee tests-report.txt
+        env:
+          APP_ENV: testing
+          DB_CONNECTION: mysql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_DATABASE: testing
+          DB_USERNAME: root
+          DB_PASSWORD: ""
+          PCOV_ENABLED: 1
+
+      - name: Validar cobertura mínima (20%)
+        if: always()
+        run: |
+          if [ -f coverage.xml ]; then
+            COVERAGE=$(php -r "
+              \$xml = simplexml_load_file('coverage.xml');
+              \$metrics = \$xml->xpath('//metrics');
+              \$total = 0; \$covered = 0;
+              foreach (\$metrics as \$m) {
+                \$total   += (int)\$m['statements'];
+                \$covered += (int)\$m['coveredstatements'];
+              }
+              echo \$total > 0 ? round((\$covered / \$total) * 100, 2) : 0;
+            ")
+            echo "Coverage actual: ${COVERAGE}%"
+            if (( $(echo "$COVERAGE < 20.0" | bc -l) )); then
+              echo "Error: La cobertura (${COVERAGE}%) es inferior al mínimo requerido (20%)"
+              exit 1
+            fi
+          else
+            echo "Aviso: No se encontró coverage.xml, saltando validación de cobertura."
+          fi
+
+      - name: Mostrar resumen de tests en el log
+        if: always()
+        run: |
+          if [ -f tests-report.txt ]; then
+            cat tests-report.txt
+          else
+            echo "Aviso: No se encontró tests-report.txt"
+          fi
+
+      - name: Subir reporte de tests como artefacto
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tests-report
+          path: tests-report.txt
+          retention-days: 7
+
+      - name: Subir reporte HTML de coverage como artefacto
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-html
+          path: coverage-html/
+          retention-days: 7
+
+      - name: Subir coverage.xml para análisis externo
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-xml
+          path: coverage.xml
+          retention-days: 7
+
+      # Coverage badge automático en el README (sin servicios externos)
+      - name: Generar badge de coverage
+        if: github.ref == 'refs/heads/main' && success()
+        run: |
+          COVERAGE=$(php -r "
+            \$xml = simplexml_load_file('coverage.xml');
+            \$metrics = \$xml->xpath('//metrics');
+            \$total = 0; \$covered = 0;
+            foreach (\$metrics as \$m) {
+              \$total   += (int)\$m['statements'];
+              \$covered += (int)\$m['coveredstatements'];
+            }
+            echo \$total > 0 ? round((\$covered / \$total) * 100, 1) : 0;
+          ")
+          echo "COVERAGE_PERCENT=${COVERAGE}" >> $GITHUB_ENV
+          echo "Coverage: ${COVERAGE}%"
+
+
+  # ════════════════════════════════════════════════════════════════════════════
+  # JOB 5 — NOTIFY
+  # Corre siempre al final — envía correo con todos los artefactos adjuntos
+  # ════════════════════════════════════════════════════════════════════════════
+  notify:
+    name: Notificación por Correo
+    runs-on: ubuntu-latest
+    needs: [ code-style, static-analysis, security-audit, tests ]
+    if: always()
+
+    steps:
+      - name: Descargar todos los artefactos
+        uses: actions/download-artifact@v4
+        with:
+          path: reports/
+        continue-on-error: true
+
+      - name: Preparar resumen de resultados
+        run: |
+          echo "STYLE_STATUS=${{ needs.code-style.result }}"         >> $GITHUB_ENV
+          echo "ANALYSIS_STATUS=${{ needs.static-analysis.result }}" >> $GITHUB_ENV
+          echo "SECURITY_STATUS=${{ needs.security-audit.result }}"  >> $GITHUB_ENV
+          echo "TESTS_STATUS=${{ needs.tests.result }}"              >> $GITHUB_ENV
+
+          # Determinar estado global
+          if [[ "${{ needs.tests.result }}" == "success" && \
+                "${{ needs.code-style.result }}" == "success" && \
+                "${{ needs.static-analysis.result }}" == "success" ]]; then
+            echo "GLOBAL_STATUS=✅ APROBADO" >> $GITHUB_ENV
+          else
+            echo "GLOBAL_STATUS=❌ FALLIDO" >> $GITHUB_ENV
+          fi
+
+      - name: Aplanar artefactos para adjuntar
+        run: |
+          find reports/ -type f | xargs -I{} cp {} . 2>/dev/null || true
+        continue-on-error: true
+
+      - name: Enviar reporte por correo
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
+          subject: "[${{ env.GLOBAL_STATUS }}] CI — ${{ github.repository }} @ ${{ github.ref_name }}"
+          to: ${{ secrets.MAIL_TO }}
+          from: GitHub Actions <${{ secrets.MAIL_USERNAME }}>
+          body: |
+            ══════════════════════════════════════
+            REPORTE CI — ${{ github.repository }}
+            ══════════════════════════════════════
+
+            Rama:    ${{ github.ref_name }}
+            Commit:  ${{ github.sha }}
+            Autor:   ${{ github.actor }}
+            Estado:  ${{ env.GLOBAL_STATUS }}
+
+            ── RESULTADOS POR JOB ─────────────────
+            Code Style (Pint)   : ${{ env.STYLE_STATUS }}
+            Static Analysis     : ${{ env.ANALYSIS_STATUS }}
+            Security Audit      : ${{ env.SECURITY_STATUS }}
+            Tests + Coverage    : ${{ env.TESTS_STATUS }}
+
+            ── GATE DE CALIDAD ────────────────────
+            Cobertura mínima requerida : 20%
+            El job de Tests falla automáticamente si no se alcanza.
+
+            ── ARTEFACTOS ADJUNTOS ────────────────
+            - tests-report.txt     → resultados de tests y coverage
+            - coverage-html/       → reporte HTML navegable (descarga desde GitHub Actions)
+            - phpstan-report.txt   → errores de análisis estático (solo si falló)
+            - security-report.txt  → vulnerabilidades de dependencias y código
+
+            Ver pipeline completo:
+            https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+          attachments: tests-report.txt,security-report.txt,phpstan-report.txt
+        continue-on-error: true

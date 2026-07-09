@@ -1,0 +1,65 @@
+<?php
+
+use App\UI\Http\Controllers\AuthController;
+use App\UI\Livewire\Auth\LoginForm;
+
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Route;
+
+/*
+|--------------------------------------------------------------------------
+| Web Routes
+|--------------------------------------------------------------------------
+|
+| Here is where you can register web routes for your application. These
+| routes are loaded by the RouteServiceProvider within a group which
+| contains the "web" middleware group. Now create something great!
+|
+*/
+
+// Públicas
+Route::get('/login', LoginForm::class)->name('login')->middleware('guest');
+
+// Acceso desde APK por POST
+Route::post('/acceso-app', [AuthController::class, 'accesoApp'])->name('acceso.app');
+
+// Protegidas (Solo Módulo Operaciones)
+Route::middleware(['auth', 'role.operaciones'])->group(function () {
+    // Menú Principal (Tarjetas)
+    Route::get('/dashboard', \App\UI\Livewire\Dashboard\DashboardIndex::class)->name('dashboard');
+
+    // Catálogo de Maniobras
+    Route::get('/maniobras', \App\UI\Livewire\Maniobras\ManiobraIndex::class)->name('maniobras.index');
+
+    // Gestión de Cuadrillas
+    Route::get('/cuadrillas', \App\UI\Livewire\Cuadrillas\CuadrillaIndex::class)->name('cuadrillas.index');
+
+    // Registro de Maniobras
+    Route::get('/registro-maniobras', \App\UI\Livewire\RegistroManiobras\RegistroIndex::class)->name('registro-maniobras.index');
+
+    // Tarifas
+    Route::get('/tarifas', \App\UI\Livewire\Tarifas\TarifasIndex::class)->name('tarifas.index');
+
+    // Corte de Liquidación
+    Route::get('/corte-liquidacion', \App\UI\Livewire\Corte\CorteIndex::class)->name('corte-liquidacion.index');
+});
+
+Route::post('/logout', function (Request $request, \App\Domain\Auth\Repositories\IAuthRepository $repository) {
+    /** @var \App\Infrastructure\Auth\Models\AuthenticatedUser|null $user */
+    $user = Auth::user();
+    
+    if ($user && $user->sessionId) {
+        $repository->logout($user->sessionId);
+    }
+
+    Auth::logout();
+    $request->session()->invalidate();
+    $request->session()->regenerateToken();
+
+    return redirect()->route('login');
+})->name('logout')->middleware('auth');
+
+Route::get('/', function () {
+    return redirect()->route('login');
+});
