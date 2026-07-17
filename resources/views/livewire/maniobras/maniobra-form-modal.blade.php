@@ -25,10 +25,8 @@
             @if($maniobraId)
             <div>
                 <x-label for="estatus" value="Estatus *" />
-                <x-select id="estatus" wire:model="estatus">
-                    <option value="A">Activa</option>
-                    <option value="I">Inactiva</option>
-                </x-select>
+                <x-select id="estatus" wire:model="estatus"
+                          :options="['Activo' => 'Activa', 'Inactivo' => 'Inactiva']" />
                 @error('estatus') <span class="text-xs text-red-500 mt-1 block font-medium">{{ $message }}</span> @enderror
             </div>
             @endif

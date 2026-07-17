@@ -43,6 +43,20 @@ class MockRegistroManiobraRepository implements RegistroManiobraRepositoryInterf
         Cache::put('mock_registro_maniobras', $data, 3600);
     }
 
+    public function almacenes(string $zonaUsuario, string $rolUsuario): array
+    {
+        if ($rolUsuario === 'CO') {
+            return $zonaUsuario === 'ZONA-NORTE' 
+                ? [101 => 'Almacén Norte (Mock)'] 
+                : [102 => 'Almacén Sur (Mock)'];
+        }
+
+        return [
+            101 => 'Almacén Norte (Mock)',
+            102 => 'Almacén Sur (Mock)'
+        ];
+    }
+
     public function list(array $filtros, string $zonaUsuario, string $rolUsuario): array
     {
         $data = $this->getData();

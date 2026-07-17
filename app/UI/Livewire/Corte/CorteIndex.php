@@ -120,6 +120,7 @@ class CorteIndex extends Component
 
     public function render()
     {
+        session()->save(); // Libera el bloqueo de sesión
         return view('livewire.corte.corte-index')->layout('layouts.app', ['title' => 'Corte de Liquidación']);
     }
 }

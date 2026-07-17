@@ -197,11 +197,11 @@
             x-transition:leave="transition ease-in duration-300"
             x-transition:leave-start="opacity-100 translate-y-0 scale-100"
             x-transition:leave-end="opacity-0 -translate-y-4 scale-95"
-            class="pointer-events-auto w-full max-w-sm overflow-hidden rounded-[1.25rem] border backdrop-blur-xl shadow-[0_20px_50px_-12px_rgba(0,0,0,0.15)] flex items-stretch transition-all duration-300"
+            class="pointer-events-auto w-full max-w-sm overflow-hidden rounded-[1.25rem] border backdrop-blur-xl shadow-[0_20px_50px_-12px_rgba(0,0,0,0.15)] flex items-stretch transition-all duration-300 dark:border-white/10"
             :class="{
-                'bg-white/90 border-green-100 shadow-green-900/5': type === 'success',
-                'bg-white/90 border-red-100 shadow-red-900/5': type === 'error',
-                'bg-white/90 border-blue-100 shadow-blue-900/5': type === 'info'
+                'bg-white/90 dark:bg-[#1A2227]/90 border-green-100 shadow-green-900/5 dark:shadow-green-900/20': type === 'success',
+                'bg-white/90 dark:bg-[#1A2227]/90 border-red-100 shadow-red-900/5 dark:shadow-red-900/20': type === 'error',
+                'bg-white/90 dark:bg-[#1A2227]/90 border-blue-100 shadow-blue-900/5 dark:shadow-blue-900/20': type === 'info'
             }">
 
             <div class="w-1.5 shrink-0" :class="{
@@ -213,12 +213,12 @@
             <div class="flex-1 p-4 flex items-start gap-3">
                 <div class="shrink-0 mt-0.5">
                     <template x-if="type === 'success'">
-                        <div class="w-8 h-8 rounded-full bg-green-50 flex items-center justify-center text-green-600">
+                        <div class="w-8 h-8 rounded-full bg-green-50 dark:bg-green-500/10 flex items-center justify-center text-green-600 dark:text-green-400">
                             <i class="fa-solid fa-check"></i>
                         </div>
                     </template>
                     <template x-if="type === 'error'">
-                        <div class="w-8 h-8 rounded-full bg-red-50 flex items-center justify-center text-red-600">
+                        <div class="w-8 h-8 rounded-full bg-red-50 dark:bg-red-500/10 flex items-center justify-center text-red-600 dark:text-red-400">
                             <i class="fa-solid fa-triangle-exclamation"></i>
                         </div>
                     </template>
@@ -226,14 +226,14 @@
 
                 <div class="flex-1 min-w-0">
                     <h4 class="text-[13px] font-black uppercase tracking-widest leading-none mb-1" :class="{
-                        'text-green-600': type === 'success',
-                        'text-red-600': type === 'error',
-                        'text-blue-600': type === 'info'
+                        'text-green-600 dark:text-green-400': type === 'success',
+                        'text-red-600 dark:text-red-400': type === 'error',
+                        'text-blue-600 dark:text-blue-400': type === 'info'
                     }" x-text="type === 'success' ? 'Éxito' : (type === 'error' ? 'Error' : 'Aviso')"></h4>
-                    <p class="text-[14px] text-gray-700 font-medium leading-snug" x-text="message"></p>
+                    <p class="text-[14px] text-gray-700 dark:text-gray-300 font-medium leading-snug" x-text="message"></p>
                 </div>
 
-                <button @click="show = false" class="shrink-0 text-gray-300 hover:text-gray-500 transition-colors">
+                <button @click="show = false" class="shrink-0 text-gray-300 hover:text-gray-500 dark:hover:text-white transition-colors">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
             </div>

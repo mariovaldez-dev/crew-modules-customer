@@ -2,46 +2,44 @@
 
 namespace App\Domain\Cuadrilla;
 
+/**
+ * Value Object que representa las tarifas por tipo de maniobra de una cuadrilla.
+ * El mapa es dinámico: [idTipoManiobra (int) => tarifa (?float)]
+ */
 class TarifasManiobra
 {
+    /**
+     * @param array<int, float|null> $dynamic  [idTipoManiobra => tarifa]
+     */
     public function __construct(
-        public readonly ?float $carga25 = null,
-        public readonly ?float $carga50 = null,
-        public readonly ?float $descarga25 = null,
-        public readonly ?float $descarga50 = null,
-        public readonly ?float $traslado = null,
-        public readonly ?float $apaleo = null
+        public readonly array $dynamic = []
     ) {
         $this->validateNoNegativos();
     }
 
+    /**
+     * Named constructor semántico para mayor claridad en los call sites.
+     *
+     * @param array<int, float|null> $tarifasMap
+     */
+    public static function fromDynamic(array $tarifasMap): self
+    {
+        return new self(dynamic: $tarifasMap);
+    }
+
     private function validateNoNegativos(): void
     {
-        $tarifas = [
-            'Carga 25kg' => $this->carga25,
-            'Carga 50kg' => $this->carga50,
-            'Descarga 25kg' => $this->descarga25,
-            'Descarga 50kg' => $this->descarga50,
-            'Traslado' => $this->traslado,
-            'Apaleo' => $this->apaleo,
-        ];
-
-        foreach ($tarifas as $nombre => $valor) {
-            if ($valor !== null && $valor < 0) {
-                throw new \InvalidArgumentException("La tarifa para $nombre no puede ser negativa.");
+        foreach ($this->dynamic as $id => $valor) {
+            if ($valor !== null && (float) $valor < 0) {
+                throw new \InvalidArgumentException(
+                    "La tarifa para tipo de maniobra #$id no puede ser negativa."
+                );
             }
         }
     }
 
     public function toArray(): array
     {
-        return [
-            'carga25' => $this->carga25,
-            'carga50' => $this->carga50,
-            'descarga25' => $this->descarga25,
-            'descarga50' => $this->descarga50,
-            'traslado' => $this->traslado,
-            'apaleo' => $this->apaleo,
-        ];
+        return $this->dynamic;
     }
 }

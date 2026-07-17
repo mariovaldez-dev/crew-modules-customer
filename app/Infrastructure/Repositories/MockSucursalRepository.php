@@ -14,7 +14,7 @@ class MockSucursalRepository implements SucursalRepositoryInterface
         if ($ownsId === 102) {
             return 'ZONA-SUR';
         }
-        return 'ZONA-NORTE';
+        return 'FA';
     }
 
     public function obtenerPuntosDeVentaDeUsuario(int $usuarioId): array
@@ -37,5 +37,28 @@ class MockSucursalRepository implements SucursalRepositoryInterface
             return 'I';
         }
         return 'A';
+    }
+
+    public function listaPuntosDeVentaPorZona(string $zona): array
+    {
+        return match (strtoupper($zona)) {
+            'FA' => [
+                'ANGOS01' => 'Angostura 01',
+                'ANGOS02' => 'Angostura 02',
+                'ANGOS03' => 'Angostura 03',
+            ],
+            'ZONA-NORTE' => [
+                '101' => 'PV Norte Principal',
+                '103' => 'PV Norte Auxiliar',
+            ],
+            'ZONA-SUR' => [
+                '102' => 'PV Sur Principal',
+                '104' => 'PV Sur Auxiliar',
+            ],
+            default => [
+                'ANGOS01' => 'Angostura 01',
+                'ANGOS02' => 'Angostura 02',
+            ],
+        };
     }
 }

@@ -11,19 +11,53 @@ class TarifasIndex extends Component
 {
     use WithZonaScope;
 
+    public bool $readyToLoad = false;
+
+    public function loadData()
+    {
+        $this->readyToLoad = true;
+    }
+
     public function render(ListTarifasUseCase $useCase)
     {
+        if ($this->readyToLoad) {
+            session()->save(); // Libera el bloqueo de sesión para navegación concurrente
+        }
+
         $esAdministrador = $this->rolUsuario === 'AM';
         
-        $data = $useCase->execute($this->zonaUsuario, $esAdministrador);
+        $nombreZonaCO = '';
+        $claveZonaCO = '';
 
+        if ($esAdministrador) {
+            $data = $this->readyToLoad ? $useCase->execute($this->zonaUsuario, true) : [];
+            $cuadrillasArray = empty($data) ? [] : array_merge(...array_values($data));
+        } else {
+            $res = $this->readyToLoad ? $useCase->execute($this->zonaUsuario, false) : [];
+            $data = $res['cuadrillas'] ?? [];
+            $nombreZonaCO = $res['nombreZona'] ?? '';
+            $claveZonaCO = $res['claveZona'] ?? $this->zonaUsuario;
+            $cuadrillasArray = $data;
+        }
+
+        // Extraer todos los tipos de maniobra para crear las columnas dinámicamente
+        $tiposManiobra = [];
+        
+        foreach ($cuadrillasArray as $cuadrilla) {
+            if (isset($cuadrilla['listaTarifas'])) {
+                foreach ($cuadrilla['listaTarifas'] as $tarifa) {
+                    $tiposManiobra[$tarifa['idTipoManiobra']] = $tarifa['nombreTipoManiobra'];
+                }
+            }
+        }
+
+        // Ordenar los tipos por ID o nombre (opcional), aquí lo dejamos como venga
         return view('livewire.tarifas.tarifas-index', [
             'esAdministrador' => $esAdministrador,
-            'data' => $data, // Si es AM es array agrupado, si es CO es array plano
-            'puntosVenta' => [
-                101 => 'PV Norte Principal',
-                102 => 'PV Sur Auxiliar'
-            ]
+            'data' => $data,
+            'tiposManiobra' => $tiposManiobra,
+            'nombreZonaCO' => $nombreZonaCO,
+            'claveZonaCO' => $claveZonaCO
         ])->layout('layouts.app', ['title' => 'Tarifas por Cuadrilla']);
     }
 }

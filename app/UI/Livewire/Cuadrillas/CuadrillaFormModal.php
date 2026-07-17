@@ -5,6 +5,8 @@ namespace App\UI\Livewire\Cuadrillas;
 use App\Domain\Cuadrilla\CreateCuadrillaUseCase;
 use App\Domain\Cuadrilla\TarifasManiobra;
 use App\Domain\Cuadrilla\UpdateCuadrillaUseCase;
+use App\Domain\Maniobra\ManiobraRepositoryInterface;
+use App\Domain\Shared\Repositories\SucursalRepositoryInterface;
 use App\UI\Livewire\Traits\WithZonaScope;
 use Exception;
 use Livewire\Component;
@@ -14,50 +16,93 @@ class CuadrillaFormModal extends Component
     use WithZonaScope;
 
     public bool $isOpen = false;
-    
+
     public ?int $cuadrillaId = null;
     public string $nombre = '';
     public string $lider = '';
     public int $miembros = 1;
-    public ?int $puntoVentaId = null;
-    
-    // Tarifas
-    public ?float $carga25 = null;
-    public ?float $carga50 = null;
-    public ?float $descarga25 = null;
-    public ?float $descarga50 = null;
-    public ?float $traslado = null;
-    public ?float $apaleo = null;
+    public string $puntoVentaId = '';   // WhsCode (ej. 'ANGOS02')
+
+    // Puntos de venta (cargados de forma lazy via wire:init)
+    public array $puntosVenta = [];
+    public bool $pvLoaded = false;
+
+    // Maniobras dinámicas cargadas del SP [id => nombre]
+    public array $maniobras = [];
+    // Tarifas dinámicas [idTipoManiobra => valorString]
+    public array $tarifas = [];
+    public array $tarifasOriginales = [];
+    public bool $maniobrasLoaded = false;
 
     protected $listeners = [
         'open-cuadrilla-modal' => 'openModal'
     ];
 
-    public function openModal($cuadrilla = null)
+    public function openModal($cuadrilla = null): void
     {
         $this->resetValidation();
         $this->reset([
-            'cuadrillaId', 'nombre', 'lider', 'miembros', 'puntoVentaId',
-            'carga25', 'carga50', 'descarga25', 'descarga50', 'traslado', 'apaleo'
+            'cuadrillaId', 'nombre', 'lider', 'miembros', 'puntoVentaId', 'tarifasOriginales',
         ]);
 
+        // Si el wire:init no ha corrido, forzamos la carga síncrona para tener las maniobras listas antes de mapear
+        if (!$this->maniobrasLoaded || !$this->pvLoaded) {
+            $this->loadData(
+                app(SucursalRepositoryInterface::class),
+                app(ManiobraRepositoryInterface::class)
+            );
+        }
+
+        // Inicializar tarifas vacías respetando las maniobras ya cargadas
+        $this->tarifas = $this->buildEmptyTarifas();
+
         if ($cuadrilla) {
-            $this->cuadrillaId = $cuadrilla['id'] ?? null;
-            $this->nombre = $cuadrilla['nombre'] ?? '';
-            $this->lider = $cuadrilla['lider'] ?? '';
-            $this->miembros = $cuadrilla['miembros'] ?? 1;
-            $this->puntoVentaId = $cuadrilla['puntoVentaId'] ?? null;
-            
-            $tarifas = $cuadrilla['tarifas'] ?? [];
-            $this->carga25 = $tarifas['carga25'] ?? null;
-            $this->carga50 = $tarifas['carga50'] ?? null;
-            $this->descarga25 = $tarifas['descarga25'] ?? null;
-            $this->descarga50 = $tarifas['descarga50'] ?? null;
-            $this->traslado = $tarifas['traslado'] ?? null;
-            $this->apaleo = $tarifas['apaleo'] ?? null;
+            $this->cuadrillaId  = $cuadrilla['id'] ?? null;
+            $this->nombre       = $cuadrilla['nombre'] ?? '';
+            $this->lider        = $cuadrilla['lider'] ?? '';
+            $this->miembros     = $cuadrilla['miembros'] ?? 1;
+            $this->puntoVentaId = $cuadrilla['puntoVentaId'] ?? '';
+
+            // Rellenar las tarifas existentes sobre el mapa vacío y registrar las originales
+            $tarifasExistentes = $cuadrilla['tarifas'] ?? [];
+            foreach ($tarifasExistentes as $key => $valor) {
+                // Si el modal ya cargó maniobras y la clave es un id numérico
+                if (is_numeric($key) && array_key_exists($key, $this->tarifas)) {
+                    $this->tarifas[$key] = $valor !== null ? (string) $valor : '';
+                    $this->tarifasOriginales[(int) $key] = $valor !== null ? (float) $valor : null;
+                }
+            }
         }
 
         $this->dispatch('open-modal', 'cuadrilla-modal');
+    }
+
+    /**
+     * Carga PV y maniobras en un solo wire:init.
+     */
+    public function loadData(
+        SucursalRepositoryInterface $sucursalRepo,
+        ManiobraRepositoryInterface $maniobraRepo
+    ): void {
+        if (!$this->pvLoaded) {
+            $this->puntosVenta = $sucursalRepo->listaPuntosDeVentaPorZona($this->zonaUsuario);
+            $this->pvLoaded    = true;
+        }
+
+        if (!$this->maniobrasLoaded) {
+            // Obtener maniobras activas y construir [id => nombre]
+            $dtos = $maniobraRepo->list();
+            $this->maniobras = [];
+            foreach ($dtos as $dto) {
+                // Solo maniobras activas
+                if (strtolower($dto->estatus) === 'activo') {
+                    $this->maniobras[$dto->id] = $dto->nombre;
+                }
+            }
+            // Inicializar el mapa de tarifas vacío con todos los ids
+            $this->tarifas          = $this->buildEmptyTarifas();
+            $this->maniobrasLoaded  = true;
+        }
     }
 
     private function parseTarifa($val): ?float
@@ -66,54 +111,77 @@ class CuadrillaFormModal extends Component
         return (float) $val;
     }
 
-    public function save(CreateCuadrillaUseCase $createUseCase, UpdateCuadrillaUseCase $updateUseCase)
+    /**
+     * Construye el mapa de tarifas vacío usando las maniobras ya cargadas.
+     */
+    private function buildEmptyTarifas(): array
     {
-        $this->validate([
-            'nombre' => 'required|max:100',
-            'lider' => 'required|max:100',
-            'miembros' => 'required|integer|min:1',
-            'puntoVentaId' => 'required|integer',
-            'carga25' => 'nullable|numeric|min:0',
-            'carga50' => 'nullable|numeric|min:0',
-            'descarga25' => 'nullable|numeric|min:0',
-            'descarga50' => 'nullable|numeric|min:0',
-            'traslado' => 'nullable|numeric|min:0',
-            'apaleo' => 'nullable|numeric|min:0',
-        ]);
+        $empty = [];
+        foreach (array_keys($this->maniobras) as $id) {
+            $empty[$id] = '';
+        }
+        return $empty;
+    }
+
+    public function save(CreateCuadrillaUseCase $createUseCase, UpdateCuadrillaUseCase $updateUseCase): void
+    {
+        // Reglas dinámicas de validación para cada tarifa
+        $tarifaRules = [];
+        foreach (array_keys($this->maniobras) as $id) {
+            $tarifaRules["tarifas.$id"] = 'nullable|numeric|min:0|max:9999999999.99|regex:/^\d{1,10}(\.\d{1,2})?$/';
+        }
+
+        $this->validate(array_merge([
+            'nombre'       => 'required|max:100',
+            'lider'        => 'required|max:100',
+            'miembros'     => 'required|integer|min:1',
+            'puntoVentaId' => 'required|string|max:20',
+        ], $tarifaRules));
 
         try {
-            $tarifas = new TarifasManiobra(
-                $this->parseTarifa($this->carga25),
-                $this->parseTarifa($this->carga50),
-                $this->parseTarifa($this->descarga25),
-                $this->parseTarifa($this->descarga50),
-                $this->parseTarifa($this->traslado),
-                $this->parseTarifa($this->apaleo)
-            );
+            // Construir el mapa dinámico [idTipo => float|null]
+            $dynamicMap = [];
+            foreach ($this->tarifas as $id => $valor) {
+                $valorFloat = $this->parseTarifa($valor);
+
+                if ($this->cuadrillaId) {
+                    // Si es edición, solo se colocan las que se modificaron
+                    $valorOriginal = $this->tarifasOriginales[(int) $id] ?? null;
+                    if ($valorFloat !== $valorOriginal) {
+                        $dynamicMap[(int) $id] = $valorFloat;
+                    }
+                } else {
+                    // Si es nueva, solo las que tengan algún valor asignado
+                    if ($valorFloat !== null) {
+                        $dynamicMap[(int) $id] = $valorFloat;
+                    }
+                }
+            }
+
+            $tarifasVO = TarifasManiobra::fromDynamic($dynamicMap);
 
             if ($this->cuadrillaId) {
-                // Mock usuario ID
-                $usuarioId = 'TEST_USER_01';
-                
+                $usuarioId = (string) (auth()->user()?->id ?? 0);
+
                 $updateUseCase->execute(
-                    id: $this->cuadrillaId,
-                    nombre: $this->nombre,
-                    lider: $this->lider,
-                    miembros: $this->miembros,
+                    id:          $this->cuadrillaId,
+                    nombre:      $this->nombre,
+                    lider:       $this->lider,
+                    miembros:    $this->miembros,
                     puntoVentaId: $this->puntoVentaId,
-                    zona: $this->zonaUsuario,
-                    tarifas: $tarifas,
-                    usuarioId: $usuarioId
+                    zona:        $this->zonaUsuario,
+                    tarifas:     $tarifasVO,
+                    usuarioId:   $usuarioId
                 );
                 $this->dispatch('notify', ['message' => 'Cuadrilla actualizada correctamente', 'type' => 'success']);
             } else {
                 $createUseCase->execute(
-                    nombre: $this->nombre,
-                    lider: $this->lider,
-                    miembros: $this->miembros,
+                    nombre:      $this->nombre,
+                    lider:       $this->lider,
+                    miembros:    $this->miembros,
                     puntoVentaId: $this->puntoVentaId,
-                    zona: $this->zonaUsuario,
-                    tarifas: $tarifas
+                    zona:        $this->zonaUsuario,
+                    tarifas:     $tarifasVO
                 );
                 $this->dispatch('notify', ['message' => 'Cuadrilla creada correctamente', 'type' => 'success']);
             }
@@ -126,13 +194,22 @@ class CuadrillaFormModal extends Component
         }
     }
 
-    public function render()
+    protected function messages(): array
+    {
+        $messages = [];
+        foreach (array_keys($this->maniobras) as $id) {
+            $messages["tarifas.$id.regex"] = 'La tarifa solo acepta hasta 10 enteros y 2 decimales.';
+            $messages["tarifas.$id.max"] = 'La tarifa excede el valor máximo permitido.';
+        }
+        return $messages;
+    }
+
+    public function render(): \Illuminate\View\View
     {
         return view('livewire.cuadrillas.cuadrilla-form-modal', [
-            'puntosVenta' => [
-                101 => 'PV Norte Principal',
-                102 => 'PV Sur Auxiliar'
-            ]
+            'puntosVenta' => $this->puntosVenta,
+            'maniobras'   => $this->maniobras,
+            'tarifas'     => $this->tarifas,
         ]);
     }
 }

@@ -12,15 +12,15 @@ class CreateManiobraManualUseCase
 
     public function execute(
         string $fecha,
-        int $almacenId,
+        string $almacenId,
         int $cuadrillaId,
         int $tipoManiobraId,
         float $toneladas,
         string $usuarioId,
         ?string $documentoSap = null
-    ): RegistroManiobraDTO {
+    ): string {
         if (empty($fecha)) throw new Exception("La fecha es obligatoria.");
-        if ($almacenId <= 0) throw new Exception("El almacén es obligatorio.");
+        if (empty($almacenId)) throw new Exception("El almacén es obligatorio.");
         if ($cuadrillaId <= 0) throw new Exception("La cuadrilla es obligatoria.");
         if ($tipoManiobraId <= 0) throw new Exception("El tipo de maniobra es obligatorio.");
         if ($toneladas <= 0) throw new Exception("Las toneladas deben ser mayores a 0.");

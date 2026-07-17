@@ -9,12 +9,12 @@ interface RegistroManiobraRepositoryInterface
      */
     public function list(array $filtros, string $zonaUsuario, string $rolUsuario): array;
 
-    public function create(ManiobraManualDTO $maniobra): RegistroManiobraDTO;
+    public function create(ManiobraManualDTO $maniobra): string;
 
     /**
      * @return array<int, string>
      */
-    public function cuadrillasPorAlmacen(int $almacenId): array;
+    public function cuadrillasPorAlmacen(string $almacenId): array;
 
     /**
      * @return array<int, string>

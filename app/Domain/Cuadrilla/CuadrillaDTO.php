@@ -9,8 +9,8 @@ class CuadrillaDTO
         public readonly string $nombre,
         public readonly string $lider,
         public readonly int $miembros,
-        public readonly int $puntoVentaId, // PV
-        public readonly string $zona, // Zona de origen
+        public readonly string $puntoVentaId, // WhsCode de OWHS (ej. 'ANGOS02')
+        public readonly string $zona,
         public readonly TarifasManiobra $tarifas
     ) {}
 

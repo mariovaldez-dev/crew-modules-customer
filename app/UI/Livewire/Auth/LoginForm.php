@@ -104,11 +104,8 @@ class LoginForm extends Component
 
             if ($tipo === 'CO') {
                 $pvs = $sucursalRepository->obtenerPuntosDeVentaDeUsuario($user->id);
-                if (!empty($pvs)) {
-                    $zona = $sucursalRepository->zonaDe($pvs[0]) ?? 'ZONA-NORTE';
-                } else {
-                    $zona = 'ZONA-NORTE';
-                }
+                // TODO: resolver zona real desde SP cuando esté validado
+                $zona = 'FA';
             }
 
             $usuarioContexto = new \App\Domain\Shared\UsuarioContexto(

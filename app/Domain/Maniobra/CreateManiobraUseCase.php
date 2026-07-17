@@ -34,7 +34,7 @@ class CreateManiobraUseCase
             id: null,
             nombre: $nombre,
             descripcion: $descripcion,
-            estatus: 'A'
+            estatus: 'Activo'
         );
 
         return $this->repository->create($dto);

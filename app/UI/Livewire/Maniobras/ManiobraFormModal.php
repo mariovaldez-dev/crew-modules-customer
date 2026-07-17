@@ -14,7 +14,7 @@ class ManiobraFormModal extends Component
     public ?int $maniobraId = null;
     public string $nombre = '';
     public string $descripcion = '';
-    public string $estatus = 'A';
+    public string $estatus = 'Activo';
 
     protected $listeners = [
         'open-maniobra-modal' => 'openModal'
@@ -29,7 +29,7 @@ class ManiobraFormModal extends Component
             $this->maniobraId = $maniobra['id'] ?? null;
             $this->nombre = $maniobra['nombre'] ?? '';
             $this->descripcion = $maniobra['descripcion'] ?? '';
-            $this->estatus = $maniobra['estatus'] ?? 'A';
+            $this->estatus = $maniobra['estatus'] ?? 'Activo';
         }
 
         $this->dispatch('open-modal', 'maniobra-modal');
@@ -40,7 +40,7 @@ class ManiobraFormModal extends Component
         $this->validate([
             'nombre' => 'required|max:100',
             'descripcion' => 'nullable|max:100',
-            'estatus' => 'required|in:A,I'
+            'estatus' => 'required|in:Activo,Inactivo'
         ], [
             'nombre.required' => 'El nombre es obligatorio.',
             'nombre.max' => 'El nombre no debe exceder 100 caracteres.',

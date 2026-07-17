@@ -84,7 +84,7 @@
             <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse">
                     <thead>
-                        <tr class="bg-gray-50/50 dark:bg-white/5 border-b border-gray-100 dark:border-white/5 text-gray-400 dark:text-gray-500 text-[10px] font-black uppercase tracking-widest">
+                        <tr class="bg-green-600 text-white text-[11px] font-bold uppercase tracking-wider">
                             <th class="px-6 py-4">Cuadrilla</th>
                             <th class="px-6 py-4">Punto de Venta</th>
                             <th class="px-6 py-4 text-right">Toneladas</th>

@@ -22,7 +22,7 @@ interface CuadrillaRepositoryInterface
     public function hasManiobrasEnProceso(int $cuadrillaId): bool;
 
     /**
-     * Verifica si una cuadrilla ya existe en ese PV y Zona para evitar duplicados.
+     * Verifica si ya existe una cuadrilla con el mismo nombre en ese punto de venta.
      */
-    public function exists(string $nombre, string $lider, int $puntoVentaId, ?int $excludeId = null): bool;
+    public function exists(string $nombre, string $lider, string $puntoVentaId, ?int $excludeId = null): bool;
 }

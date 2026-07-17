@@ -3,6 +3,7 @@
 namespace App\UI\Livewire\Maniobras;
 
 use App\Domain\Maniobra\ListManiobrasUseCase;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -11,6 +12,7 @@ class ManiobraIndex extends Component
     use WithPagination;
 
     public string $search = '';
+    public bool $readyToLoad = false;
 
     protected $listeners = [
         'maniobra-saved' => '$refresh',
@@ -24,6 +26,11 @@ class ManiobraIndex extends Component
         }
     }
 
+    public function loadData()
+    {
+        $this->readyToLoad = true;
+    }
+
     public function updatedSearch()
     {
         $this->resetPage();
@@ -31,12 +38,25 @@ class ManiobraIndex extends Component
 
     public function render(ListManiobrasUseCase $useCase)
     {
-        // Dado que el repositorio retorna un array, deberíamos paginar manualmente o retornar colección.
-        // Por simplicidad en la UI, pasamos todo el arreglo. Si crece, deberíamos hacer paginación en SQL.
-        $maniobras = $useCase->execute($this->search);
+        if ($this->readyToLoad) {
+            session()->save(); // Libera la sesión durante la consulta lenta
+        }
+        
+        $items = $this->readyToLoad ? $useCase->execute($this->search) : [];
+
+        $currentPage = $this->paginators['page'] ?? 1;
+        $perPage = 10;
+
+        $paginated = new LengthAwarePaginator(
+            array_slice($items, ($currentPage - 1) * $perPage, $perPage),
+            count($items),
+            $perPage,
+            $currentPage,
+            ['path' => LengthAwarePaginator::resolveCurrentPath()]
+        );
 
         return view('livewire.maniobras.maniobra-index', [
-            'maniobras' => $maniobras
+            'maniobras' => $paginated
         ])->layout('layouts.app', ['title' => 'Catálogo de Maniobras']);
     }
 }

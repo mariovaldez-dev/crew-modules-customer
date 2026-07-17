@@ -28,16 +28,20 @@ class NuevaManiobraForm extends Component
         'open-nueva-maniobra-modal' => 'openModal'
     ];
 
-    public function mount(RegistroManiobraRepositoryInterface $repository)
+    public bool $readyToLoad = false;
+
+    public function mount()
     {
         $this->fecha = date('Y-m-d');
-        
-        // Mock de almacenes por zona
-        $this->almacenes = $this->zonaUsuario === 'ZONA-NORTE' 
-            ? [101 => 'Almacén Norte'] 
-            : [102 => 'Almacén Sur'];
-            
+    }
+
+    public function loadData(RegistroManiobraRepositoryInterface $repository)
+    {
+        $sucursalRepo = app(\App\Domain\Shared\Repositories\SucursalRepositoryInterface::class);
+        $zonaFiltro = ($this->rolUsuario === 'AM') ? 'TODAS' : $this->zonaUsuario;
+        $this->almacenes = $sucursalRepo->listaPuntosDeVentaPorZona($zonaFiltro);
         $this->tiposManiobra = $repository->tiposManiobra();
+        $this->readyToLoad = true;
     }
 
     public function openModal()
@@ -59,7 +63,7 @@ class NuevaManiobraForm extends Component
         $this->cuadrillaId = '';
         if ($value) {
             $repo = app(RegistroManiobraRepositoryInterface::class);
-            $this->cuadrillas = $repo->cuadrillasPorAlmacen((int) $value);
+            $this->cuadrillas = $repo->cuadrillasPorAlmacen((string) $value);
         } else {
             $this->cuadrillas = [];
         }
@@ -68,11 +72,11 @@ class NuevaManiobraForm extends Component
     public function save(CreateManiobraManualUseCase $createUseCase)
     {
         $this->validate([
-            'fecha' => 'required|date',
-            'almacenId' => 'required|integer',
+            'fecha' => 'required|date|before_or_equal:today',
+            'almacenId' => 'required|string',
             'cuadrillaId' => 'required|integer',
             'tipoManiobraId' => 'required|integer',
-            'toneladas' => 'required|numeric|min:0.001',
+            'toneladas' => 'required|numeric|min:0.001|decimal:0,3',
             'documentoSap' => 'nullable|string|max:50',
         ]);
 
@@ -80,9 +84,9 @@ class NuevaManiobraForm extends Component
             // Mock de ID de usuario
             $usuarioId = Auth::user()?->id ?? 'TEST_USER_01';
             
-            $createUseCase->execute(
+            $mensaje = $createUseCase->execute(
                 fecha: $this->fecha,
-                almacenId: (int) $this->almacenId,
+                almacenId: (string) $this->almacenId,
                 cuadrillaId: (int) $this->cuadrillaId,
                 tipoManiobraId: (int) $this->tipoManiobraId,
                 toneladas: (float) $this->toneladas,
@@ -90,7 +94,7 @@ class NuevaManiobraForm extends Component
                 documentoSap: $this->documentoSap ?: null
             );
 
-            $this->dispatch('notify', ['message' => 'Maniobra registrada correctamente', 'type' => 'success']);
+            $this->dispatch('notify', ['message' => $mensaje, 'type' => 'success']);
             $this->dispatch('close-modal', 'nueva-maniobra-modal');
             $this->dispatch('maniobra-registrada');
 

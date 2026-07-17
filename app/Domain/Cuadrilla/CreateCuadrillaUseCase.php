@@ -14,17 +14,17 @@ class CreateCuadrillaUseCase
         string $nombre,
         string $lider,
         int $miembros,
-        int $puntoVentaId,
+        string $puntoVentaId,   // WhsCode (ej. 'ANGOS02')
         string $zona,
         TarifasManiobra $tarifas
     ): CuadrillaDTO {
         $nombre = trim($nombre);
-        $lider = trim($lider);
+        $lider  = trim($lider);
 
-        if (empty($nombre)) throw new Exception("El nombre de la cuadrilla es obligatorio.");
-        if (empty($lider)) throw new Exception("El líder es obligatorio.");
-        if ($miembros <= 0) throw new Exception("El número de miembros debe ser mayor a 0.");
-        if ($puntoVentaId <= 0) throw new Exception("Debe seleccionar un punto de venta válido.");
+        if (empty($nombre))       throw new Exception('El nombre de la cuadrilla es obligatorio.');
+        if (empty($lider))        throw new Exception('El líder es obligatorio.');
+        if ($miembros <= 0)       throw new Exception('El número de miembros debe ser mayor a 0.');
+        if (empty($puntoVentaId)) throw new Exception('Debe seleccionar un punto de venta válido.');
 
         if ($this->repository->exists($nombre, $lider, $puntoVentaId)) {
             throw new Exception("Ya existe una cuadrilla con el mismo nombre y líder en este punto de venta.");

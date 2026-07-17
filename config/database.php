@@ -75,16 +75,12 @@ return [
             'prefix_indexes' => true,
         ],
 
-        'sapImpulsoraDB' => [
-            'driver' => 'sqlsrv',
-            'host' => env('DB_SAP_HOST', '127.0.0.1'),
-            'port' => env('DB_SAP_PORT', '1433'),
-            'database' => env('DB_SAP_DATABASE', 'forge'),
-            'username' => env('DB_SAP_USERNAME', 'sa'),
-            'password' => env('DB_SAP_PASSWORD', ''),
-            'charset' => env('DB_CHARSET', 'utf8'),
-            'prefix' => '',
-            'prefix_indexes' => true,
+        // Conexión SQLite exclusiva para Laravel Telescope (solo entorno local)
+        'telescope' => [
+            'driver'   => 'sqlite',
+            'database' => database_path('telescope.sqlite'),
+            'prefix'   => '',
+            'foreign_key_constraints' => true,
         ],
 
     ],

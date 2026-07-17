@@ -30,8 +30,8 @@ class UpdateManiobraUseCase
             throw new Exception("La descripción no puede exceder los 100 caracteres.");
         }
 
-        if (!in_array($estatus, ['A', 'I'])) {
-            throw new Exception("El estatus proporcionado no es válido.");
+        if (!in_array($estatus, ['Activo', 'Inactivo'])) {
+            throw new Exception("El estatus proporcionado no es válido. Use 'Activo' o 'Inactivo'.");
         }
 
         $dto = new ManiobraDTO(

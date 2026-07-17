@@ -13,9 +13,9 @@ class MockCuadrillaRepository implements CuadrillaRepositoryInterface
     {
         return Cache::remember('mock_cuadrillas', 3600, function () {
             return [
-                1 => new CuadrillaDTO(1, 'Cuadrilla Alfa', 'Juan Pérez', 4, 101, 'ZONA-NORTE', new TarifasManiobra(10.5, 20.0, 5.0, 10.0, null, 15.0)),
-                2 => new CuadrillaDTO(2, 'Cuadrilla Beta', 'Carlos Gómez', 5, 101, 'ZONA-NORTE', new TarifasManiobra(12.0, 22.0, 6.0, 11.0, null, null)),
-                3 => new CuadrillaDTO(3, 'Cuadrilla Sur', 'Pedro López', 3, 102, 'ZONA-SUR', new TarifasManiobra(9.5, 19.0, 4.0, 9.0, 50.0, 10.0)),
+                1 => new CuadrillaDTO(1, 'Cuadrilla Alfa', 'Juan Pérez',  4, 'ANGOS01', 'FA', TarifasManiobra::fromDynamic([1 => 10.5, 2 => 20.0, 3 => 5.0, 4 => 10.0, 6 => 15.0])),
+                2 => new CuadrillaDTO(2, 'Cuadrilla Beta', 'Carlos Gómez', 5, 'ANGOS02', 'FA', TarifasManiobra::fromDynamic([1 => 12.0, 2 => 22.0, 3 => 6.0, 4 => 11.0])),
+                3 => new CuadrillaDTO(3, 'Cuadrilla Sur',  'Pedro López',  3, 'ANGOS03', 'FA', TarifasManiobra::fromDynamic([1 => 9.5,  2 => 19.0, 3 => 4.0, 4 => 9.0, 5 => 50.0, 6 => 10.0])),
             ];
         });
     }
@@ -121,7 +121,7 @@ class MockCuadrillaRepository implements CuadrillaRepositoryInterface
         return $cuadrillaId === 2;
     }
 
-    public function exists(string $nombre, string $lider, int $puntoVentaId, ?int $excludeId = null): bool
+    public function exists(string $nombre, string $lider, string $puntoVentaId, ?int $excludeId = null): bool
     {
         foreach ($this->getData() as $id => $item) {
             if ($excludeId !== null && $id === $excludeId) {

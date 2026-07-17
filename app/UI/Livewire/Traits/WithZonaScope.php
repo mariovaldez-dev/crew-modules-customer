@@ -13,7 +13,7 @@ trait WithZonaScope
             return $context->zona;
         }
         
-        return 'ZONA-NORTE';
+        return 'FA';
     }
 
     public function getRolUsuarioProperty(): string

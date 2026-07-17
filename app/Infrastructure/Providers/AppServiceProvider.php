@@ -31,9 +31,11 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(ManiobraRepositoryInterface::class, \App\Infrastructure\Repositories\SqlServerManiobraRepository::class);
         $this->app->singleton(CuadrillaRepositoryInterface::class, \App\Infrastructure\Repositories\SqlServerCuadrillaRepository::class);
         $this->app->singleton(TarifaAuditRepositoryInterface::class, MockTarifaAuditRepository::class);
-        $this->app->singleton(RegistroManiobraRepositoryInterface::class, MockRegistroManiobraRepository::class);
+        $this->app->singleton(RegistroManiobraRepositoryInterface::class, \App\Infrastructure\Repositories\SqlServerRegistroManiobraRepository::class);
         $this->app->singleton(CorteRepositoryInterface::class, MockCorteRepository::class);
         $this->app->singleton(SucursalRepositoryInterface::class, SqlServerSucursalRepository::class);
+        $this->app->singleton(\App\Domain\Tarifa\TarifaRepositoryInterface::class, \App\Infrastructure\Repositories\SqlServerTarifaRepository::class);
+        $this->app->singleton(\App\Domain\Dashboard\DashboardRepositoryInterface::class, \App\Infrastructure\Repositories\SqlServerDashboardRepository::class);
     }
 
     public function boot()

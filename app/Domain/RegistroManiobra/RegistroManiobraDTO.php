@@ -8,7 +8,7 @@ class RegistroManiobraDTO
         public readonly int $id,
         public readonly string $folio,
         public readonly \DateTimeImmutable $fecha,
-        public readonly int $almacenId,
+        public readonly string $almacenId,
         public readonly string $almacenNombre,
         public readonly int $cuadrillaId,
         public readonly string $cuadrillaNombre,

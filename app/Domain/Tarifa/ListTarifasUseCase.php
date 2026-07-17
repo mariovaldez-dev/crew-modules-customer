@@ -2,41 +2,42 @@
 
 namespace App\Domain\Tarifa;
 
-use App\Domain\Cuadrilla\CuadrillaRepositoryInterface;
-
 class ListTarifasUseCase
 {
     public function __construct(
-        private readonly CuadrillaRepositoryInterface $repository
+        private readonly TarifaRepositoryInterface $repository
     ) {}
 
     public function execute(string $zonaUsuario, bool $esAdministrador): array
     {
-        // En este Use Case, reutilizamos CuadrillaRepository para obtener las cuadrillas y sus tarifas.
-        // Como mock, usaremos la lógica actual del MockCuadrillaRepository que de por sí filtra por zona si se lo pedimos.
-        
         if ($esAdministrador) {
-            // El administrador ve todas las zonas. Simularemos que pasamos null o pedimos todas.
-            // Para el mock actual, $zonaUsuario se requiere en list(), así que temporalmente 
-            // leeremos todas si el repositorio lo permite. En nuestro mock actual, el filtro de zona es estricto, 
-            // así que para el AM mandaremos 'TODAS' y ajustaremos el mock.
-            $cuadrillas = $this->repository->list([], 'TODAS');
+            // El AM no envía zona y el SP le devuelve todas las zonas agrupadas.
+            $resultados = $this->repository->consultarTarifas(null);
             
-            // Agrupar por zona
             $agrupadas = [];
-            foreach ($cuadrillas as $cuadrilla) {
-                $zona = $cuadrilla->zona;
-                if (!isset($agrupadas[$zona])) {
-                    $agrupadas[$zona] = [];
-                }
-                $agrupadas[$zona][] = $cuadrilla;
+            foreach ($resultados as $zonaData) {
+                $nombreZona = $zonaData['nombreZona'] ?? $zonaData['claveZona'] ?? 'Desconocida';
+                $agrupadas[$nombreZona] = $zonaData['listaCuadrillas'] ?? [];
             }
             
-            return $agrupadas; // [ 'ZONA-NORTE' => [ CuadrillaDTO... ], 'ZONA-SUR' => ... ]
+            return $agrupadas; // [ 'Zona Angostura' => [ ...cuadrillas ], 'Zona Guasave' => ... ]
         } else {
             // El CO solo ve su zona
-            $cuadrillas = $this->repository->list([], $zonaUsuario);
-            return $cuadrillas; // Array plano de CuadrillaDTO
+            $resultados = $this->repository->consultarTarifas($zonaUsuario);
+            
+            if (!empty($resultados)) {
+                return [
+                    'claveZona' => $resultados[0]['claveZona'] ?? $zonaUsuario,
+                    'nombreZona' => $resultados[0]['nombreZona'] ?? 'Zona ' . $zonaUsuario,
+                    'cuadrillas' => $resultados[0]['listaCuadrillas'] ?? []
+                ];
+            }
+            
+            return [
+                'claveZona' => $zonaUsuario,
+                'nombreZona' => 'Zona ' . $zonaUsuario,
+                'cuadrillas' => []
+            ];
         }
     }
 }
