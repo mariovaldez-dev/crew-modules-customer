@@ -158,14 +158,16 @@
             @else
                 <div class="bg-white dark:bg-[#131B20] border border-gray-100 dark:border-white/5 rounded-3xl p-6 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between">
                     <div class="flex items-center justify-between">
-                        <span class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Liquidadas</span>
-                        <span class="inline-flex items-center px-2 py-0.5 rounded-full bg-purple-50 dark:bg-purple-950/40 text-[10px] font-black text-purple-700 dark:text-purple-400 tracking-wider">
-                            Completado
+                        <span class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Tons Registradas</span>
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-[10px] font-black text-emerald-700 dark:text-emerald-400 tracking-wider">
+                            Volumen Nacional
                         </span>
                     </div>
                     <div class="mt-4">
-                        <p class="text-3xl font-black text-gray-900 dark:text-white">{{ $maniobrasLiquidadas }}</p>
-                        <p class="text-[11px] text-gray-400 dark:text-gray-500 font-semibold mt-1">Maniobras cerradas</p>
+                        <p class="text-3xl font-black text-gray-900 dark:text-white">
+                            {{ number_format($toneladasTotales, 1) }}t
+                        </p>
+                        <p class="text-[11px] text-gray-400 dark:text-gray-500 font-semibold mt-1">Acumulado general</p>
                     </div>
                 </div>
             @endif
