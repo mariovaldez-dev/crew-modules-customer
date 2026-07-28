@@ -1,28 +1,12 @@
 <?php
 
-use App\UI\Http\Controllers\AuthController;
 use App\UI\Livewire\Auth\LoginForm;
-
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
-/*
-|--------------------------------------------------------------------------
-| Web Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register web routes for your application. These
-| routes are loaded by the RouteServiceProvider within a group which
-| contains the "web" middleware group. Now create something great!
-|
-*/
-
-// Públicas
+// Pública
 Route::get('/login', LoginForm::class)->name('login')->middleware('guest');
-
-// Acceso desde APK por POST
-Route::post('/acceso-app', [AuthController::class, 'accesoApp'])->name('acceso.app');
 
 // Protegidas (Solo Módulo Operaciones)
 Route::middleware(['auth', 'role.operaciones'])->group(function () {
