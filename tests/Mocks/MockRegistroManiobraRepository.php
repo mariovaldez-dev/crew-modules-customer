@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Infrastructure\Repositories;
+namespace Tests\Mocks;
 
 use App\Domain\RegistroManiobra\ManiobraManualDTO;
 use App\Domain\RegistroManiobra\RegistroManiobraDTO;
@@ -43,28 +43,11 @@ class MockRegistroManiobraRepository implements RegistroManiobraRepositoryInterf
         Cache::put('mock_registro_maniobras', $data, 3600);
     }
 
-    public function almacenes(string $zonaUsuario, string $rolUsuario): array
-    {
-        if ($rolUsuario === 'CO') {
-            return $zonaUsuario === 'ZONA-NORTE' 
-                ? [101 => 'Almacén Norte (Mock)'] 
-                : [102 => 'Almacén Sur (Mock)'];
-        }
-
-        return [
-            101 => 'Almacén Norte (Mock)',
-            102 => 'Almacén Sur (Mock)'
-        ];
-    }
-
     public function list(array $filtros, string $zonaUsuario, string $rolUsuario): array
     {
         $data = $this->getData();
 
         $filtered = array_filter($data, function (RegistroManiobraDTO $item) use ($filtros, $zonaUsuario, $rolUsuario) {
-            
-            // Regla: Rol CO solo ve almacenes de su zona (en mock, asumimos que 101 es ZONA-NORTE y 102 ZONA-SUR)
-            // Si rol es AM, ve todo.
             if ($rolUsuario === 'CO') {
                 $almacenesZona = $zonaUsuario === 'ZONA-NORTE' ? [101] : [102];
                 if (!in_array($item->almacenId, $almacenesZona)) {
@@ -72,12 +55,10 @@ class MockRegistroManiobraRepository implements RegistroManiobraRepositoryInterf
                 }
             }
 
-            // Filtro de Almacén
             if (!empty($filtros['almacenId']) && $item->almacenId != $filtros['almacenId']) {
                 return false;
             }
 
-            // Filtro Búsqueda
             if (!empty($filtros['search'])) {
                 $s = $filtros['search'];
                 if (stripos($item->folio, $s) === false && 
@@ -87,7 +68,6 @@ class MockRegistroManiobraRepository implements RegistroManiobraRepositoryInterf
                 }
             }
 
-            // Filtro Fecha
             $fechaItem = $item->fecha->format('Y-m-d');
             if (!empty($filtros['fechaInicio']) && $fechaItem < $filtros['fechaInicio']) {
                 return false;
@@ -96,7 +76,6 @@ class MockRegistroManiobraRepository implements RegistroManiobraRepositoryInterf
                 return false;
             }
 
-            // Filtro Estado (este es dinámico según si tiene corte o no)
             $estadoCalculado = $item->corteId ? 'Liquidada' : 'En proceso';
             if (!empty($filtros['estado']) && $estadoCalculado !== $filtros['estado']) {
                 return false;
@@ -105,7 +84,6 @@ class MockRegistroManiobraRepository implements RegistroManiobraRepositoryInterf
             return true;
         });
 
-        // Ordenar por fecha desc, folio desc
         usort($filtered, function($a, $b) {
             if ($a->fecha == $b->fecha) {
                 return $b->folio <=> $a->folio;
@@ -116,21 +94,21 @@ class MockRegistroManiobraRepository implements RegistroManiobraRepositoryInterf
         return array_values($filtered);
     }
 
-    public function create(ManiobraManualDTO $maniobra): RegistroManiobraDTO
+    public function create(ManiobraManualDTO $maniobra): string
     {
         $data = $this->getData();
         $newId = count($data) > 0 ? max(array_keys($data)) + 1 : 1;
         $folio = 'MAN-' . str_pad($newId, 4, '0', STR_PAD_LEFT);
 
         $almacenes = [101 => 'Almacén Norte', 102 => 'Almacén Sur'];
-        $cuadrillas = $this->cuadrillasPorAlmacen($maniobra->almacenId);
+        $cuadrillas = $this->cuadrillasPorAlmacen((string)$maniobra->almacenId);
         $tipos = $this->tiposManiobra();
 
         $newDto = new RegistroManiobraDTO(
             id: $newId,
             folio: $folio,
-            fecha: $maniobra->fecha,
-            almacenId: $maniobra->almacenId,
+            fecha: new \DateTimeImmutable(),
+            almacenId: (string)$maniobra->almacenId,
             almacenNombre: $almacenes[$maniobra->almacenId] ?? 'Desconocido',
             cuadrillaId: $maniobra->cuadrillaId,
             cuadrillaNombre: $cuadrillas[$maniobra->cuadrillaId] ?? 'Desconocida',
@@ -140,22 +118,21 @@ class MockRegistroManiobraRepository implements RegistroManiobraRepositoryInterf
             corteId: null,
             origen: 'MANUAL',
             estado: 'En proceso',
-            documentoSap: $maniobra->documentoSap
+            documentoSap: (string)$maniobra->documentoSap
         );
 
         $data[$newId] = $newDto;
         $this->saveData($data);
 
-        return $newDto;
+        return 'Maniobra registrada correctamente.';
     }
 
-    public function cuadrillasPorAlmacen(int $almacenId): array
+    public function cuadrillasPorAlmacen(string $almacenId): array
     {
-        // Mock
-        if ($almacenId == 101) {
+        if ($almacenId == '101') {
             return [1 => 'Cuadrilla Alfa', 2 => 'Cuadrilla Beta'];
         }
-        if ($almacenId == 102) {
+        if ($almacenId == '102') {
             return [3 => 'Cuadrilla Sur'];
         }
         return [];

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Infrastructure\Repositories;
+namespace Tests\Mocks;
 
 use App\Domain\Corte\CorteCuadrillaDTO;
 use App\Domain\Corte\CorteDTO;
@@ -49,8 +49,6 @@ class MockCorteRepository implements CorteRepositoryInterface
 
     public function marcarConfirmado(int $corteId): void
     {
-        // En mock buscamos en todas las zonas para encontrar el corte por ID,
-        // o si es simple, solo iteramos las dos posibles zonas.
         $zonas = ['ZONA-NORTE', 'ZONA-SUR'];
         foreach ($zonas as $zona) {
             $corte = $this->getData($zona);

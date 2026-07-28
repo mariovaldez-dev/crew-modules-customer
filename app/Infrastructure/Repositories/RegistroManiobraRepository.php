@@ -9,12 +9,11 @@ use Illuminate\Support\Facades\DB;
 use Exception;
 use Illuminate\Support\Facades\Log;
 
-class SqlServerRegistroManiobraRepository implements RegistroManiobraRepositoryInterface
+class RegistroManiobraRepository implements RegistroManiobraRepositoryInterface
 {
     public function list(array $filtros, string $zonaUsuario, string $rolUsuario): array
     {
         try {
-            // El nuevo SP solo recibe la zona
             $claveZona = ($zonaUsuario === 'TODAS') ? '' : $zonaUsuario;
 
             DB::connection('localDB')->statement("SET ANSI_NULLS ON");
@@ -41,13 +40,12 @@ class SqlServerRegistroManiobraRepository implements RegistroManiobraRepositoryI
             if (!is_array($maniobrasJson)) {
                 return [];
             }
-            // Obtener el mapeo de nombres de almacén desde el repositorio genérico de sucursales
-            // Obtener el mapeo de nombres de almacén desde el repositorio genérico de sucursales
+
             $sucursalRepo = app(\App\Domain\Shared\Repositories\SucursalRepositoryInterface::class);
             $zonaFiltro = ($rolUsuario === 'AM') ? 'TODAS' : $zonaUsuario;
             $almacenesMap = $sucursalRepo->listaPuntosDeVentaPorZona($zonaFiltro);
 
-            Log::debug('[SqlServerRegistroManiobraRepository@list] Inicia mapeo', [
+            Log::debug('[RegistroManiobraRepository@list] Inicia mapeo', [
                 'total_json' => count($maniobrasJson),
                 'filtros' => $filtros,
                 'data' => $maniobrasJson
@@ -55,22 +53,17 @@ class SqlServerRegistroManiobraRepository implements RegistroManiobraRepositoryI
 
             $maniobras = [];
             foreach ($maniobrasJson as $item) {
-                // Como el SP aún no devuelve fecha, origen o folio, usamos defaults o verificamos si existen.
                 $fechaStr = $item['fecha'] ?? $item['fec_registro'] ?? date('Y-m-d');
                 $fecha = new \DateTimeImmutable($fechaStr);
                 
                 $almacenId = $item['idPuntoVenta'] ?? '';
 
-                // Ya no filtramos por fecha aquí porque el SP ya lo hizo
-                
-                // Filtrar por almacén
                 if (!empty($filtros['almacenId'])) {
                     if ((string)$almacenId !== (string)$filtros['almacenId']) {
                         continue;
                     }
                 }
 
-                // Filtrar por búsqueda
                 if (!empty($filtros['search'])) {
                     $search = mb_strtolower(trim($filtros['search']));
                     $match = false;
@@ -82,7 +75,7 @@ class SqlServerRegistroManiobraRepository implements RegistroManiobraRepositoryI
                     if (!$match) continue;
                 }
 
-                $estadoId = (int) ($item['estatus'] ?? 1); // 1 = activa
+                $estadoId = (int) ($item['estatus'] ?? 1);
                 $corteId = isset($item['idCorte']) ? (int) $item['idCorte'] : null;
 
                 $dto = new RegistroManiobraDTO(
@@ -98,11 +91,10 @@ class SqlServerRegistroManiobraRepository implements RegistroManiobraRepositoryI
                     toneladas: (float) ($item['numeroToneladas'] ?? 0),
                     corteId: $corteId,
                     origen: $item['origen'] ?? 'APP',
-                    estado: 'En proceso', // El UseCase lo calculará en base a corteId
+                    estado: 'En proceso',
                     documentoSap: $item['numeroDocumentoSAP'] ?? null
                 );
 
-                // Filtrar por estado dinámico (calculado)
                 if (!empty($filtros['estado'])) {
                     $estadoCalculado = $corteId ? 'Liquidada' : 'En proceso';
                     if (mb_strtolower($estadoCalculado) !== mb_strtolower($filtros['estado'])) {
@@ -113,13 +105,13 @@ class SqlServerRegistroManiobraRepository implements RegistroManiobraRepositoryI
                 $maniobras[] = $dto;
             }
             
-            Log::debug('[SqlServerRegistroManiobraRepository@list] Fin mapeo', [
+            Log::debug('[RegistroManiobraRepository@list] Fin mapeo', [
                 'total_maniobras_filtradas' => count($maniobras)
             ]);
 
             return $maniobras;
         } catch (Exception $e) {
-            Log::error('Error en SqlServerRegistroManiobraRepository@list', ['error' => $e->getMessage()]);
+            Log::error('Error en RegistroManiobraRepository@list', ['error' => $e->getMessage()]);
             return [];
         }
     }
@@ -142,7 +134,7 @@ class SqlServerRegistroManiobraRepository implements RegistroManiobraRepositoryI
                     $maniobra->tipoManiobraId,
                     $maniobra->almacenId,
                     $maniobra->cuadrillaId,
-                    0, // serieDocumento por defecto
+                    0,
                     (int) $maniobra->documentoSap,
                     $maniobra->toneladas,
                     (int) $usuarioId
@@ -160,7 +152,7 @@ class SqlServerRegistroManiobraRepository implements RegistroManiobraRepositoryI
 
             return $row->mensaje ?? 'Maniobra registrada correctamente.';
         } catch (Exception $e) {
-            Log::error('Error en SqlServerRegistroManiobraRepository@create', ['error' => $e->getMessage()]);
+            Log::error('Error en RegistroManiobraRepository@create', ['error' => $e->getMessage()]);
             throw new Exception($e->getMessage());
         }
     }
@@ -203,7 +195,7 @@ class SqlServerRegistroManiobraRepository implements RegistroManiobraRepositoryI
             }
             return $cuadrillas;
         } catch (\Throwable $e) {
-            Log::error('Error en SqlServerRegistroManiobraRepository@cuadrillasPorAlmacen', ['error' => $e->getMessage()]);
+            Log::error('Error en RegistroManiobraRepository@cuadrillasPorAlmacen', ['error' => $e->getMessage()]);
             return [];
         }
     }
@@ -245,10 +237,8 @@ class SqlServerRegistroManiobraRepository implements RegistroManiobraRepositoryI
             }
             return $tipos;
         } catch (\Throwable $e) {
-            Log::error('Error en SqlServerRegistroManiobraRepository@tiposManiobra', ['error' => $e->getMessage()]);
+            Log::error('Error en RegistroManiobraRepository@tiposManiobra', ['error' => $e->getMessage()]);
             return [];
         }
     }
-
-
 }

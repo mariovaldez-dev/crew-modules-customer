@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\DB;
 use Exception;
 use Illuminate\Support\Facades\Log;
 
-class SqlServerManiobraRepository implements ManiobraRepositoryInterface
+class ManiobraRepository implements ManiobraRepositoryInterface
 {
     /**
      * @return ManiobraDTO[]
@@ -16,7 +16,6 @@ class SqlServerManiobraRepository implements ManiobraRepositoryInterface
     public function list(?string $search = null): array
     {
         try {
-            // El SP no acepta parámetros; el filtro de búsqueda se aplica en PHP
             $results = DB::connection('localDB')->select(
                 "EXEC proc_consultar_tipos_maniobras"
             );
@@ -27,7 +26,6 @@ class SqlServerManiobraRepository implements ManiobraRepositoryInterface
 
             $row = $results[0];
             if ((int) $row->estado !== 0) {
-                // -100 = sin registros, cualquier otro valor = error
                 return [];
             }
 
@@ -42,10 +40,9 @@ class SqlServerManiobraRepository implements ManiobraRepositoryInterface
                     id:          (int) $item['idTipoManiobra'],
                     nombre:      $item['nombreTipoManiobra'],
                     descripcion: $item['descripcionTipoManiobra'] ?? null,
-                    estatus:     $item['estatus']  // "Activo" | "inactivo" tal como devuelve el SP
+                    estatus:     $item['estatus']
                 );
 
-                // Filtro de búsqueda en memoria (nombre o descripción)
                 if ($search !== null && $search !== '') {
                     if (stripos($dto->nombre, $search) === false &&
                         stripos($dto->descripcion ?? '', $search) === false
@@ -59,7 +56,7 @@ class SqlServerManiobraRepository implements ManiobraRepositoryInterface
 
             return $maniobras;
         } catch (Exception $e) {
-            Log::error('Error en SqlServerManiobraRepository@list', ['error' => $e->getMessage()]);
+            Log::error('Error en ManiobraRepository@list', ['error' => $e->getMessage()]);
             return [];
         }
     }
@@ -91,21 +88,16 @@ class SqlServerManiobraRepository implements ManiobraRepositoryInterface
                 throw new Exception($row->mensaje);
             }
 
-            // El SP no devuelve el ID generado; lo recuperamos por nombre
-            $nuevo = DB::connection('localDB')->selectOne(
-                "SELECT TOP 1 idu_tipomaniobra FROM cat_pdm_tipos_maniobras
-                  WHERE nom_maniobra = ? ORDER BY idu_tipomaniobra DESC",
-                [$maniobra->nombre]
-            );
+            $idGenerado = isset($row->idTipoManiobra) ? (int) $row->idTipoManiobra : (isset($row->id) ? (int) $row->id : null);
 
             return new ManiobraDTO(
-                id:          $nuevo ? (int) $nuevo->idu_tipomaniobra : null,
+                id:          $idGenerado,
                 nombre:      $maniobra->nombre,
                 descripcion: $maniobra->descripcion,
                 estatus:     'Activo'
             );
         } catch (Exception $e) {
-            Log::error('Error en SqlServerManiobraRepository@create', ['error' => $e->getMessage()]);
+            Log::error('Error en ManiobraRepository@create', ['error' => $e->getMessage()]);
             throw new Exception('Error al crear la maniobra: ' . $e->getMessage());
         }
     }
@@ -115,7 +107,6 @@ class SqlServerManiobraRepository implements ManiobraRepositoryInterface
         try {
             $usuarioId = (int) (auth()->user()?->id ?? 0);
 
-            // El SP recibe @Estatus como BIT: 1 = Activo, 0 = Inactivo
             $estatusBit = $this->estatusToBit($maniobra->estatus);
 
             $results = DB::connection('localDB')->select(
@@ -144,7 +135,6 @@ class SqlServerManiobraRepository implements ManiobraRepositoryInterface
                 throw new Exception($row->mensaje);
             }
 
-            // El SP no devuelve el registro; reconstruimos el DTO con los datos enviados
             return new ManiobraDTO(
                 id:          $id,
                 nombre:      $maniobra->nombre,
@@ -152,15 +142,11 @@ class SqlServerManiobraRepository implements ManiobraRepositoryInterface
                 estatus:     $maniobra->estatus
             );
         } catch (Exception $e) {
-            Log::error('Error en SqlServerManiobraRepository@update', ['error' => $e->getMessage()]);
+            Log::error('Error en ManiobraRepository@update', ['error' => $e->getMessage()]);
             throw new Exception('Error al actualizar la maniobra: ' . $e->getMessage());
         }
     }
 
-    /**
-     * Convierte el estatus textual del dominio a BIT para el SP.
-     * 'Activo' → 1  |  cualquier otro valor → 0
-     */
     private function estatusToBit(string $estatus): int
     {
         return strtolower($estatus) === 'activo' ? 1 : 0;
@@ -169,19 +155,18 @@ class SqlServerManiobraRepository implements ManiobraRepositoryInterface
     public function existsByNombre(string $nombre, ?int $excludeId = null): bool
     {
         try {
-            $sql = "SELECT COUNT(*) as total FROM cat_pdm_tipos_maniobras WHERE LTRIM(RTRIM(UPPER(nom_maniobra))) = LTRIM(RTRIM(UPPER(?)))";
-            $params = [$nombre];
-
-            if ($excludeId !== null) {
-                $sql .= " AND idu_tipomaniobra <> ?";
-                $params[] = $excludeId;
+            $maniobras = $this->list($nombre);
+            foreach ($maniobras as $m) {
+                if ($excludeId !== null && $m->id === $excludeId) {
+                    continue;
+                }
+                if (strtolower(trim($m->nombre)) === strtolower(trim($nombre))) {
+                    return true;
+                }
             }
-
-            $result = DB::connection('localDB')->selectOne($sql, $params);
-            
-            return $result && $result->total > 0;
+            return false;
         } catch (Exception $e) {
-            Log::error('Error en SqlServerManiobraRepository@existsByNombre', ['error' => $e->getMessage()]);
+            Log::error('Error en ManiobraRepository@existsByNombre', ['error' => $e->getMessage()]);
             return false;
         }
     }

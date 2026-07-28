@@ -24,21 +24,16 @@ class LoginForm extends Component
     protected function rules(): array
     {
         return [
-            // RN-01: Obligatorio, alfanumérico (alpha_dash), máx 50
-            'username' => 'required|alpha_dash|max:50',
-            // RN-02: Obligatorio, alfanumérico (alpha_num), mín 8, máx 15
-            'password' => 'required|alpha_num|min:3|max:25',
+            'username' => 'required|string|max:100',
+            'password' => 'required|string|min:1|max:100',
         ];
     }
 
     protected array $messages = [
         'username.required' => 'El usuario es obligatorio.',
-        'username.alpha_dash' => 'El usuario solo puede contener letras, números, guiones y guiones bajos.',
-        'username.max' => 'El usuario no puede exceder los 50 caracteres.',
+        'username.max' => 'El usuario no puede exceder los 100 caracteres.',
         'password.required' => 'La contraseña es obligatoria.',
-        'password.alpha_num' => 'La contraseña solo puede contener letras y números.',
-        'password.min' => 'La contraseña debe tener al menos 3 caracteres.',
-        'password.max' => 'La contraseña no puede exceder los 25 caracteres.',
+        'password.max' => 'La contraseña no puede exceder los 100 caracteres.',
     ];
 
     /**
@@ -59,7 +54,20 @@ class LoginForm extends Component
         $this->resetErrorBag();
         $this->hasError = false;
 
-        $this->validate();
+        Log::info('[LoginForm] Intento de login iniciado', [
+            'username' => $this->username,
+            'ip' => request()->ip()
+        ]);
+
+        try {
+            $this->validate();
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            Log::warning('[LoginForm] Validación fallida en login', [
+                'errors' => $e->errors(),
+                'username' => $this->username
+            ]);
+            throw $e;
+        }
 
         try {
             $user = $useCase->execute(new AuthenticateUserDTO(
@@ -69,7 +77,16 @@ class LoginForm extends Component
                 platform: $this->getPlatform()
             ));
 
+            Log::info('[LoginForm] Resultado del UseCase execute', [
+                'user_retornado' => !is_null($user),
+                'user_id' => $user?->id,
+                'user_name' => $user?->name,
+                'user_rol' => $user?->rol,
+                'user_zona' => $user?->zona,
+            ]);
+
             if (! $user) {
+                Log::warning('[LoginForm] Usuario nulo o credenciales inválidas', ['username' => $this->username]);
                 $this->hasError = true;
                 $this->addError('auth_error', 'Usuario o contraseña incorrectos.');
 
@@ -77,7 +94,18 @@ class LoginForm extends Component
             }
 
             // Validación de Rol (RN: Administrador Maniobras o Coordinadora Almacén)
-            if (!in_array((string)$user->rol, ['AM', 'CO', '2'])) {
+            $rawRol = strtoupper(trim((string)$user->rol));
+            $isCoordinador = in_array($rawRol, ['CO', '2', 'COORDINADOR', 'COORDINADORA', 'ASESOR']);
+            $isAdmin = in_array($rawRol, ['AM', '1', 'ADMIN', 'ADMINISTRADOR', 'ADMINISTRADORA']);
+
+            Log::info('[LoginForm] Validación de rol', [
+                'rawRol' => $rawRol,
+                'isCoordinador' => $isCoordinador,
+                'isAdmin' => $isAdmin
+            ]);
+
+            if (!$isCoordinador && !$isAdmin) {
+                Log::warning('[LoginForm] Rol sin privilegios', ['rawRol' => $rawRol]);
                 $this->hasError = true;
                 $this->addError('auth_error', 'No cuentas con los privilegios para acceder a esta plataforma, contacta al administrador.');
                 return;
@@ -96,22 +124,14 @@ class LoginForm extends Component
             session()->put('authenticated_user', $authenticatedUser);
 
             // Resolver y guardar el UsuarioContexto (RQM-06)
-            $sucursalRepository = app(\App\Domain\Shared\Repositories\SucursalRepositoryInterface::class);
-            $tipo = in_array((string)$user->rol, ['CO', '2']) ? 'CO' : 'AM';
-            $pvs = [];
-            $zona = 'TODAS';
-            $status = $user->activo ? $sucursalRepository->obtenerStatusUsuario($user->id) : 'I';
-
-            if ($tipo === 'CO') {
-                $pvs = $sucursalRepository->obtenerPuntosDeVentaDeUsuario($user->id);
-                // TODO: resolver zona real desde SP cuando esté validado
-                $zona = 'FA';
-            }
+            $tipo = $isCoordinador ? 'CO' : 'AM';
+            $zona = !empty($user->zona) ? $user->zona : ($tipo === 'AM' ? 'TODAS' : 'FA');
+            $status = $user->activo ? 'A' : 'I';
 
             $usuarioContexto = new \App\Domain\Shared\UsuarioContexto(
                 zona: $zona,
                 tipo: $tipo,
-                puntosDeVenta: $pvs,
+                puntosDeVenta: [],
                 status: $status
             );
             session()->put('usuario_contexto', $usuarioContexto);
@@ -122,11 +142,16 @@ class LoginForm extends Component
                 session()->regenerate();
             }
 
+            Log::info('[LoginForm] Login exitoso, redirigiendo a dashboard', ['user_id' => $user->id]);
+
             return redirect()->route('dashboard');
 
         } catch (\Exception $e) {
             $this->hasError = true;
-            Log::error('Excepción en login UI', ['msg' => $e->getMessage()]);
+            Log::error('[LoginForm] Excepción en login UI', [
+                'msg' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
             $this->addError('auth_error', 'Ocurrió un error al procesar el acceso.');
         }
     }

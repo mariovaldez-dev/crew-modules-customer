@@ -2,14 +2,14 @@
 
 namespace App\Domain\Corte;
 
-class RegenerarCorteUseCase
+class ListarCortesUseCase
 {
     public function __construct(private CorteRepositoryInterface $repository)
     {
     }
 
-    public function execute(int $corteId, string $zona): void
+    public function execute(string $zona): array
     {
-        $this->repository->regenerar($corteId);
+        return $this->repository->listarCortes($zona);
     }
 }

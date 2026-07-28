@@ -4,13 +4,12 @@ namespace App\Domain\Corte;
 
 interface CorteRepositoryInterface
 {
-    public function findByZona(string $zona): ?CorteDTO;
-    
-    public function crear(string $fechaInicio, string $fechaFin, string $zona, array $cuadrillas): CorteDTO;
-    
-    public function marcarConfirmado(int $corteId): void;
-
-    public function marcarCuadrillaConfirmada(int $corteId, int $cuadrillaId): void;
-
-    public function regenerar(int $corteId, array $nuevasCuadrillas): CorteDTO;
+    public function generar(string $zona, string $fechaInicio, string $fechaFin): array;
+    public function consultar(string $zona): ?array;
+    public function confirmarCuadrilla(int $corteId, int $cuadrillaId): array;
+    public function confirmarGeneral(int $corteId): array;
+    public function regenerar(int $corteId): array;
+    public function obtenerUltimaFechaFinConfirmada(string $zona): ?string;
+    public function listarCortes(string $zona): array;
+    public function consultarCortePorId(int $corteId): array;
 }

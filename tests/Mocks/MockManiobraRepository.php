@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Infrastructure\Repositories;
+namespace Tests\Mocks;
 
 use App\Domain\Maniobra\ManiobraDTO;
 use App\Domain\Maniobra\ManiobraRepositoryInterface;

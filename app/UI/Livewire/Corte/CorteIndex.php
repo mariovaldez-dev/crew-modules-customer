@@ -2,7 +2,7 @@
 
 namespace App\UI\Livewire\Corte;
 
-use App\Domain\Corte\CorteRepositoryInterface;
+use App\Domain\Corte\ConsultarCorteUseCase;
 use App\Domain\Corte\ConfirmarCorteCuadrillaUseCase;
 use App\Domain\Corte\ConfirmarCorteGeneralUseCase;
 use App\Domain\Corte\GenerarCorteUseCase;
@@ -19,108 +19,75 @@ class CorteIndex extends Component
 
     public string $fechaInicio = '';
     public string $fechaFin = '';
+    public array $cortes = [];
+    public bool $cargando = true;
+    public bool $isPrimerCorte = true;
+    public bool $mostrandoFormularioNuevo = false;
 
-    protected $listeners = ['corte-actualizado' => '$refresh', 'resumen-confirmado' => 'confirmarCuadrillaEvent'];
-
-    public function mount(CorteRepositoryInterface $repository)
+    public function mount(\App\Domain\Corte\ObtenerUltimaFechaFinCorteUseCase $ultimaFechaUseCase)
     {
         $context = session()->get('usuario_contexto');
         if (!$context || $context->tipo !== 'CO') {
             abort(403, 'No tienes permisos para acceder a esta sección.');
         }
 
-        $this->fechaInicio = date('Y-m-d', strtotime('-15 days'));
-        $this->fechaFin = date('Y-m-d');
-    }
-
-    public function getCorteProperty()
-    {
-        return app(CorteRepositoryInterface::class)->findByZona($this->zonaUsuario);
-    }
-
-    public function getTodasConfirmadasProperty(): bool
-    {
-        $corte = $this->corte;
-        if (!$corte) return false;
-
-        foreach ($corte->cuadrillas as $cuadrilla) {
-            if (!$cuadrilla->confirmada) return false;
+        $ultimaFecha = $ultimaFechaUseCase->execute($this->zonaUsuario);
+        
+        if ($ultimaFecha) {
+            $this->isPrimerCorte = false;
+            $this->fechaInicio = explode(' ', $ultimaFecha)[0];
+            $this->fechaFin = date('Y-m-d');
+        } else {
+            $this->isPrimerCorte = true;
+            $this->fechaInicio = date('Y-m-d');
+            $this->fechaFin = date('Y-m-d');
         }
-
-        return count($corte->cuadrillas) > 0;
     }
 
-    public function generar(GenerarCorteUseCase $useCase)
+    public function loadData(\App\Domain\Corte\ListarCortesUseCase $useCase)
     {
+        $this->cargando = true;
+        try {
+            $this->cortes = $useCase->execute($this->zonaUsuario);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error("Error listando cortes: " . $e->getMessage());
+            $this->dispatch('notify', ['message' => 'Error al cargar cortes.', 'type' => 'error']);
+        }
+        $this->cargando = false;
+    }
+
+    public function generarCorte(GenerarCorteUseCase $useCase, \App\Domain\Corte\ListarCortesUseCase $listarUseCase)
+    {
+        $this->validate([
+            'fechaInicio' => 'required|date',
+            'fechaFin' => 'required|date|after_or_equal:fechaInicio'
+        ], [
+            'fechaInicio.required' => 'La fecha de inicio es requerida',
+            'fechaFin.required' => 'La fecha final es requerida',
+            'fechaFin.after_or_equal' => 'La fecha fin no puede ser menor a la fecha inicio'
+        ]);
+
         try {
             $useCase->execute($this->fechaInicio, $this->fechaFin, $this->zonaUsuario);
+            
             $this->dispatch('notify', ['message' => 'Corte generado exitosamente', 'type' => 'success']);
-        } catch (Exception $e) {
+            $this->mostrandoFormularioNuevo = false;
+            $this->loadData($listarUseCase);
+            $this->dispatch('close-modal', 'nuevo-corte-modal');
+        } catch (\Exception $e) {
             $this->dispatch('notify', ['message' => $e->getMessage(), 'type' => 'error']);
         }
     }
 
-    public function regenerar(RegenerarCorteUseCase $useCase)
+    public function prepararNuevoCorte()
     {
-        try {
-            if ($this->corte) {
-                $useCase->execute($this->corte->id, $this->zonaUsuario);
-                $this->dispatch('notify', ['message' => 'Corte regenerado', 'type' => 'success']);
-            }
-        } catch (Exception $e) {
-            $this->dispatch('notify', ['message' => $e->getMessage(), 'type' => 'error']);
-        }
-    }
-
-    public function confirmarCorteGeneral(ConfirmarCorteGeneralUseCase $useCase)
-    {
-        try {
-            if ($this->corte) {
-                $useCase->execute($this->corte->id, $this->zonaUsuario);
-                $this->dispatch('notify', ['message' => 'Corte confirmado y maniobras liquidadas', 'type' => 'success']);
-            }
-        } catch (Exception $e) {
-            $this->dispatch('notify', ['message' => $e->getMessage(), 'type' => 'error']);
-        }
-    }
-
-    public function imprimirPdf(GenerarPdfCorteUseCase $useCase)
-    {
-        try {
-            if ($this->corte) {
-                // Return immediate download response from Livewire (since Livewire v3 handles binary downloads directly)
-                return response()->streamDownload(
-                    function () use ($useCase) {
-                        echo $useCase->execute($this->corte->id, $this->zonaUsuario);
-                    },
-                    "Corte_{$this->corte->folio}.pdf"
-                );
-            }
-        } catch (Exception $e) {
-            $this->dispatch('notify', ['message' => $e->getMessage(), 'type' => 'error']);
-        }
-    }
-
-    public function openResumen($cuadrillaId)
-    {
-        if ($this->corte) {
-            $this->dispatch('open-resumen-modal', corteId: $this->corte->id, cuadrillaId: $cuadrillaId);
-        }
-    }
-
-    public function confirmarCuadrillaEvent($corteId, $cuadrillaId)
-    {
-        try {
-            app(ConfirmarCorteCuadrillaUseCase::class)->execute($corteId, $cuadrillaId, $this->zonaUsuario);
-            $this->dispatch('notify', ['message' => 'Cuadrilla confirmada', 'type' => 'success']);
-        } catch (Exception $e) {
-            $this->dispatch('notify', ['message' => $e->getMessage(), 'type' => 'error']);
-        }
+        $this->mostrandoFormularioNuevo = true;
+        $this->dispatch('open-modal', 'nuevo-corte-modal');
     }
 
     public function render()
     {
-        session()->save(); // Libera el bloqueo de sesión
-        return view('livewire.corte.corte-index')->layout('layouts.app', ['title' => 'Corte de Liquidación']);
+        session()->save(); 
+        return view('livewire.corte.corte-index')->layout('layouts.app', ['title' => 'Cortes de Liquidación']);
     }
 }

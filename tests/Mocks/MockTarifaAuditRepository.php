@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Infrastructure\Repositories;
+namespace Tests\Mocks;
 
 use App\Domain\Cuadrilla\TarifaAuditRepositoryInterface;
 use App\Domain\Cuadrilla\TarifaCambioDTO;

@@ -15,6 +15,7 @@
     placement: 'bottom',
     selected: @if($hasWireModel) @entangle($attributes->wire('model')){{ $wireModel->hasModifier('live') ? '.live' : '' }} @else '' @endif,
     options: {{ json_encode($formattedOptions) }},
+    disabled: {{ $disabled ? 'true' : 'false' }},
     toggle() {
         if (this.disabled) return;
         if (!this.open) {

@@ -7,53 +7,35 @@ use Barryvdh\DomPDF\Facade\Pdf;
 
 class GenerarPdfCorteUseCase
 {
-    public function __construct(
-        private readonly CorteRepositoryInterface $repository,
-        private readonly ObtenerResumenManiobrasUseCase $obtenerResumenUseCase
-    ) {}
-
-    public function execute(int $corteId, string $zonaUsuario)
+    public function __construct(private ConsultarCorteUseCase $consultarUseCase)
     {
-        $corte = $this->repository->findByZona($zonaUsuario);
+    }
 
-        if (!$corte || $corte->id !== $corteId) {
-            throw new Exception("Corte no encontrado o no pertenece a esta zona.");
+    public function execute(int $corteId): string
+    {
+        $corte = $this->consultarUseCase->execute($corteId);
+
+        if (!$corte) {
+            throw new \Exception("No se encontró información para generar el reporte");
         }
 
-        if ($corte->estado !== 'confirmado') {
-            throw new Exception("Solo se pueden imprimir cortes confirmados.");
+        if ($corte['estado'] !== 'Confirmado') {
+            throw new Exception('Solo se pueden exportar cortes que ya están confirmados.');
         }
 
-        // Agrupar por PV
-        $puntosDeVenta = [];
-        
-        foreach ($corte->cuadrillas as $cuadrilla) {
-            // Requerimiento: Solo se imprimen cuadrillas confirmadas (aunque si el corte está confirmado, todas deben estarlo).
-            if (!$cuadrilla->confirmada) continue;
+        $context = session()->get('usuario_contexto');
+        $zona = ($context instanceof \App\Domain\Shared\UsuarioContexto) ? $context->zona : 'FA';
 
-            $pvNombre = $cuadrilla->puntoVentaNombre;
-            if (!isset($puntosDeVenta[$pvNombre])) {
-                $puntosDeVenta[$pvNombre] = [
-                    'nombre' => $pvNombre,
-                    'cuadrillas' => []
-                ];
-            }
-
-            // Obtener el detalle (resumen) real
-            $detalle = $this->obtenerResumenUseCase->execute($corteId, $cuadrilla->cuadrillaId);
-
-            $puntosDeVenta[$pvNombre]['cuadrillas'][] = [
-                'cuadrilla' => $cuadrilla,
-                'detalle' => $detalle
-            ];
-        }
-
-        $pdf = Pdf::loadView('pdf.corte', [
+        // Cargar la vista Blade de dompdf con los datos del corte
+        $pdf = Pdf::loadView('pdf.corte-liquidacion', [
             'corte' => $corte,
-            'puntosDeVenta' => $puntosDeVenta,
-            'zona' => $zonaUsuario
+            'zona' => $zona
         ]);
 
+        // Ajustar el papel (Carta, vertical)
+        $pdf->setPaper('letter', 'portrait');
+
+        // Retornar el binario crudo del PDF
         return $pdf->output();
     }
 }

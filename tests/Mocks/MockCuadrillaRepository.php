@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Infrastructure\Repositories;
+namespace Tests\Mocks;
 
 use App\Domain\Cuadrilla\CuadrillaDTO;
 use App\Domain\Cuadrilla\CuadrillaRepositoryInterface;
@@ -111,13 +111,11 @@ class MockCuadrillaRepository implements CuadrillaRepositoryInterface
 
     public function hasLiquidacionesEnProceso(int $cuadrillaId): bool
     {
-        // Mock logic: let's pretend Cuadrilla ID 1 has liquidations in process
         return $cuadrillaId === 1;
     }
 
     public function hasManiobrasEnProceso(int $cuadrillaId): bool
     {
-        // Mock logic: pretend Cuadrilla ID 2 has maneuvers in process
         return $cuadrillaId === 2;
     }
 

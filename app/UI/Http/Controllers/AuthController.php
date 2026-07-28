@@ -71,23 +71,14 @@ class AuthController extends Controller
             session(['authenticated_user' => $authUser]);
 
             // Resolver y guardar el UsuarioContexto (RQM-06)
-            $sucursalRepository = app(\App\Domain\Shared\Repositories\SucursalRepositoryInterface::class);
             $tipo = in_array((string)$agente->U_Tipo_Agente, ['CO', '2']) ? 'CO' : 'AM';
-            $pvs = [];
-            $zona = 'TODAS';
-            $status = $sucursalRepository->obtenerStatusUsuario($idAgente);
-
-            if ($tipo === 'CO') {
-                $pvs = $sucursalRepository->obtenerPuntosDeVentaDeUsuario($idAgente);
-                // TODO: resolver zona real desde SP cuando esté validado
-                $zona = 'FA';
-            }
+            $zona = ($tipo === 'CO') ? 'FA' : 'TODAS';
 
             $usuarioContexto = new \App\Domain\Shared\UsuarioContexto(
                 zona: $zona,
                 tipo: $tipo,
-                puntosDeVenta: $pvs,
-                status: $status
+                puntosDeVenta: [],
+                status: 'A'
             );
             session(['usuario_contexto' => $usuarioContexto]);
             

@@ -5,30 +5,14 @@ namespace App\Domain\Shared\Repositories;
 interface SucursalRepositoryInterface
 {
     /**
-     * Obtiene la zona asociada a un almacén/punto de venta (OWHS).
-     */
-    public function zonaDe(int $ownsId): ?string;
-
-    /**
-     * Obtiene los puntos de venta asignados a un usuario.
-     * @return int[]
-     */
-    public function obtenerPuntosDeVentaDeUsuario(int $usuarioId): array;
-
-    /**
-     * Obtiene el estatus del usuario desde SAP B1.
-     */
-    public function obtenerStatusUsuario(int $usuarioId): string;
-
-    /**
-     * Lista los puntos de venta activos de una zona (U_SerieSucursal).
+     * Lista los puntos de venta activos de una zona (vía SP proc_pdm_cosultar_combos 1).
      * Devuelve un array asociativo [WhsCode => WhsName] para poblar combos.
      */
     public function listaPuntosDeVentaPorZona(string $zona): array;
 
     /**
-     * Lista los líderes de cuadrillas (filtrado opcional por zona).
-     * Devuelve un array asociativo [codigo => nombre] para poblar combos.
+     * Lista los líderes de cuadrillas por zona (vía SP proc_pdm_cosultar_combos 4).
+     * Devuelve un array asociativo [nombre => nombre] para poblar combos.
      */
     public function listaLideresPorZona(string $zona): array;
 }

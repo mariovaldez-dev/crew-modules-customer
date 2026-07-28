@@ -3,22 +3,27 @@
 namespace App\Infrastructure\Providers;
 
 use App\Domain\Auth\Repositories\IAuthRepository;
-use App\Infrastructure\Auth\AuthRepository;
-
-use App\Domain\Shared\Repositories\ICommonRepository;
-use App\Infrastructure\Persistence\CommonRepository;
-use App\Domain\Maniobra\ManiobraRepositoryInterface;
-use App\Infrastructure\Repositories\MockManiobraRepository;
-use App\Domain\Cuadrilla\CuadrillaRepositoryInterface;
-use App\Infrastructure\Repositories\MockCuadrillaRepository;
-use App\Domain\Cuadrilla\TarifaAuditRepositoryInterface;
-use App\Infrastructure\Repositories\MockTarifaAuditRepository;
-use App\Domain\RegistroManiobra\RegistroManiobraRepositoryInterface;
-use App\Infrastructure\Repositories\MockRegistroManiobraRepository;
 use App\Domain\Corte\CorteRepositoryInterface;
-use App\Infrastructure\Repositories\MockCorteRepository;
+use App\Domain\Cuadrilla\CuadrillaRepositoryInterface;
+use App\Domain\Cuadrilla\TarifaAuditRepositoryInterface;
+use App\Domain\Dashboard\DashboardRepositoryInterface;
+use App\Domain\Maniobra\ManiobraRepositoryInterface;
+use App\Domain\RegistroManiobra\RegistroManiobraRepositoryInterface;
+use App\Domain\Shared\Repositories\ICommonRepository;
 use App\Domain\Shared\Repositories\SucursalRepositoryInterface;
-use App\Infrastructure\Repositories\SqlServerSucursalRepository;
+use App\Domain\Tarifa\TarifaRepositoryInterface;
+
+use App\Infrastructure\Auth\AuthRepository;
+use App\Infrastructure\Persistence\CommonRepository;
+use App\Infrastructure\Repositories\CorteRepository;
+use App\Infrastructure\Repositories\CuadrillaRepository;
+use App\Infrastructure\Repositories\DashboardRepository;
+use App\Infrastructure\Repositories\ManiobraRepository;
+use App\Infrastructure\Repositories\RegistroManiobraRepository;
+use App\Infrastructure\Repositories\SucursalRepository;
+use App\Infrastructure\Repositories\TarifaAuditRepository;
+use App\Infrastructure\Repositories\TarifaRepository;
+
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -26,16 +31,16 @@ class AppServiceProvider extends ServiceProvider
     public function register()
     {
         $this->app->bind(IAuthRepository::class, AuthRepository::class);
-
         $this->app->bind(ICommonRepository::class, CommonRepository::class);
-        $this->app->singleton(ManiobraRepositoryInterface::class, \App\Infrastructure\Repositories\SqlServerManiobraRepository::class);
-        $this->app->singleton(CuadrillaRepositoryInterface::class, \App\Infrastructure\Repositories\SqlServerCuadrillaRepository::class);
-        $this->app->singleton(TarifaAuditRepositoryInterface::class, MockTarifaAuditRepository::class);
-        $this->app->singleton(RegistroManiobraRepositoryInterface::class, \App\Infrastructure\Repositories\SqlServerRegistroManiobraRepository::class);
-        $this->app->singleton(CorteRepositoryInterface::class, MockCorteRepository::class);
-        $this->app->singleton(SucursalRepositoryInterface::class, SqlServerSucursalRepository::class);
-        $this->app->singleton(\App\Domain\Tarifa\TarifaRepositoryInterface::class, \App\Infrastructure\Repositories\SqlServerTarifaRepository::class);
-        $this->app->singleton(\App\Domain\Dashboard\DashboardRepositoryInterface::class, \App\Infrastructure\Repositories\SqlServerDashboardRepository::class);
+
+        $this->app->singleton(ManiobraRepositoryInterface::class, ManiobraRepository::class);
+        $this->app->singleton(CuadrillaRepositoryInterface::class, CuadrillaRepository::class);
+        $this->app->singleton(TarifaAuditRepositoryInterface::class, TarifaAuditRepository::class);
+        $this->app->singleton(RegistroManiobraRepositoryInterface::class, RegistroManiobraRepository::class);
+        $this->app->singleton(CorteRepositoryInterface::class, CorteRepository::class);
+        $this->app->singleton(SucursalRepositoryInterface::class, SucursalRepository::class);
+        $this->app->singleton(TarifaRepositoryInterface::class, TarifaRepository::class);
+        $this->app->singleton(DashboardRepositoryInterface::class, DashboardRepository::class);
     }
 
     public function boot()

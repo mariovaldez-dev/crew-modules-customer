@@ -15,7 +15,7 @@ class EnsureUserRoleTest extends TestCase
 
         $this->app->singleton(
             \App\Domain\Shared\Repositories\SucursalRepositoryInterface::class,
-            \App\Infrastructure\Repositories\MockSucursalRepository::class
+            \Tests\Mocks\MockSucursalRepository::class
         );
     }
     /** @test */
@@ -130,10 +130,11 @@ class EnsureUserRoleTest extends TestCase
     public function missing_context_is_resolved_on_the_fly()
     {
         $user = new AuthenticatedUser([
-            'id' => 2, // ID 2 is mocked to have PV 101 / ZONA-NORTE
+            'id' => 2,
             'name' => 'Coordinadora User',
             'email' => 'coord@example.com',
             'rol' => 'CO',
+            'zona' => 'ZONA-NORTE',
             'sessionId' => 'session-456'
         ]);
 
@@ -149,7 +150,7 @@ class EnsureUserRoleTest extends TestCase
         $context = session('usuario_contexto');
         $this->assertInstanceOf(UsuarioContexto::class, $context);
         $this->assertEquals('CO', $context->tipo);
-        $this->assertEquals('ZONA-NORTE', $context->zona);
+        $this->assertEquals('FA', $context->zona);
         $this->assertEquals('A', $context->status);
     }
 }

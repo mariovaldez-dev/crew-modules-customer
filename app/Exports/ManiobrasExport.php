@@ -22,20 +22,46 @@ class ManiobrasExport implements FromArray, WithHeadings, WithMapping, ShouldAut
     }
 
     /**
-     * @param RegistroManiobraDTO $maniobra
+     * @param RegistroManiobraDTO|array $maniobra
      */
     public function map($maniobra): array
     {
+        $isObj = is_object($maniobra);
+
+        $folio = $isObj ? $maniobra->folio : ($maniobra['folio'] ?? '');
+        
+        $rawFecha = $isObj ? $maniobra->fecha : ($maniobra['fecha'] ?? null);
+        if ($rawFecha instanceof \DateTimeInterface) {
+            $fecha = $rawFecha->format('d-m-Y');
+        } elseif (is_string($rawFecha) && !empty($rawFecha)) {
+            $fecha = (new \DateTimeImmutable($rawFecha))->format('d-m-Y');
+        } else {
+            $fecha = '';
+        }
+
+        $tipo = $isObj ? $maniobra->tipoManiobraNombre : ($maniobra['tipoManiobraNombre'] ?? '');
+        $almacen = $isObj ? $maniobra->almacenNombre : ($maniobra['almacenNombre'] ?? '');
+        $cuadrilla = $isObj ? $maniobra->cuadrillaNombre : ($maniobra['cuadrillaNombre'] ?? '');
+        
+        $rawTons = $isObj ? $maniobra->toneladas : ($maniobra['toneladas'] ?? 0);
+        $toneladas = rtrim(rtrim(number_format((float)$rawTons, 3, '.', ''), '0'), '.');
+        
+        $docSap = $isObj ? ($maniobra->documentoSap ?? '') : ($maniobra['documentoSap'] ?? '');
+        $estado = $isObj ? $maniobra->estado : ($maniobra['estado'] ?? '');
+        
+        $corteId = $isObj ? $maniobra->corteId : ($maniobra['corteId'] ?? null);
+        $corte = $corteId ? 'LIQ-' . str_pad((string)$corteId, 4, '0', STR_PAD_LEFT) : '';
+
         return [
-            $maniobra->folio,
-            $maniobra->fecha->format('Y-m-d'),
-            $maniobra->almacenNombre,
-            $maniobra->cuadrillaNombre,
-            $maniobra->tipoManiobraNombre,
-            number_format($maniobra->toneladas, 3, '.', ''),
-            $maniobra->estado,
-            $maniobra->origen,
-            $maniobra->corteId ?? 'N/A'
+            $folio,
+            $fecha,
+            $tipo,
+            $almacen,
+            $cuadrilla,
+            $toneladas,
+            $docSap,
+            $estado,
+            $corte,
         ];
     }
 
@@ -44,13 +70,13 @@ class ManiobrasExport implements FromArray, WithHeadings, WithMapping, ShouldAut
         return [
             'Folio',
             'Fecha',
-            'Almacén',
+            'Tipo',
+            'Almacen',
             'Cuadrilla',
-            'Tipo de Maniobra',
             'Toneladas',
-            'Estatus',
-            'Origen',
-            'Corte de Liq.'
+            'Doc SAP',
+            'Estado',
+            'Corte'
         ];
     }
 

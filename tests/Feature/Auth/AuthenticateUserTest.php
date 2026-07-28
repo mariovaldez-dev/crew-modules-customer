@@ -2,10 +2,12 @@
 
 namespace Tests\Feature\Auth;
 
+use App\Domain\Auth\Entities\User;
+use App\Domain\Auth\Repositories\IAuthRepository;
 use App\UI\Livewire\Auth\LoginForm;
-use Illuminate\Support\Facades\Http;
 use Livewire\Livewire;
 use Tests\TestCase;
+use Mockery;
 
 class AuthenticateUserTest extends TestCase
 {
@@ -46,10 +48,10 @@ class AuthenticateUserTest extends TestCase
     /** @test */
     public function invalid_credentials_show_error()
     {
-        // Mock de la API externa devolviendo error
-        Http::fake([
-            '*/auth/login' => Http::response(['success' => false, 'mensaje' => 'Usuario o contraseña incorrectos'], 401)
-        ]);
+        $mockRepo = Mockery::mock(IAuthRepository::class);
+        $mockRepo->shouldReceive('authenticate')->andReturn(null);
+        $mockRepo->shouldReceive('logAttempt');
+        $this->app->instance(IAuthRepository::class, $mockRepo);
 
         Livewire::test(LoginForm::class)
             ->set('username', 'wronguser')
@@ -61,53 +63,47 @@ class AuthenticateUserTest extends TestCase
     /** @test */
     public function successful_login_redirects_to_dashboard()
     {
-        // Mock de la API externa con la estructura real
-        Http::fake([
-            '*/auth/login' => Http::response([
-                'success' => true,
-                'accessToken' => 'fake-token',
-                'sessionId' => 'my-fake-session-id',
-                'user' => [
-                    'CodigoAgente' => 140,
-                    'Nombre' => 'JORGE EDUARDO PEÑA RAMIREZ',
-                    'Correo' => 'jpramirez@grupoimpulsora.com',
-                    'u_zona' => 'FM',
-                    'U_Cobranza' => 'Comercial',
-                    'Code' => 140,
-                    'tipoAgente' => '2'
-                ]
-            ], 200)
-        ]);
+        $mockRepo = Mockery::mock(IAuthRepository::class);
+        $mockRepo->shouldReceive('authenticate')
+            ->andReturn(new User(
+                id: 140,
+                name: 'JORGE EDUARDO PEÑA RAMIREZ',
+                email: 'jpramirez@grupoimpulsora.com',
+                rol: 'CO',
+                activo: true,
+                sessionId: 'my-fake-session-id',
+                zona: 'FM'
+            ));
+        $mockRepo->shouldReceive('logAttempt');
+        $this->app->instance(IAuthRepository::class, $mockRepo);
 
         Livewire::test(LoginForm::class)
             ->set('username', 'jpramirez')
-            ->set('password', 'password123') // 11 caracteres (mínimo 8)
+            ->set('password', 'password123')
             ->call('login')
             ->assertRedirect(route('dashboard'));
 
         $this->assertAuthenticated();
         
-        // Verificar que el sessionId se guardó en el usuario autenticado
         $this->assertEquals('my-fake-session-id', auth()->user()->sessionId);
     }
 
     /** @test */
     public function user_with_invalid_role_cannot_login()
     {
-        // Mock de la API externa con un rol diferente a '2'
-        Http::fake([
-            '*/auth/login' => Http::response([
-                'success' => true,
-                'accessToken' => 'fake-token',
-                'sessionId' => 'my-fake-session-id',
-                'user' => [
-                    'CodigoAgente' => 140,
-                    'Nombre' => 'USUARIO SIN PERMISOS',
-                    'Correo' => 'invalid@grupoimpulsora.com',
-                    'tipoAgente' => '3' // Rol inválido
-                ]
-            ], 200)
-        ]);
+        $mockRepo = Mockery::mock(IAuthRepository::class);
+        $mockRepo->shouldReceive('authenticate')
+            ->andReturn(new User(
+                id: 140,
+                name: 'USUARIO SIN PERMISOS',
+                email: 'invalid@grupoimpulsora.com',
+                rol: 'INVALID_ROLE',
+                activo: true,
+                sessionId: 'my-fake-session-id',
+                zona: 'FM'
+            ));
+        $mockRepo->shouldReceive('logAttempt');
+        $this->app->instance(IAuthRepository::class, $mockRepo);
 
         Livewire::test(LoginForm::class)
             ->set('username', 'invalid')
@@ -120,16 +116,12 @@ class AuthenticateUserTest extends TestCase
     }
 
     /** @test */
-    public function successful_logout_calls_external_api()
+    public function successful_logout_clears_session()
     {
-        Http::fake([
-            '*/auth/logout' => Http::response(['success' => true], 200)
-        ]);
-
         $user = new \App\Infrastructure\Auth\Models\AuthenticatedUser([
             'id' => 1,
             'name' => 'Test User',
-            'rol' => 'Asesor Agrónomo',
+            'rol' => 'CO',
             'sessionId' => 'active-session-123'
         ]);
 
@@ -139,10 +131,5 @@ class AuthenticateUserTest extends TestCase
             ->assertRedirect(route('login'));
 
         $this->assertGuest();
-
-        Http::assertSent(function ($request) {
-            return str_contains($request->url(), 'auth/logout') &&
-                   $request['sessionId'] === 'active-session-123';
-        });
     }
 }

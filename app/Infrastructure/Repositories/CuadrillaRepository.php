@@ -9,17 +9,12 @@ use Illuminate\Support\Facades\DB;
 use Exception;
 use Illuminate\Support\Facades\Log;
 
-class SqlServerCuadrillaRepository implements CuadrillaRepositoryInterface
+class CuadrillaRepository implements CuadrillaRepositoryInterface
 {
-    // -------------------------------------------------------------------------
-    // CONSULTAS
-    // -------------------------------------------------------------------------
-
     /** @return CuadrillaDTO[] */
     public function list(array $filtros, string $zonaUsuario): array
     {
         try {
-            // Si la zona es 'TODAS' (Administrador), enviamos vacío '' al SP
             $claveZona = ($zonaUsuario === 'TODAS') ? '' : $zonaUsuario;
 
             Log::debug('[CuadrillaRepo::list] INICIO', [
@@ -74,7 +69,6 @@ class SqlServerCuadrillaRepository implements CuadrillaRepositoryInterface
                 return [];
             }
 
-            // El SP filtra por zona; filtros adicionales (search, puntoVenta) se aplican en PHP
             $search   = trim($filtros['search']       ?? '');
             $pvFiltro = trim($filtros['puntoVentaId'] ?? '');
 
@@ -114,13 +108,11 @@ class SqlServerCuadrillaRepository implements CuadrillaRepositoryInterface
         }
     }
 
-
     public function findById(int $id): ?CuadrillaDTO
     {
         try {
             Log::debug('[CuadrillaRepo::findById] INICIO', ['id_buscado' => $id]);
 
-            // Determinar la clave de zona basada en el contexto del usuario logueado
             $context = session()->get('usuario_contexto');
             $claveZona = '';
             if ($context instanceof \App\Domain\Shared\UsuarioContexto && $context->tipo !== 'AM') {
@@ -132,7 +124,6 @@ class SqlServerCuadrillaRepository implements CuadrillaRepositoryInterface
             DB::connection('localDB')->statement("SET ANSI_NULLS ON");
             DB::connection('localDB')->statement("SET ANSI_WARNINGS ON");
 
-            // Consultamos con el filtro de zona correspondiente para evitar restricciones del SP
             $results = DB::connection('localDB')->select(
                 "EXEC proc_consultar_cuadrillas @ClaveZona = ?",
                 [$claveZona]
@@ -187,17 +178,12 @@ class SqlServerCuadrillaRepository implements CuadrillaRepositoryInterface
         }
     }
 
-    // -------------------------------------------------------------------------
-    // ESCRITURA — SP UNIFICADO proc_pdm_administrar_cuadrillas
-    // -------------------------------------------------------------------------
-
     public function create(CuadrillaDTO $cuadrilla): CuadrillaDTO
     {
         try {
             $usuarioId  = (int) (auth()->user()?->id ?? 0);
             $listaTarifas = $this->tarifasToJson($cuadrilla->tarifas);
 
-            // Determinar la zona si es coordinador
             $context = session()->get('usuario_contexto');
             $claveZona = '';
             if ($context instanceof \App\Domain\Shared\UsuarioContexto && $context->tipo !== 'AM') {
@@ -219,7 +205,7 @@ class SqlServerCuadrillaRepository implements CuadrillaRepositoryInterface
                     $cuadrilla->nombre,
                     $cuadrilla->lider,
                     $cuadrilla->miembros,
-                    $cuadrilla->puntoVentaId,   // WhsCode (string)
+                    $cuadrilla->puntoVentaId,
                     $listaTarifas,
                     $usuarioId,
                 ]
@@ -233,18 +219,10 @@ class SqlServerCuadrillaRepository implements CuadrillaRepositoryInterface
             if ((int) $row->estado !== 0) {
                 throw new Exception($row->mensaje);
             }
-
-            // El SP no devuelve el ID; lo recuperamos por nombre
-            $nuevo = DB::connection('localDB')->selectOne(
-                "SELECT TOP 1 idu_cuadrilla
-                   FROM mae_pdm_cuadrillas
-                  WHERE nom_cuadrilla = ? AND opc_estatus = 1
-                  ORDER BY idu_cuadrilla DESC",
-                [$cuadrilla->nombre]
-            );
+            $idGenerado = isset($row->idCuadrilla) ? (int) $row->idCuadrilla : (isset($row->id) ? (int) $row->id : null);
 
             return new CuadrillaDTO(
-                id:          $nuevo ? (int) $nuevo->idu_cuadrilla : null,
+                id:          $idGenerado,
                 nombre:      $cuadrilla->nombre,
                 lider:       $cuadrilla->lider,
                 miembros:    $cuadrilla->miembros,
@@ -253,7 +231,7 @@ class SqlServerCuadrillaRepository implements CuadrillaRepositoryInterface
                 tarifas:     $cuadrilla->tarifas
             );
         } catch (Exception $e) {
-            Log::error('Error en SqlServerCuadrillaRepository@create', ['error' => $e->getMessage()]);
+            Log::error('Error en CuadrillaRepository@create', ['error' => $e->getMessage()]);
             throw new Exception($e->getMessage());
         }
     }
@@ -264,7 +242,6 @@ class SqlServerCuadrillaRepository implements CuadrillaRepositoryInterface
             $usuarioId    = (int) (auth()->user()?->id ?? 0);
             $listaTarifas = $this->tarifasToJson($cuadrilla->tarifas);
 
-            // Determinar la zona si es coordinador
             $context = session()->get('usuario_contexto');
             $claveZona = '';
             if ($context instanceof \App\Domain\Shared\UsuarioContexto && $context->tipo !== 'AM') {
@@ -288,7 +265,7 @@ class SqlServerCuadrillaRepository implements CuadrillaRepositoryInterface
                     $cuadrilla->nombre,
                     $cuadrilla->lider,
                     $cuadrilla->miembros,
-                    $cuadrilla->puntoVentaId,   // WhsCode (string)
+                    $cuadrilla->puntoVentaId,
                     $listaTarifas,
                     $usuarioId,
                 ]
@@ -303,7 +280,6 @@ class SqlServerCuadrillaRepository implements CuadrillaRepositoryInterface
                 throw new Exception($row->mensaje);
             }
 
-            // El SP no devuelve el registro; reconstruimos con los datos enviados
             return new CuadrillaDTO(
                 id:          $id,
                 nombre:      $cuadrilla->nombre,
@@ -314,14 +290,11 @@ class SqlServerCuadrillaRepository implements CuadrillaRepositoryInterface
                 tarifas:     $cuadrilla->tarifas
             );
         } catch (Exception $e) {
-            Log::error('Error en SqlServerCuadrillaRepository@update', ['error' => $e->getMessage()]);
+            Log::error('Error en CuadrillaRepository@update', ['error' => $e->getMessage()]);
             throw new Exception($e->getMessage());
         }
     }
 
-    /**
-     * Inhabilita la cuadrilla (@Opcion = 3 — soft delete).
-     */
     public function delete(int $id): bool
     {
         try {
@@ -346,83 +319,44 @@ class SqlServerCuadrillaRepository implements CuadrillaRepositoryInterface
 
             return true;
         } catch (Exception $e) {
-            Log::error('Error en SqlServerCuadrillaRepository@delete', ['error' => $e->getMessage()]);
+            Log::error('Error en CuadrillaRepository@delete', ['error' => $e->getMessage()]);
             throw new Exception($e->getMessage());
         }
     }
 
-    // -------------------------------------------------------------------------
-    // REGLAS DE NEGOCIO
-    // -------------------------------------------------------------------------
-
     public function hasLiquidacionesEnProceso(int $cuadrillaId): bool
     {
-        try {
-            $result = DB::connection('localDB')->selectOne("
-                SELECT COUNT(*) AS total
-                FROM dbo.mov_pdm_registro_maniobras M
-                INNER JOIN dbo.mov_pdm_cortes_liquidacion C ON M.idu_corte = C.idu_corte
-                WHERE M.idu_cuadrilla = ? AND C.opc_estatus = 'borrador'
-            ", [$cuadrillaId]);
-
-            return $result && $result->total > 0;
-        } catch (Exception $e) {
-            Log::error('Error en SqlServerCuadrillaRepository@hasLiquidacionesEnProceso', ['error' => $e->getMessage()]);
-            return false;
-        }
+        // La validación de eliminación la procesa el SP proc_pdm_administrar_cuadrillas @Opcion = 3
+        return false;
     }
 
     public function hasManiobrasEnProceso(int $cuadrillaId): bool
     {
-        try {
-            $result = DB::connection('localDB')->selectOne("
-                SELECT COUNT(*) AS total
-                FROM dbo.mov_pdm_registro_maniobras
-                WHERE idu_cuadrilla = ? AND idu_corte IS NULL
-            ", [$cuadrillaId]);
-
-            return $result && $result->total > 0;
-        } catch (Exception $e) {
-            Log::error('Error en SqlServerCuadrillaRepository@hasManiobrasEnProceso', ['error' => $e->getMessage()]);
-            return false;
-        }
+        // La validación de eliminación la procesa el SP proc_pdm_administrar_cuadrillas @Opcion = 3
+        return false;
     }
 
     public function exists(string $nombre, string $lider, string $puntoVentaId, ?int $excludeId = null): bool
     {
         try {
-            $sql = "
-                SELECT COUNT(*) AS total
-                FROM dbo.mae_pdm_cuadrillas
-                WHERE LTRIM(RTRIM(UPPER(nom_cuadrilla))) = LTRIM(RTRIM(UPPER(?)))
-                  AND idu_punto_venta = ?
-                  AND opc_estatus = 1
-            ";
-            $params = [$nombre, $puntoVentaId];
-
-            if ($excludeId !== null) {
-                $sql .= " AND idu_cuadrilla <> ?";
-                $params[] = $excludeId;
+            $cuadrillas = $this->list(['search' => $nombre, 'puntoVentaId' => $puntoVentaId], 'TODAS');
+            foreach ($cuadrillas as $c) {
+                if ($excludeId !== null && $c->id === $excludeId) {
+                    continue;
+                }
+                if (strtolower(trim($c->nombre)) === strtolower(trim($nombre)) &&
+                    (string)$c->puntoVentaId === (string)$puntoVentaId
+                ) {
+                    return true;
+                }
             }
-
-            $result = DB::connection('localDB')->selectOne($sql, $params);
-            return $result && $result->total > 0;
+            return false;
         } catch (Exception $e) {
-            Log::error('Error en SqlServerCuadrillaRepository@exists', ['error' => $e->getMessage()]);
+            Log::error('Error en CuadrillaRepository@exists', ['error' => $e->getMessage()]);
             return false;
         }
     }
 
-    // -------------------------------------------------------------------------
-    // HELPERS PRIVADOS
-    // -------------------------------------------------------------------------
-
-    /**
-     * Convierte TarifasManiobra al JSON que espera el SP:
-     * [{"tipoManiobra": 1, "tarifa": 150.00}, ...]
-     *
-     * Solo incluye los conceptos con tarifa definida y mayor a 0.
-     */
     private function tarifasToJson(TarifasManiobra $tarifas): string
     {
         $lista = [];
@@ -437,19 +371,12 @@ class SqlServerCuadrillaRepository implements CuadrillaRepositoryInterface
         return json_encode($lista, JSON_UNESCAPED_UNICODE);
     }
 
-    /**
-     * Mapea un item del JSON de proc_consultar_cuadrillas a CuadrillaDTO.
-     * listaTarifas es un array [{idTipoManiobra, nombreTipoManiobra, tarifa}].
-     * Se construye un mapa dinámico [idTipoManiobra => tarifa] para TarifasManiobra.
-     */
     private function mapRowToDTO(array $item): CuadrillaDTO
     {
-        // Decodificar listaTarifas (viene como JSON string anidado o como array)
         $tarifasArray = is_string($item['listaTarifas'] ?? null)
             ? json_decode($item['listaTarifas'], true)
             : ($item['listaTarifas'] ?? []);
 
-        // Construir mapa dinámico [idTipoManiobra => tarifa]
         $tarifasMap = [];
         foreach ((array) $tarifasArray as $t) {
             $tarifasMap[(int) $t['idTipoManiobra']] = (float) $t['tarifa'];
@@ -461,7 +388,7 @@ class SqlServerCuadrillaRepository implements CuadrillaRepositoryInterface
             lider:        $item['liderCuadrilla'],
             miembros:     (int) $item['miembros'],
             puntoVentaId: (string) $item['puntoVenta'],
-            zona:         '',   // el SP no devuelve zona; se infiere del scope del usuario
+            zona:         '',
             tarifas:      TarifasManiobra::fromDynamic($tarifasMap)
         );
     }

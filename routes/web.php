@@ -43,16 +43,32 @@ Route::middleware(['auth', 'role.operaciones'])->group(function () {
 
     // Corte de Liquidación
     Route::get('/corte-liquidacion', \App\UI\Livewire\Corte\CorteIndex::class)->name('corte-liquidacion.index');
+    Route::get('/corte-liquidacion/{id}', \App\UI\Livewire\Corte\CorteDetalle::class)->name('corte-liquidacion.detalle');
+    
+    Route::get('/corte-liquidacion/pdf/{id}', function (int $id, \App\Domain\Corte\GenerarPdfCorteUseCase $useCase, \App\Domain\Corte\ConsultarCorteUseCase $consultarUseCase) {
+        try {
+            $corte = $consultarUseCase->execute($id);
+            if (!$corte) {
+                abort(404, 'Corte no encontrado');
+            }
+            
+            $folio = $corte['folio'] ?? 'Borrador';
+            $fechaInicio = \Carbon\Carbon::parse($corte['fechaInicio'])->format('d-m-Y');
+            $fechaFin = \Carbon\Carbon::parse($corte['fechaFin'])->format('d-m-Y');
+            $filename = "{$folio}_{$fechaInicio}_al_{$fechaFin}.pdf";
+            
+            $pdfContent = $useCase->execute($id);
+            return response($pdfContent, 200, [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'inline; filename="'.$filename.'"'
+            ]);
+        } catch (\Exception $e) {
+            abort(500, $e->getMessage());
+        }
+    })->name('corte-liquidacion.pdf');
 });
 
-Route::post('/logout', function (Request $request, \App\Domain\Auth\Repositories\IAuthRepository $repository) {
-    /** @var \App\Infrastructure\Auth\Models\AuthenticatedUser|null $user */
-    $user = Auth::user();
-    
-    if ($user && $user->sessionId) {
-        $repository->logout($user->sessionId);
-    }
-
+Route::post('/logout', function (Request $request) {
     Auth::logout();
     $request->session()->invalidate();
     $request->session()->regenerateToken();

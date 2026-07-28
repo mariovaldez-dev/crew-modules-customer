@@ -31,26 +31,14 @@ class EnsureUserRole
         $context = session()->get('usuario_contexto');
 
         if (!$context instanceof UsuarioContexto) {
-            // Resolver al vuelo si por alguna razón no está en la sesión (por ejemplo, en tests)
             $tipo = in_array((string)$user->rol, ['CO', '2']) ? 'CO' : 'AM';
-            $sucursalRepository = app(SucursalRepositoryInterface::class);
-            $pvs = $sucursalRepository->obtenerPuntosDeVentaDeUsuario($user->id);
-            $zona = 'TODAS';
-            $status = $sucursalRepository->obtenerStatusUsuario($user->id);
-
-            if ($tipo === 'CO') {
-                if (!empty($pvs)) {
-                    $zona = $sucursalRepository->zonaDe($pvs[0]) ?? 'ZONA-NORTE';
-                } else {
-                    $zona = 'ZONA-NORTE';
-                }
-            }
+            $zona = !empty($user->zona) ? $user->zona : ($tipo === 'CO' ? 'FA' : 'TODAS');
 
             $context = new UsuarioContexto(
                 zona: $zona,
                 tipo: $tipo,
-                puntosDeVenta: $pvs,
-                status: $status
+                puntosDeVenta: [],
+                status: 'A'
             );
             session()->put('usuario_contexto', $context);
         }

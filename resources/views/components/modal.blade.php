@@ -1,4 +1,4 @@
-@props(['name', 'title', 'maxWidth' => '2xl'])
+@props(['name', 'title' => '', 'maxWidth' => '2xl'])
 
 @php
 $maxWidthClass = match ($maxWidth) {

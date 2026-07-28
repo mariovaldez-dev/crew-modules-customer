@@ -10,7 +10,8 @@ final class User
         public readonly string $email,
         public readonly string $rol,
         public readonly bool $activo = true,
-        public readonly ?string $sessionId = null
+        public readonly ?string $sessionId = null,
+        public readonly ?string $zona = null
     ) {}
 
     public function isAsesorAgronomo(): bool
