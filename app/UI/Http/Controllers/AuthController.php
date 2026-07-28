@@ -24,8 +24,8 @@ class AuthController extends Controller
         }
 
         try {
-            // 1. Buscar la sesión en la base de datos de logins (Conexión por defecto sqlsrv)
-            $sesion = DB::connection('loginDB')
+            // 1. Buscar la sesión en la base de datos de logins
+            $sesion = DB::connection('maniobras')
                 ->table('DEVICESESSIONS')
                 ->where('U_SessionId', $token)
                 ->where('U_Activo', 'Y')
@@ -40,7 +40,7 @@ class AuthController extends Controller
             $idAgente = $sesion->U_IdAgente;
 
             // 2. Buscar el agente en la base de datos SAP
-            $agente = DB::connection('sapImpulsoraDB')
+            $agente = DB::connection('maniobras')
                 ->table('@AGENTES_VENTAS')
                 ->where('Code', $idAgente)
                 ->first();

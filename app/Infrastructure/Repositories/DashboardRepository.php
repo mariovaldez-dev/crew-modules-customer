@@ -10,7 +10,7 @@ class DashboardRepository implements DashboardRepositoryInterface
 {
     public function getDashboardData(?string $zonaUsuario): array
     {
-        $pdo = DB::connection('localDB')->getPdo();
+        $pdo = DB::connection('maniobras')->getPdo();
         $pdo->exec("SET ANSI_NULLS ON; SET ANSI_WARNINGS ON;");
 
         $stmt = $pdo->prepare("EXEC proc_pdm_dashboard_inicio :zona");

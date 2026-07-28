@@ -92,7 +92,7 @@ sequenceDiagram
    ```
 2. Configurar las conexiones de base de datos en `.env`:
    ```env
-   DB_CONNECTION=sqlsrv
+   DB_CONNECTION=maniobras
    DB_HOST=tu_servidor
    DB_DATABASE=tu_base_de_datos
    DB_USERNAME=sa

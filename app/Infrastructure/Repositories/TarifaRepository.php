@@ -14,12 +14,12 @@ class TarifaRepository implements TarifaRepositoryInterface
         try {
             Log::debug('[TarifaRepository@consultarTarifas] Ejecutando SP', ['zona' => $claveZona]);
             
-            DB::connection('localDB')->getPdo()->exec("SET ANSI_NULLS ON; SET ANSI_WARNINGS ON;");
+            DB::connection('maniobras')->getPdo()->exec("SET ANSI_NULLS ON; SET ANSI_WARNINGS ON;");
             
             if ($claveZona) {
-                $resultados = DB::connection('localDB')->select('EXEC proc_pdm_consultar_tarifas ?', [$claveZona]);
+                $resultados = DB::connection('maniobras')->select('EXEC proc_pdm_consultar_tarifas ?', [$claveZona]);
             } else {
-                $resultados = DB::connection('localDB')->select('EXEC proc_pdm_consultar_tarifas');
+                $resultados = DB::connection('maniobras')->select('EXEC proc_pdm_consultar_tarifas');
             }
 
             Log::debug('[TarifaRepository@consultarTarifas] Resultados devueltos por DB::select', ['count' => count($resultados)]);

@@ -10,7 +10,7 @@ class CorteRepository implements CorteRepositoryInterface
 {
     public function generar(string $zona, string $fechaInicio, string $fechaFin): array
     {
-        $pdo = DB::connection('localDB')->getPdo();
+        $pdo = DB::connection('maniobras')->getPdo();
         $pdo->exec("SET ANSI_NULLS ON; SET ANSI_WARNINGS ON;");
 
         $stmt = $pdo->prepare("EXEC proc_pdm_corte_generar @Zona = :zona, @FechaInicio = :inicio, @FechaFin = :fin");
@@ -25,7 +25,7 @@ class CorteRepository implements CorteRepositoryInterface
         \Illuminate\Support\Facades\Log::info("Iniciando consultar corte para zona: {$zona}");
         
         try {
-            $pdo = DB::connection('localDB')->getPdo();
+            $pdo = DB::connection('maniobras')->getPdo();
             $pdo->exec("SET ANSI_NULLS ON; SET ANSI_WARNINGS ON;");
 
             $stmt = $pdo->prepare("EXEC proc_pdm_corte_consultar @Zona = :zona");
@@ -58,7 +58,7 @@ class CorteRepository implements CorteRepositoryInterface
 
     public function confirmarCuadrilla(int $corteId, int $cuadrillaId): array
     {
-        $pdo = DB::connection('localDB')->getPdo();
+        $pdo = DB::connection('maniobras')->getPdo();
         $pdo->exec("SET ANSI_NULLS ON; SET ANSI_WARNINGS ON;");
 
         $stmt = $pdo->prepare("EXEC proc_pdm_corte_confirmar_cuadrilla @CorteID = :corte, @CuadrillaID = :cuadrilla");
@@ -69,7 +69,7 @@ class CorteRepository implements CorteRepositoryInterface
 
     public function confirmarGeneral(int $corteId): array
     {
-        $pdo = DB::connection('localDB')->getPdo();
+        $pdo = DB::connection('maniobras')->getPdo();
         $pdo->exec("SET ANSI_NULLS ON; SET ANSI_WARNINGS ON;");
 
         $stmt = $pdo->prepare("EXEC proc_pdm_corte_confirmar_general @CorteID = :corte");
@@ -80,7 +80,7 @@ class CorteRepository implements CorteRepositoryInterface
 
     public function regenerar(int $corteId): array
     {
-        $pdo = DB::connection('localDB')->getPdo();
+        $pdo = DB::connection('maniobras')->getPdo();
         $pdo->exec("SET ANSI_NULLS ON; SET ANSI_WARNINGS ON;");
 
         $stmt = $pdo->prepare("EXEC proc_pdm_corte_regenerar @CorteID = :corte");
@@ -131,7 +131,7 @@ class CorteRepository implements CorteRepositoryInterface
 
     public function consultarCortePorId(int $corteId): array
     {
-        $pdo = DB::connection('localDB')->getPdo();
+        $pdo = DB::connection('maniobras')->getPdo();
         $pdo->exec("SET NOCOUNT ON; SET ANSI_NULLS ON; SET ANSI_WARNINGS OFF;");
 
         $query = "EXEC proc_pdm_corte_consultar_por_id @CorteID = :corteId";

@@ -16,9 +16,9 @@ class RegistroManiobraRepository implements RegistroManiobraRepositoryInterface
         try {
             $claveZona = ($zonaUsuario === 'TODAS') ? '' : $zonaUsuario;
 
-            DB::connection('localDB')->statement("SET ANSI_NULLS ON");
-            DB::connection('localDB')->statement("SET ANSI_WARNINGS ON");
-            $results = DB::connection('localDB')->select(
+            DB::connection('maniobras')->statement("SET ANSI_NULLS ON");
+            DB::connection('maniobras')->statement("SET ANSI_WARNINGS ON");
+            $results = DB::connection('maniobras')->select(
                 "EXEC proc_pdm_obtener_maniobras_ejecutadas @ClaveZona = ?, @FechaInicio = ?, @FechaFin = ?",
                 [
                     $claveZona,
@@ -121,7 +121,7 @@ class RegistroManiobraRepository implements RegistroManiobraRepositoryInterface
         try {
             $usuarioId = auth()->user()?->id ?? 0;
 
-            $results = DB::connection('localDB')->select(
+            $results = DB::connection('maniobras')->select(
                 "EXEC dbo.proc_pdm_administrar_maniobras_ejecutadas
                     @idTipoManiobra = ?,
                     @idPuntoVenta = ?,
@@ -160,10 +160,10 @@ class RegistroManiobraRepository implements RegistroManiobraRepositoryInterface
     public function cuadrillasPorAlmacen(string $almacenId): array
     {
         try {
-            DB::connection('localDB')->statement("SET ANSI_NULLS ON");
-            DB::connection('localDB')->statement("SET ANSI_WARNINGS ON");
+            DB::connection('maniobras')->statement("SET ANSI_NULLS ON");
+            DB::connection('maniobras')->statement("SET ANSI_WARNINGS ON");
 
-            $results = DB::connection('localDB')->select(
+            $results = DB::connection('maniobras')->select(
                 "EXEC proc_pdm_cosultar_combos 2, ?",
                 [$almacenId]
             );
@@ -203,10 +203,10 @@ class RegistroManiobraRepository implements RegistroManiobraRepositoryInterface
     public function tiposManiobra(): array
     {
         try {
-            DB::connection('localDB')->statement("SET ANSI_NULLS ON");
-            DB::connection('localDB')->statement("SET ANSI_WARNINGS ON");
+            DB::connection('maniobras')->statement("SET ANSI_NULLS ON");
+            DB::connection('maniobras')->statement("SET ANSI_WARNINGS ON");
 
-            $results = DB::connection('localDB')->select(
+            $results = DB::connection('maniobras')->select(
                 "EXEC proc_pdm_cosultar_combos 3"
             );
 

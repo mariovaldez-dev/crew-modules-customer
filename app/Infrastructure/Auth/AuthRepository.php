@@ -15,10 +15,10 @@ class AuthRepository implements IAuthRepository
         Log::info('[AuthRepository] Iniciando autenticación mediante SP proc_pdm_login', ['usuario' => $username, 'platform' => $platform]);
 
         try {
-            DB::connection('localDB')->statement("SET ANSI_NULLS ON;");
-            DB::connection('localDB')->statement("SET ANSI_WARNINGS ON;");
+            DB::connection('maniobras')->statement("SET ANSI_NULLS ON;");
+            DB::connection('maniobras')->statement("SET ANSI_WARNINGS ON;");
 
-            $results = DB::connection('localDB')->select(
+            $results = DB::connection('maniobras')->select(
                 "EXEC proc_pdm_login @Usuario = :usuario, @Contrasena = :contrasena",
                 [
                     'usuario' => $username,

@@ -14,10 +14,10 @@ class SucursalRepository implements SucursalRepositoryInterface
         Log::debug('[SucursalRepo::listaPuntosDeVentaPorZona] INICIO', ['zona' => $zona]);
 
         try {
-            DB::connection('localDB')->statement("SET ANSI_NULLS ON");
-            DB::connection('localDB')->statement("SET ANSI_WARNINGS ON");
+            DB::connection('maniobras')->statement("SET ANSI_NULLS ON");
+            DB::connection('maniobras')->statement("SET ANSI_WARNINGS ON");
             $paramZona = ($zona === 'TODAS') ? '' : $zona;
-            $response = DB::connection('localDB')->select(
+            $response = DB::connection('maniobras')->select(
                 "EXEC proc_pdm_cosultar_combos 1, ?",
                 [$paramZona]
             );
@@ -81,8 +81,8 @@ class SucursalRepository implements SucursalRepositoryInterface
         Log::debug('[SucursalRepo::listaLideresPorZona] INICIO', ['zona' => $zona]);
 
         try {
-            DB::connection('localDB')->statement("SET ANSI_NULLS ON");
-            DB::connection('localDB')->statement("SET ANSI_WARNINGS ON");
+            DB::connection('maniobras')->statement("SET ANSI_NULLS ON");
+            DB::connection('maniobras')->statement("SET ANSI_WARNINGS ON");
 
             $query = "EXEC proc_pdm_cosultar_combos 4";
             $bindings = [];
@@ -92,7 +92,7 @@ class SucursalRepository implements SucursalRepositoryInterface
                 $bindings[] = $zona;
             }
 
-            $response = DB::connection('localDB')->select($query, $bindings);
+            $response = DB::connection('maniobras')->select($query, $bindings);
 
             if (empty($response)) {
                 return [];

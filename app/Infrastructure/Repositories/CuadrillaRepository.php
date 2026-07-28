@@ -23,10 +23,10 @@ class CuadrillaRepository implements CuadrillaRepositoryInterface
                 'filtros'     => $filtros,
             ]);
 
-            DB::connection('localDB')->statement("SET ANSI_NULLS ON");
-            DB::connection('localDB')->statement("SET ANSI_WARNINGS ON");
+            DB::connection('maniobras')->statement("SET ANSI_NULLS ON");
+            DB::connection('maniobras')->statement("SET ANSI_WARNINGS ON");
 
-            $results = DB::connection('localDB')->select(
+            $results = DB::connection('maniobras')->select(
                 "EXEC proc_consultar_cuadrillas @ClaveZona = ?",
                 [$claveZona]
             );
@@ -121,10 +121,10 @@ class CuadrillaRepository implements CuadrillaRepositoryInterface
 
             Log::debug('[CuadrillaRepo::findById] Parámetro de zona', ['claveZona' => $claveZona]);
 
-            DB::connection('localDB')->statement("SET ANSI_NULLS ON");
-            DB::connection('localDB')->statement("SET ANSI_WARNINGS ON");
+            DB::connection('maniobras')->statement("SET ANSI_NULLS ON");
+            DB::connection('maniobras')->statement("SET ANSI_WARNINGS ON");
 
-            $results = DB::connection('localDB')->select(
+            $results = DB::connection('maniobras')->select(
                 "EXEC proc_consultar_cuadrillas @ClaveZona = ?",
                 [$claveZona]
             );
@@ -190,7 +190,7 @@ class CuadrillaRepository implements CuadrillaRepositoryInterface
                 $claveZona = $context->zona;
             }
 
-            $results = DB::connection('localDB')->select(
+            $results = DB::connection('maniobras')->select(
                 "EXEC proc_pdm_administrar_cuadrillas
                     @Opcion          = 1,
                     @zona            = ?,
@@ -248,7 +248,7 @@ class CuadrillaRepository implements CuadrillaRepositoryInterface
                 $claveZona = $context->zona;
             }
 
-            $results = DB::connection('localDB')->select(
+            $results = DB::connection('maniobras')->select(
                 "EXEC proc_pdm_administrar_cuadrillas
                     @Opcion          = 2,
                     @zona            = ?,
@@ -300,7 +300,7 @@ class CuadrillaRepository implements CuadrillaRepositoryInterface
         try {
             $usuarioId = (int) (auth()->user()?->id ?? 0);
 
-            $results = DB::connection('localDB')->select(
+            $results = DB::connection('maniobras')->select(
                 "EXEC proc_pdm_administrar_cuadrillas
                     @Opcion      = 3,
                     @idCuadrilla = ?,

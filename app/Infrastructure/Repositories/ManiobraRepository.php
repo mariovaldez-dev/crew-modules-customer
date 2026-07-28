@@ -16,7 +16,7 @@ class ManiobraRepository implements ManiobraRepositoryInterface
     public function list(?string $search = null): array
     {
         try {
-            $results = DB::connection('localDB')->select(
+            $results = DB::connection('maniobras')->select(
                 "EXEC proc_consultar_tipos_maniobras"
             );
 
@@ -66,7 +66,7 @@ class ManiobraRepository implements ManiobraRepositoryInterface
         try {
             $usuarioId = (int) (auth()->user()?->id ?? 0);
 
-            $results = DB::connection('localDB')->select(
+            $results = DB::connection('maniobras')->select(
                 "EXEC proc_pdm_administrar_tipos_maniobras
                     @Opcion = 1,
                     @NombreManiobra = ?,
@@ -109,7 +109,7 @@ class ManiobraRepository implements ManiobraRepositoryInterface
 
             $estatusBit = $this->estatusToBit($maniobra->estatus);
 
-            $results = DB::connection('localDB')->select(
+            $results = DB::connection('maniobras')->select(
                 "EXEC proc_pdm_administrar_tipos_maniobras
                     @Opcion = 2,
                     @IdTipoManiobra = ?,
