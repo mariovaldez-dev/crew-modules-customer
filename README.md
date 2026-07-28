@@ -7,61 +7,71 @@
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
 ![SQL Server](https://img.shields.io/badge/SQL_Server-CC2927?style=for-the-badge&logo=microsoft-sql-server&logoColor=white)
 
-Sistema administrativo para la gestión de Maniobras, Cuadrillas, Tarifas, y Cortes de Liquidación, integrado con el ERP SAP B1 mediante Stored Procedures.
+Sistema administrativo para la gestión de Maniobras, Cuadrillas, Tarifas, Registro de Maniobras y Cortes de Liquidación, integrado con el ERP SAP B1 mediante Stored Procedures exclusivamente.
 
 ## 🚀 Arquitectura y Tecnologías
 
-- **Backend:** Laravel 10+, PHP 8.x
+- **Backend:** Laravel 10+, PHP 8.3+
 - **Frontend:** Livewire 3.x + Alpine.js + Tailwind CSS
-- **Persistencia:** Stored Procedures (SQL Server) y Vistas SAP B1 (Sin Eloquent ni migraciones).
+- **Persistencia:** Consumo 100% de Stored Procedures y Vistas de SQL Server / SAP B1 (sin Eloquent, sin migraciones, sin consultas `SELECT` directas a tablas).
 - **Patrones de Diseño:** Clean Architecture (Use Cases, Repository Pattern), Atomic Design UI.
+- **Testing:** PHPUnit (Mocks organizados independientemente en `tests/Mocks/`).
 
 ## 📦 Submódulos
 
-1. **Dashboard**
-   Resumen estadístico cargado asíncronamente con *Skeleton Loaders*. Optimizado mediante un único SP (`proc_pdm_dashboard_inicio`) que genera y retorna toda la estructura en JSON directamente desde SQL Server.
-2. **Catálogo de Maniobras**
-   ABCC (Altas, Bajas, Cambios y Consultas) de tipos de maniobra.
-3. **Catálogo de Cuadrillas**
-   Gestión de cuadrillas filtradas por zona y punto de venta.
-4. **Tarifas por Cuadrilla**
-   Asignación de hasta 6 conceptos de tarifas (Carga, Descarga, Apaleo, Traslado, etc.) a cada cuadrilla con bitácora de auditoría histórica.
-5. **Registro de Maniobras**
-   Ingreso manual y listado histórico de maniobras ejecutadas por las cuadrillas. El estado (*En proceso* / *Liquidada*) se calcula dinámicamente con base en los cortes. Incluye exportación a Excel.
-6. **Cortes de Liquidación**
-   *(Próximamente)* Generación de cortes semanales para el pago a cuadrillas, reportes en PDF y exportación.
+1. **Autenticación (RQM-00)**
+   - Autenticación centralizada mediante el Stored Procedure `proc_pdm_login`.
+   - Inicialización automática del contexto de sesión (`UsuarioContexto`) incluyendo la zona del usuario (`zonaAsesor`), su rol (`rolAsesor`) y estatus activo.
+2. **Dashboard**
+   - Resumen estadístico cargado asíncronamente con *Skeleton Loaders*. Optimizado mediante un único SP (`proc_pdm_dashboard_inicio`) que genera y retorna toda la estructura en JSON directamente desde SQL Server.
+3. **Catálogo de Maniobras (RQM-01)**
+   - ABCC (Altas, Bajas, Cambios y Consultas) de tipos de maniobra utilizando `proc_consultar_tipos_maniobras` y `proc_pdm_administrar_tipos_maniobras`.
+4. **Catálogo de Cuadrillas (RQM-02)**
+   - Gestión de cuadrillas filtradas por zona y punto de venta utilizando `proc_consultar_cuadrillas` y `proc_pdm_administrar_cuadrillas`.
+5. **Tarifas por Cuadrilla**
+   - Asignación de hasta 6 conceptos de tarifas (Carga 25kg, Carga 50kg, Descarga 25kg, Descarga 50kg, Traslado, Apaleo) a cada cuadrilla con bitácora de auditoría histórica.
+6. **Registro de Maniobras (RQM-03)**
+   - Alta manual y consulta con filtros de fecha, almacén, cuadrilla y estado.
+   - El estado (*En proceso* / *Liquidada*) se calcula dinámicamente según la asociación a un corte.
+   - Exportación a Excel (`ManiobrasExport`) respetando exactamente las columnas, orden y encabezados visualizados en pantalla.
+7. **Cortes de Liquidación (RQM-05)**
+   - Generación de cortes de liquidación por rango de fechas y zona.
+   - Confirmación por cuadrilla y confirmación general.
+   - Regeneración de cortes en estado borrador.
+   - Vista de detalle, previsualización de reporte en modal y descarga de reportes PDF en formato listo para impresión.
 
 ## 📐 Principios de Diseño (Clean Architecture)
 
-El proyecto separa estrictamente las responsabilidades en 4 capas, impidiendo que los componentes visuales interactúen directamente con la base de datos:
+El proyecto separa estrictamente las responsabilidades en 4 capas, impidiendo que los componentes visuales interactúen directamente con la base de datos o ejecuten SQL arbitrario:
 
 ```mermaid
 graph LR
-    UI[Livewire Component] -->|Llama a| UC[Use Case]
-    UC -->|Inyecta| IF[Repository Interface]
-    IF -->|Implementado por| SQL[SQL Server Repository]
-    SQL -->|Ejecuta| SP[(Stored Procedure)]
+    UI[Livewire Component] -->|Invoca| UC[Use Case]
+    UC -->|Depende de| IF[Repository Interface]
+    IF -->|Implementado por| Repo[Repository]
+    Repo -->|Ejecuta| SP[(Stored Procedure SQL Server)]
 ```
 
+### Repositorios e Infraestructura
+- **Ubicación:** `app/Infrastructure/Repositories/` (`CorteRepository`, `CuadrillaRepository`, `DashboardRepository`, `ManiobraRepository`, `RegistroManiobraRepository`, `SucursalRepository`, `TarifaRepository`, `TarifaAuditRepository`).
+- **Mocks de Testing:** Ubicados exclusivamente en `tests/Mocks/` (`MockCorteRepository`, `MockCuadrillaRepository`, etc.), desacoplados del código de producción.
+
 ### Sistema de Componentes (Atomic Design)
-Se utiliza un enfoque de diseño atómico para optimizar las peticiones de Livewire:
-- **Organismos (Livewire):** Mantienen estado con el servidor (`DashboardIndex`, `CuadrillaFormModal`).
-- **Moléculas (Blade + Alpine):** Tienen interactividad puramente en el cliente sin llamadas de red (`x-modal`, `x-confirm-modal`, acordeones).
-- **Átomos (Blade puro):** Elementos visuales estáticos (`x-status-badge`, `x-button`, `x-currency-input`).
-- **Traits:** Comportamientos reutilizables en servidor (`WithZonaScope`, `WithTableFilters`).
+- **Organismos (Livewire):** Mantienen estado con el servidor (`DashboardIndex`, `CuadrillaIndex`, `CorteIndex`, `CorteDetalle`).
+- **Moléculas (Blade + Alpine):** Interactividad 100% cliente sin ida y vuelta al servidor (`x-modal`, `x-confirm-modal`, `pdf-preview-modal`).
+- **Átomos (Blade puro):** Elementos visuales estáticos reusables (`x-status-badge`, `x-button`, `x-select`, `x-table-empty-state`).
+- **Traits:** Comportamientos reutilizables en servidor (`WithZonaScope`, `WithTableFilters`, `WithDebouncedSearch`).
 
 ## 🔄 Diagramas de Flujo
 
-### Flujo Optimizado del Dashboard (JSON SP)
-Para evitar el problema de N+1 consultas o tiempos de carga altos, el Dashboard delega el cálculo y agrupamiento del JSON directamente al motor de SQL Server.
-
+### Flujo del Dashboard (JSON SP)
 ```mermaid
 sequenceDiagram
     actor Usuario
     participant UI as DashboardIndex (Livewire)
     participant UC as GetDashboardDataUseCase
-    participant Repo as SqlServerDashboardRepository
-    participant DB as SQL Server (SP)
+    participant Repo as DashboardRepository
+    participant DB as SQL Server (proc_pdm_dashboard_inicio)
 
     Usuario->>UI: Ingresa al Dashboard
     UI-->>Usuario: Muestra Skeleton Loaders inmediatos
@@ -70,9 +80,8 @@ sequenceDiagram
     Repo->>DB: EXEC proc_pdm_dashboard_inicio @Zona
     DB-->>Repo: { "totalManiobras": 12, "toneladasTotales": 45.5, ... }
     Repo-->>UC: Retorna Array PHP
-    UC->>UC: Mapea fechas con Carbon
-    UC-->>UI: Retorna datos listos para vista
-    UI-->>Usuario: Pinta los datos (Reemplaza Skeletons)
+    UC-->>UI: Retorna datos formateados
+    UI-->>Usuario: Pinta los datos en pantalla
 ```
 
 ## ⚙️ Configuración del Entorno local
@@ -81,7 +90,7 @@ sequenceDiagram
    ```bash
    cp .env.example .env
    ```
-2. Configurar la conexión de la base de datos local (SQL Server) en `.env`:
+2. Configurar las conexiones de base de datos en `.env`:
    ```env
    DB_CONNECTION=sqlsrv
    DB_HOST=tu_servidor
@@ -94,12 +103,16 @@ sequenceDiagram
    composer install
    php artisan key:generate
    ```
-4. Levantar el servidor:
+4. Ejecutar la suite de pruebas unitarias/integración:
+   ```bash
+   vendor/bin/phpunit
+   ```
+5. Levantar el servidor local:
    ```bash
    php artisan serve
    ```
 
-*(Nota: Este proyecto no usa migraciones de base de datos debido a que consume directamente esquemas de SAP B1 administrados por Grupo Impulsora).*
+*(Nota: Este proyecto no utiliza migraciones de Laravel ya que la estructura y persistencia dependen 100% de los Stored Procedures y vistas de SAP B1 en SQL Server administrados por Grupo Impulsora).*
 
 ---
 Desarrollado para **Grupo Impulsora**.
