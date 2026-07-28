@@ -1,57 +1,77 @@
 <?php
 
+use App\Domain\Corte\ConsultarCorteUseCase;
+use App\Domain\Corte\GenerarPdfCorteUseCase;
 use App\UI\Livewire\Auth\LoginForm;
+use App\UI\Livewire\Corte\CorteDetalle;
+use App\UI\Livewire\Corte\CorteIndex;
+use App\UI\Livewire\Cuadrillas\CuadrillaIndex;
+use App\UI\Livewire\Dashboard\DashboardIndex;
+use App\UI\Livewire\Maniobras\ManiobraIndex;
+use App\UI\Livewire\RegistroManiobras\RegistroIndex;
+use App\UI\Livewire\Tarifas\TarifasIndex;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
-// Pública
+/*
+|--------------------------------------------------------------------------
+| Rutas Módulo de Operaciones - Grupo Impulsora
+|--------------------------------------------------------------------------
+*/
+
+// Rutas Públicas (Autenticación)
 Route::get('/login', LoginForm::class)->name('login')->middleware('guest');
 
-// Protegidas (Solo Módulo Operaciones)
+// Rutas Protegidas (Módulo de Operaciones: AM / CO)
 Route::middleware(['auth', 'role.operaciones'])->group(function () {
-    // Menú Principal (Tarjetas)
-    Route::get('/dashboard', \App\UI\Livewire\Dashboard\DashboardIndex::class)->name('dashboard');
 
-    // Catálogo de Maniobras
-    Route::get('/maniobras', \App\UI\Livewire\Maniobras\ManiobraIndex::class)->name('maniobras.index');
+    // Dashboard e Inicio
+    Route::get('/dashboard', DashboardIndex::class)->name('dashboard');
 
-    // Gestión de Cuadrillas
-    Route::get('/cuadrillas', \App\UI\Livewire\Cuadrillas\CuadrillaIndex::class)->name('cuadrillas.index');
+    // Catálogo de Maniobras (Rol Administrador Maniobras)
+    Route::get('/maniobras', ManiobraIndex::class)->name('maniobras.index');
 
-    // Registro de Maniobras
-    Route::get('/registro-maniobras', \App\UI\Livewire\RegistroManiobras\RegistroIndex::class)->name('registro-maniobras.index');
+    // Gestión de Cuadrillas (Filtro por Zona / PV)
+    Route::get('/cuadrillas', CuadrillaIndex::class)->name('cuadrillas.index');
 
-    // Tarifas
-    Route::get('/tarifas', \App\UI\Livewire\Tarifas\TarifasIndex::class)->name('tarifas.index');
+    // Registro e Histórico de Maniobras
+    Route::get('/registro-maniobras', RegistroIndex::class)->name('registro-maniobras.index');
 
-    // Corte de Liquidación
-    Route::get('/corte-liquidacion', \App\UI\Livewire\Corte\CorteIndex::class)->name('corte-liquidacion.index');
-    Route::get('/corte-liquidacion/{id}', \App\UI\Livewire\Corte\CorteDetalle::class)->name('corte-liquidacion.detalle');
-    
-    Route::get('/corte-liquidacion/pdf/{id}', function (int $id, \App\Domain\Corte\GenerarPdfCorteUseCase $useCase, \App\Domain\Corte\ConsultarCorteUseCase $consultarUseCase) {
+    // Consulta de Tarifas por Cuadrilla
+    Route::get('/tarifas', TarifasIndex::class)->name('tarifas.index');
+
+    // Cortes de Liquidación
+    Route::get('/corte-liquidacion', CorteIndex::class)->name('corte-liquidacion.index');
+    Route::get('/corte-liquidacion/{id}', CorteDetalle::class)->name('corte-liquidacion.detalle');
+
+    // Descarga / Impresión de Reporte PDF del Corte
+    Route::get('/corte-liquidacion/pdf/{id}', function (int $id, GenerarPdfCorteUseCase $useCase, ConsultarCorteUseCase $consultarUseCase) {
         try {
             $corte = $consultarUseCase->execute($id);
             if (!$corte) {
-                abort(404, 'Corte no encontrado');
+                abort(404, 'Corte de liquidación no encontrado');
             }
-            
+
             $folio = $corte['folio'] ?? 'Borrador';
             $fechaInicio = \Carbon\Carbon::parse($corte['fechaInicio'])->format('d-m-Y');
             $fechaFin = \Carbon\Carbon::parse($corte['fechaFin'])->format('d-m-Y');
-            $filename = "{$folio}_{$fechaInicio}_al_{$fechaFin}.pdf";
-            
+            $filename = "corte_{$folio}_{$fechaInicio}_al_{$fechaFin}.pdf";
+
             $pdfContent = $useCase->execute($id);
+
             return response($pdfContent, 200, [
                 'Content-Type' => 'application/pdf',
-                'Content-Disposition' => 'inline; filename="'.$filename.'"'
+                'Content-Disposition' => 'inline; filename="'.$filename.'"',
             ]);
         } catch (\Exception $e) {
             abort(500, $e->getMessage());
         }
     })->name('corte-liquidacion.pdf');
+
 });
 
+// Cierre de Sesión
 Route::post('/logout', function (Request $request) {
     Auth::logout();
     $request->session()->invalidate();
@@ -60,6 +80,7 @@ Route::post('/logout', function (Request $request) {
     return redirect()->route('login');
 })->name('logout')->middleware('auth');
 
+// Redirección Raíz
 Route::get('/', function () {
     return redirect()->route('login');
 });
