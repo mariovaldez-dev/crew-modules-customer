@@ -381,11 +381,11 @@
                     </div>
 
                     <h1 class="brand-title">
-                        Impulsora Digital <span>- Módulo de Operaciones</span>
+                        Impulsora Digital <span>- Maniobra</span>
                     </h1>
 
                     <p class="brand-text">
-                        Accede al Módulo de Operaciones de Grupo Impulsora desde una
+                        Accede al Módulo de Maniobra de Grupo Impulsora desde una
                         experiencia moderna, segura y alineada con el ecosistema de
                         Impulsora Digital.
                     </p>
