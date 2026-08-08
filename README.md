@@ -86,37 +86,45 @@ sequenceDiagram
 
 ## ⚙️ Configuración del Entorno local
 
-1. Clonar y configurar `.env`:
+1. **Clonar y configurar el archivo `.env`:**
    ```bash
    cp .env.example .env
    ```
-2. Configurar las conexiones de base de datos en `.env`:
+2. **Configurar la base de datos y nivel de logs en `.env`:**
    ```env
    DB_CONNECTION=maniobras
    DB_HOST=tu_servidor
    DB_DATABASE=tu_base_de_datos
    DB_USERNAME=sa
    DB_PASSWORD=tu_password
+
+   # Nivel de logs ('debug' en local, usar 'info' o 'error' en producción para evitar I/O excesivo)
+   LOG_LEVEL=debug
    ```
-3. Instalar dependencias de PHP y generar la Key:
+3. **Instalar dependencias de PHP y generar la clave de aplicación:**
    ```bash
    composer install
    php artisan key:generate
    ```
-4. Instalar dependencias de Frontend (Tailwind CSS / Vite) y compilar los assets estáticos:
+4. **Instalar dependencias de Frontend (Tailwind CSS / Vite) y compilar assets estáticos:**
    ```bash
    npm install
    npm run build
    ```
-   *(Durante el desarrollo activo se puede ejecutar `npm run dev` para hot-reloading o `npm run build` para generar el paquete minificado en `public/build/`).*
-5. Ejecutar la suite de pruebas unitarias/integración:
+   *(Durante el desarrollo activo se puede ejecutar `npm run dev` para hot-reloading de estilos con Open Sans o `npm run build` para generar el paquete minificado en `public/build/`).*
+5. **Ejecutar la suite de pruebas unitarias/integración:**
    ```bash
    vendor/bin/phpunit
    ```
-6. Levantar el servidor local:
+6. **Levantar el servidor de desarrollo:**
    ```bash
    php artisan serve
    ```
+
+### ⚡ Notas de Optimización y Rendimiento
+
+- **Compilación de Assets:** Las vistas integran Vite con la fuente estandarizada `'Open Sans', sans-serif` y estilos en *Sentence case*. Al ejecutar `npm run build` se genera automáticamente el paquete optimizado en `public/build/`.
+- **Capa de Caché (Rendimiento SPs):** Los catálogos de puntos de venta (`SucursalRepository`), tarifas por zona (`TarifaRepository`) y métricas del Inicio (`DashboardRepository`) cuentan con caché temporal de Laravel (`Cache::remember`) para acelerar la navegación y minimizar tiempos de respuesta sobre SQL Server.
 
 *(Nota: Este proyecto no utiliza migraciones de Laravel ya que la estructura y persistencia dependen 100% de los Stored Procedures y vistas de SAP B1 en SQL Server administrados por Grupo Impulsora).*
 
