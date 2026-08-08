@@ -25,6 +25,7 @@ class DashboardIndex extends Component
 
         $zona = $this->zonaUsuario;
         $rol = $this->rolUsuario;
+        $zonaNombre = $this->zonaNombreUsuario;
 
         $totalManiobras = 0;
         $totalCuadrillas = 0;
@@ -57,6 +58,7 @@ class DashboardIndex extends Component
             'maniobrasLiquidadas' => $maniobrasLiquidadasCount,
             'maniobrasEnProceso' => $maniobrasEnProcesoCount,
             'zona' => $zona,
+            'zonaNombre' => $zonaNombre,
             'rol' => $rol,
             'readyToLoad' => $this->readyToLoad,
         ])->layout('layouts.app', ['title' => 'Inicio']);

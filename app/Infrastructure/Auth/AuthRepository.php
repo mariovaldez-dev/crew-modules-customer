@@ -40,6 +40,7 @@ class AuthRepository implements IAuthRepository
                     'codigoAsesor' => $row->codigoAsesor ?? null,
                     'nombreAsesor' => $row->nombreAsesor ?? null,
                     'zonaAsesor' => $row->zonaAsesor ?? null,
+                    'zonaNombre' => $row->zonaNombre ?? null,
                     'rolAsesor' => $row->rolAsesor ?? null,
                 ]);
 
@@ -51,7 +52,8 @@ class AuthRepository implements IAuthRepository
                         rol: (string) ($row->rolAsesor ?? ''),
                         activo: true,
                         sessionId: 'sess_' . md5($username . time()),
-                        zona: !empty($row->zonaAsesor) ? (string) $row->zonaAsesor : null
+                        zona: !empty($row->zonaAsesor) ? (string) $row->zonaAsesor : null,
+                        zonaNombre: !empty($row->zonaNombre) ? (string) $row->zonaNombre : null
                     );
 
                     Log::info('[AuthRepository] Usuario autenticado con éxito', ['user_id' => $user->id, 'rol' => $user->rol]);

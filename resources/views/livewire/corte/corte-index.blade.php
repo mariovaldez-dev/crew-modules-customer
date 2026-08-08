@@ -4,14 +4,14 @@
         <div>
             <h1 class="text-2xl md:text-3xl font-black text-gray-900 dark:text-white flex items-center gap-3">
                 <i class="fa-solid fa-file-invoice-dollar text-green-500"></i>
-                Cortes de Liquidación
+                Cortes de liquidación
             </h1>
-            <p class="text-sm text-gray-500 dark:text-gray-400 font-bold uppercase tracking-wider mt-1">Historial de cortes generados</p>
+            <p class="text-lg text-gray-400 dark:text-gray-500 font-bold tracking-widest mt-1">Historial de cortes generados</p>
         </div>
 
         <div class="mt-4 sm:mt-0">
             <x-button wire:click="prepararNuevoCorte" variant="primary">
-                <i class="fa-solid fa-plus mr-2"></i> Generar Nuevo Corte
+                <i class="fa-solid fa-plus mr-2"></i> Generar nuevo corte
             </x-button>
         </div>
     </div>

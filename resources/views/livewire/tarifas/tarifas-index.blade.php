@@ -1,7 +1,7 @@
 <div class="space-y-6" wire:init="loadData">
     <div class="mb-8">
-        <h1 class="text-3xl font-black tracking-tight text-gray-900 dark:text-white">Consulta de Tarifas</h1>
-        <p class="text-xs text-gray-400 dark:text-gray-500 font-bold uppercase tracking-widest mt-1">
+        <h1 class="text-3xl font-black tracking-tight text-gray-900 dark:text-white">Consulta de tarifas</h1>
+            <p class="text-lg text-gray-400 dark:text-gray-500 font-bold tracking-widest mt-1">
             Revisión de precios por concepto de maniobras y cuadrilla
         </p>
     </div>

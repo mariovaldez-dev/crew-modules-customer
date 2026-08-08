@@ -171,6 +171,6 @@ class CuadrillaIndex extends Component
             'cuadrillas'  => $paginated,
             'puntosVenta' => $this->puntosVenta,
             'lideres'     => $this->lideres,
-        ])->layout('layouts.app', ['title' => 'Gestión de Cuadrillas']);
+        ])->layout('layouts.app', ['title' => 'Cuadrillas']);
     }
 }

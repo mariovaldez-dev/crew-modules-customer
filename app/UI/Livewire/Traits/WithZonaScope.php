@@ -16,6 +16,16 @@ trait WithZonaScope
         return 'FA';
     }
 
+    public function getZonaNombreUsuarioProperty(): string
+    {
+        $context = session()->get('usuario_contexto');
+        if ($context instanceof UsuarioContexto && isset($context->zonaNombre) && !empty($context->zonaNombre)) {
+            return $context->zonaNombre;
+        }
+        
+        return $this->zonaUsuario;
+    }
+
     public function getRolUsuarioProperty(): string
     {
         $context = session()->get('usuario_contexto');

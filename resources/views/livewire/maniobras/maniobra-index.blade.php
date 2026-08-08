@@ -2,8 +2,8 @@
     <!-- Header Page -->
     <div class="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-            <h1 class="text-3xl font-black tracking-tight text-gray-900 dark:text-white">Catálogo de Maniobras</h1>
-            <p class="text-xs text-gray-400 dark:text-gray-500 font-bold uppercase tracking-widest mt-1">
+            <h1 class="text-3xl font-black tracking-tight text-gray-900 dark:text-white">Catálogo de maniobras</h1>
+            <p class="text-lg text-gray-400 dark:text-gray-500 font-bold tracking-widest mt-1">
                 Administra los tipos de maniobra autorizados en el sistema
             </p>
         </div>
@@ -11,7 +11,7 @@
         <div>
             <button wire:click="$dispatch('open-maniobra-modal')" class="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-green-600 hover:bg-green-700 text-white text-sm font-bold shadow-md shadow-green-900/10 hover:shadow-lg transition-all duration-200">
                 <i class="fa-solid fa-plus text-xs"></i>
-                Nueva Maniobra
+                Nueva maniobra
             </button>
         </div>
     </div>

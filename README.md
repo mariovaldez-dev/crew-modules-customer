@@ -103,11 +103,17 @@ sequenceDiagram
    composer install
    php artisan key:generate
    ```
-4. Ejecutar la suite de pruebas unitarias/integración:
+4. Instalar dependencias de Frontend (Tailwind CSS / Vite) y compilar los assets estáticos:
+   ```bash
+   npm install
+   npm run build
+   ```
+   *(Durante el desarrollo activo se puede ejecutar `npm run dev` para hot-reloading o `npm run build` para generar el paquete minificado en `public/build/`).*
+5. Ejecutar la suite de pruebas unitarias/integración:
    ```bash
    vendor/bin/phpunit
    ```
-5. Levantar el servidor local:
+6. Levantar el servidor local:
    ```bash
    php artisan serve
    ```

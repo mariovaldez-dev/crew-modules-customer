@@ -2,8 +2,8 @@
     <!-- Header Page -->
     <div class="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-            <h1 class="text-3xl font-black tracking-tight text-gray-900 dark:text-white">Bitácora de Maniobras</h1>
-            <p class="text-xs text-gray-400 dark:text-gray-500 font-bold uppercase tracking-widest mt-1">
+            <h1 class="text-3xl font-black tracking-tight text-gray-900 dark:text-white">Bitácora de maniobras</h1>
+            <p class="text-lg text-gray-400 dark:text-gray-500 font-bold tracking-widest mt-1">
                 Consulta de operaciones registradas, carga por dispositivo y asignación manual
             </p>
         </div>
@@ -18,7 +18,7 @@
             @if($this->rolUsuario === 'CO')
                 <x-button wire:click="$dispatch('open-nueva-maniobra-modal')" variant="primary">
                     <i class="fa-solid fa-plus mr-2"></i>
-                    Alta Manual
+                    Alta manual
                 </x-button>
             @endif
         </div>
