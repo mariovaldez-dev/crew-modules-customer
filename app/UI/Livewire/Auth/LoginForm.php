@@ -130,6 +130,7 @@ class LoginForm extends Component
 
             $usuarioContexto = new \App\Domain\Shared\UsuarioContexto(
                 zona: $zona,
+                zonaNombre: $user->zonaNombre ?? '',
                 tipo: $tipo,
                 puntosDeVenta: [],
                 status: $status

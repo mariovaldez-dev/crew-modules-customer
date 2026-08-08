@@ -58,6 +58,6 @@ class TarifasIndex extends Component
             'tiposManiobra' => $tiposManiobra,
             'nombreZonaCO' => $nombreZonaCO,
             'claveZonaCO' => $claveZonaCO
-        ])->layout('layouts.app', ['title' => 'Tarifas por Cuadrilla']);
+        ])->layout('layouts.app', ['title' => 'Tarifas']);
     }
 }

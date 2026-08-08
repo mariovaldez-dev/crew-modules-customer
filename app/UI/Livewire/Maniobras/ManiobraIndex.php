@@ -57,6 +57,6 @@ class ManiobraIndex extends Component
 
         return view('livewire.maniobras.maniobra-index', [
             'maniobras' => $paginated
-        ])->layout('layouts.app', ['title' => 'Catálogo de Maniobras']);
+        ])->layout('layouts.app', ['title' => 'Maniobras']);
     }
 }

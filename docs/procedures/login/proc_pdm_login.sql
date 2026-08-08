@@ -17,7 +17,8 @@ BEGIN
         @nombreAsesor = age.Name,
 		@zonaAsesor = age.U_serieSucursal,
 		@rol = (CASE WHEN age.U_Tipo = 'AM' THEN 1 ELSE 2 END)
-    FROM SAP.SBO_Impulsora_PROD.dbo.[@USUARIOS_PUNTOVENTA] AS age  
+    FROM SAP.SBO_Impulsora_PROD.dbo.[@USUARIOS_PUNTOVENTA] AS age 
+    JOIN SAP.SBO_Impulsora_PROD.dbo.[OSLP] AS o ON o.Memo = age.U_SerieSucursal AND o.Active  = 'Y'
 	WHERE          
         UPPER(age.U_usuario) = UPPER(@Usuario) 
         AND UPPER(age.U_passwd) = UPPER(@Contrasena)  

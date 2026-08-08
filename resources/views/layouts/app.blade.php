@@ -5,117 +5,55 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <title>Módulo de Operaciones</title>
-    <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.png') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-    <!-- Tailwind CSS via Play CDN -->
-    <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        green: {
-                            50: '#f4f7f5',
-                            100: '#e3ece6',
-                            200: '#c7d8ce',
-                            300: '#9ebba9',
-                            400: '#749983',
-                            500: '#4A7C59',
-                            600: '#1f7a2f',
-                            700: '#2a4430',
-                            800: '#1d2f21',
-                            900: '#082312',
+    @if(file_exists(public_path('build/manifest.json')))
+        @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @else
+        <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+        <script>
+            tailwind.config = {
+                darkMode: 'class',
+                theme: {
+                    extend: {
+                        colors: {
+                            green: {
+                                50: '#f4f7f5', 100: '#e3ece6', 200: '#c7d8ce', 300: '#9ebba9', 400: '#749983', 500: '#4A7C59', 600: '#1f7a2f', 700: '#2a4430', 800: '#1d2f21', 900: '#082312',
+                            }
                         }
                     }
                 }
             }
-        }
-    </script>
+        </script>
+    @endif
     <script>
-        if (localStorage.getItem('color-theme') === 'dark' || (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-            document.documentElement.classList.add('dark');
-        } else {
-            document.documentElement.classList.remove('dark');
+        function applyTheme() {
+            if (localStorage.getItem('color-theme') === 'dark' || (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
         }
+        applyTheme();
+        document.addEventListener('livewire:navigated', applyTheme);
     </script>
-    <style type="text/tailwindcss">
-        @layer base {
-            [x-cloak] { display: none !important; }
-            font-family: 'Inter', sans-serif;
-
-            select {
-                -webkit-appearance: none !important;
-                -moz-appearance: none !important;
-                appearance: none !important;
-                background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%239ca3af' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e") !important;
-                background-position: right 0.75rem center !important;
-                background-repeat: no-repeat !important;
-                background-size: 1.25rem 1.25rem !important;
-                padding-right: 2.5rem !important;
-            }
-            select:focus {
-                outline: none !important;
-                @apply ring-1 ring-green-500 border-green-500;
-            }
-
-            .custom-scrollbar::-webkit-scrollbar {
-                width: 6px;
-            }
-            .custom-scrollbar::-webkit-scrollbar-track {
-                @apply bg-gray-50 rounded-full;
-            }
-            .custom-scrollbar::-webkit-scrollbar-thumb {
-                @apply bg-gray-300 rounded-full;
-            }
-            .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-                @apply bg-gray-400;
-            }
-
-            input::-webkit-outer-spin-button,
-            input::-webkit-inner-spin-button {
-                -webkit-appearance: none;
-                margin: 0;
-            }
-            input[type=number] {
-                -moz-appearance: textfield;
-            }
-
-            @media screen and (max-width: 768px) {
-                input, select, textarea {
-                    font-size: 16px !important;
-                }
-            }
-        }
-
-        .nav-link {
-            @apply flex items-center gap-3 px-4 py-3.5 text-sm font-medium rounded-2xl transition-all duration-200;
-        }
-        .nav-link.active {
-            @apply bg-green-600 text-white font-bold;
-        }
-        .nav-link:not(.active) {
-            @apply text-gray-700 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-white/5 dark:hover:text-white;
-        }
-
-        /* High-contrast overrides for gray text in light mode */
-        body:not(.dark) .text-gray-400 {
-            color: #6b7280 !important;
-        }
-        body:not(.dark) .text-gray-555,
-        body:not(.dark) .text-gray-500 {
-            color: #4b5563 !important;
-        }
-    </style>
     @livewireStyles
     @stack('styles')
 </head>
 
-<body class="font-sans antialiased text-gray-900 dark:text-gray-100 bg-[#f4f7f5] dark:bg-[#0B0F12] flex h-screen overflow-hidden transition-colors duration-300" x-data="{ sidebarOpen: false }">
+<body class="font-sans antialiased text-gray-900 dark:text-gray-100 bg-[#f4f7f5] dark:bg-[#0B0F12] flex h-screen overflow-hidden transition-colors duration-300" 
+      x-data="{ 
+          sidebarOpen: false,
+          toggleSidebar() {
+              this.sidebarOpen = !this.sidebarOpen;
+          }
+      }">
 
     @auth
         <!-- Mobile Sidebar Backdrop -->
-        <div x-show="sidebarOpen" x-transition.opacity class="fixed inset-0 z-40 bg-gray-900/80 backdrop-blur-sm lg:hidden" @click="sidebarOpen = false" x-cloak></div>
+        <div x-show="sidebarOpen" x-transition.opacity class="fixed inset-0 z-40 bg-gray-900/80 backdrop-blur-sm lg:hidden" @click="toggleSidebar()" x-cloak></div>
 
         <!-- Sidebar -->
         <x-sidebar />
@@ -128,12 +66,12 @@
         <!-- Topbar -->
         <header class="h-20 bg-white dark:bg-[#131B20] border-b border-gray-200 dark:border-white/10 flex items-center justify-between px-4 lg:px-8 shrink-0 z-10 shadow-sm transition-colors duration-300">
             <div class="flex items-center gap-4">
-                <!-- Sidebar Toggle (Mobile) -->
-                <button @click="sidebarOpen = true" class="p-2 -ml-2 rounded-xl text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5 lg:hidden">
+                <!-- Sidebar Toggle (Mobile & Desktop) -->
+                <button @click="toggleSidebar()" class="p-2 -ml-2 rounded-xl text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5 transition-colors" title="Alternar menú lateral">
                     <i class="fa-solid fa-bars text-xl"></i>
                 </button>
                 <h1 class="text-xl font-bold text-gray-800 dark:text-white hidden sm:block">
-                    @yield('title', 'Dashboard')
+                    {{ $title ?? View::yieldContent('title') ?: 'Inicio' }}
                 </h1>
             </div>
 

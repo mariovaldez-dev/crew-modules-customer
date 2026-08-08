@@ -30,12 +30,13 @@ class EnsureUserRole
 
         $context = session()->get('usuario_contexto');
 
-        if (!$context instanceof UsuarioContexto) {
+        if (!$context instanceof UsuarioContexto || !isset($context->zonaNombre)) {
             $tipo = in_array((string)$user->rol, ['CO', '2']) ? 'CO' : 'AM';
             $zona = !empty($user->zona) ? $user->zona : ($tipo === 'CO' ? 'FA' : 'TODAS');
 
             $context = new UsuarioContexto(
                 zona: $zona,
+                zonaNombre: $user->zonaNombre ?? '',
                 tipo: $tipo,
                 puntosDeVenta: [],
                 status: 'A'

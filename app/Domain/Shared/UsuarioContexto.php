@@ -12,8 +12,9 @@ final class UsuarioContexto
      */
     public function __construct(
         public readonly string $zona,
-        public readonly string $tipo,
-        public readonly array $puntosDeVenta,
+        public readonly string $zonaNombre = '',
+        public readonly string $tipo = 'CO',
+        public readonly array $puntosDeVenta = [],
         public readonly string $status = 'A'
     ) {}
 
