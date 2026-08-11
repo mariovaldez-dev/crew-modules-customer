@@ -70,10 +70,10 @@ $maxWidthClass = match ($maxWidth) {
         x-transition:leave="ease-in duration-200"
         x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
         x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-        class="w-full bg-white dark:bg-[#131B20] rounded-3xl shadow-2xl shadow-black/20 dark:shadow-green-900/10 transform transition-all mx-auto {{ $maxWidthClass }} relative border border-gray-100 dark:border-white/5"
+        class="w-full bg-[#F3F5F8] dark:bg-[#0B0F13] rounded-3xl shadow-2xl shadow-black/20 dark:shadow-green-900/10 transform transition-all mx-auto {{ $maxWidthClass }} relative"
     >
         <!-- Header -->
-        <div class="px-6 py-4 border-b border-gray-100 dark:border-white/5 flex items-center justify-between bg-gray-50/50 dark:bg-white/5 rounded-t-3xl">
+        <div class="px-6 py-4 flex items-center justify-between bg-white/50 dark:bg-white/5 rounded-t-3xl">
             <h3 class="text-lg font-bold text-gray-900 dark:text-white">
                 {{ $title }}
             </h3>
@@ -85,7 +85,7 @@ $maxWidthClass = match ($maxWidth) {
         </div>
 
         <!-- Body -->
-        <div class="px-6 py-4 bg-white dark:bg-[#131B20]">
+        <div class="px-6 py-4 bg-[#F3F5F8] dark:bg-[#0B0F13]">
             {{ $slot }}
         </div>
 

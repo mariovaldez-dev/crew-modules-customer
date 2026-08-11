@@ -29,7 +29,7 @@
     @elseif($normalizado === 'inactivo' || $normalizado === 'i')
         <span class="h-1.5 w-1.5 rounded-full bg-rose-500 mr-2"></span>
     @elseif($normalizado === 'en proceso' || $normalizado === 'sin confirmar' || $normalizado === 'borrador')
-        <span class="relative flex h-1.5 w-1.5 mr-2">
+        <span class="relative flex h-1.5 w-1.5 mr-2 bg-amber-500">
             <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
             <span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-amber-500"></span>
         </span>

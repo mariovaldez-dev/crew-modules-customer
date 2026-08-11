@@ -80,7 +80,7 @@
                                     <tbody class="divide-y divide-gray-100 dark:divide-white/5 text-sm">
                                         <template x-for="maniobra in maniobras" :key="maniobra.maniobraId">
                                             <tr class="hover:bg-gray-50/50 dark:hover:bg-white/5">
-                                                <td class="px-4 py-3 whitespace-nowrap text-gray-600 dark:text-gray-400" x-text="maniobra.fecha.split('T')[0]"></td>
+                                                <td class="px-4 py-3 whitespace-nowrap text-gray-600 dark:text-gray-400" x-text="maniobra.fecha ? maniobra.fecha.split('T')[0].split('-').reverse().join('/') : ''"></td>
                                                 <td class="px-4 py-3 font-semibold text-gray-900 dark:text-white" x-text="maniobra.concepto"></td>
                                                 <td class="px-4 py-3 font-mono text-gray-600 dark:text-gray-300 text-right" x-text="parseFloat(maniobra.toneladas).toFixed(3)"></td>
                                                 <td class="px-4 py-3 font-mono text-gray-500 dark:text-gray-400 text-right" x-text="'$' + parseFloat(maniobra.tarifaAplicada).toFixed(2)"></td>

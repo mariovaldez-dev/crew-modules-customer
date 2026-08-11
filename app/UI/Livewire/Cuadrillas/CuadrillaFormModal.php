@@ -136,7 +136,7 @@ class CuadrillaFormModal extends Component
             'lider'        => 'required|max:100',
             'miembros'     => 'required|integer|min:1',
             'puntoVentaId' => 'required|string|max:20',
-        ], $tarifaRules));
+        ], $tarifaRules), $this->messages());
 
         try {
             // Construir el mapa dinámico [idTipo => float|null]
@@ -196,11 +196,25 @@ class CuadrillaFormModal extends Component
 
     protected function messages(): array
     {
-        $messages = [];
+        $messages = [
+            'nombre.required'       => 'El nombre de la cuadrilla es obligatorio.',
+            'nombre.max'            => 'El nombre no debe exceder 100 caracteres.',
+            'lider.required'        => 'El nombre del líder es obligatorio.',
+            'lider.max'             => 'El nombre del líder no debe exceder 100 caracteres.',
+            'miembros.required'     => 'El número de miembros es obligatorio.',
+            'miembros.integer'      => 'El número de miembros debe ser un número entero.',
+            'miembros.min'          => 'La cuadrilla debe tener al menos 1 miembro.',
+            'puntoVentaId.required' => 'El punto de venta es obligatorio.',
+            'puntoVentaId.max'      => 'El punto de venta no es válido.',
+        ];
+
         foreach (array_keys($this->maniobras) as $id) {
-            $messages["tarifas.$id.regex"] = 'La tarifa solo acepta hasta 10 enteros y 2 decimales.';
-            $messages["tarifas.$id.max"] = 'La tarifa excede el valor máximo permitido.';
+            $messages["tarifas.$id.numeric"] = 'La tarifa debe ser un número válido.';
+            $messages["tarifas.$id.min"]     = 'La tarifa no puede ser negativa.';
+            $messages["tarifas.$id.regex"]   = 'La tarifa solo acepta hasta 10 enteros y 2 decimales.';
+            $messages["tarifas.$id.max"]     = 'La tarifa excede el valor máximo permitido.';
         }
+
         return $messages;
     }
 

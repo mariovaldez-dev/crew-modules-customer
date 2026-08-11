@@ -11,7 +11,7 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <!-- Datos Generales -->
                 <div class="space-y-4 col-span-1 sm:col-span-2">
-                    <h4 class="text-sm font-bold text-gray-900 dark:text-white border-b border-gray-100 dark:border-white/5 pb-2">Datos Generales</h4>
+                    <h4 class="text-sm font-bold text-gray-900 dark:text-white pb-2">Datos Generales</h4>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
@@ -48,9 +48,9 @@
 
                 <!-- Tarifas por Maniobra (dinámicas) -->
                 <div class="space-y-4 col-span-1 sm:col-span-2 mt-4">
-                    <h4 class="text-sm font-bold text-gray-900 dark:text-white border-b border-gray-100 dark:border-white/5 pb-2">
+                    <h4 class="text-sm font-bold text-gray-900 dark:text-white pb-2">
                         Tarifas por Maniobra
-                        <span class="ml-2 text-[10px] font-normal text-gray-400 dark:text-gray-500 uppercase tracking-widest">Opcional</span>
+                        <span class="ml-2 text-[10px] font-bold text-gray-500 uppercase tracking-widest">(Opcional)</span>
                     </h4>
 
                     @if($maniobrasLoaded)

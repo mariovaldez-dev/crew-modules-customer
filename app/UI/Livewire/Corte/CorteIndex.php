@@ -10,6 +10,7 @@ use App\Domain\Corte\RegenerarCorteUseCase;
 use App\Domain\Corte\GenerarPdfCorteUseCase;
 use App\UI\Livewire\Traits\WithZonaScope;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Exception;
 use Livewire\Component;
 
@@ -46,11 +47,21 @@ class CorteIndex extends Component
 
     public function loadData(\App\Domain\Corte\ListarCortesUseCase $useCase)
     {
+        Log::info("[CORTE-LIQUIDACION] [UI-Index] Cargando lista de cortes para zona: {$this->zonaUsuario}");
         $this->cargando = true;
         try {
-            $this->cortes = $useCase->execute($this->zonaUsuario);
+            $cortesRaw = $useCase->execute($this->zonaUsuario);
+            $this->cortes = array_map(function($c) {
+                if (is_array($c)) {
+                    if (!isset($c['id']) && isset($c['corteId'])) {
+                        $c['id'] = $c['corteId'];
+                    }
+                }
+                return $c;
+            }, $cortesRaw);
+            Log::info("[CORTE-LIQUIDACION] [UI-Index] Cortes cargados correctamente. Total: " . count($this->cortes));
         } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::error("Error listando cortes: " . $e->getMessage());
+            Log::error("[CORTE-LIQUIDACION] [UI-Index] Error listando cortes: " . $e->getMessage(), ['exception' => $e]);
             $this->dispatch('notify', ['message' => 'Error al cargar cortes.', 'type' => 'error']);
         }
         $this->cargando = false;
@@ -58,6 +69,12 @@ class CorteIndex extends Component
 
     public function generarCorte(GenerarCorteUseCase $useCase, \App\Domain\Corte\ListarCortesUseCase $listarUseCase)
     {
+        Log::info("[CORTE-LIQUIDACION] [UI-Index] Solicitando generar corte", [
+            'fechaInicio' => $this->fechaInicio,
+            'fechaFin' => $this->fechaFin,
+            'zona' => $this->zonaUsuario
+        ]);
+
         $this->validate([
             'fechaInicio' => 'required|date',
             'fechaFin' => 'required|date|after_or_equal:fechaInicio'
@@ -69,12 +86,14 @@ class CorteIndex extends Component
 
         try {
             $useCase->execute($this->fechaInicio, $this->fechaFin, $this->zonaUsuario);
+            Log::info("[CORTE-LIQUIDACION] [UI-Index] Corte generado exitosamente.");
             
             $this->dispatch('notify', ['message' => 'Corte generado exitosamente', 'type' => 'success']);
             $this->mostrandoFormularioNuevo = false;
             $this->loadData($listarUseCase);
             $this->dispatch('close-modal', 'nuevo-corte-modal');
         } catch (\Exception $e) {
+            Log::error("[CORTE-LIQUIDACION] [UI-Index] Error al generar corte: " . $e->getMessage());
             $this->dispatch('notify', ['message' => $e->getMessage(), 'type' => 'error']);
         }
     }

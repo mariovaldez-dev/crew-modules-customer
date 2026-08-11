@@ -29,8 +29,8 @@
                         Corte {{ $corte['folio'] ?? 'Borrador' }}
                     </h2>
                     <p class="text-sm text-gray-500 mt-1">
-                        Periodo: <span class="font-bold text-gray-700 dark:text-gray-300">{{ \Carbon\Carbon::parse($corte['fechaInicio'])->format('d/M/Y') }}</span> 
-                        al <span class="font-bold text-gray-700 dark:text-gray-300">{{ \Carbon\Carbon::parse($corte['fechaFin'])->format('d/M/Y') }}</span>
+                        Periodo: <span class="font-bold text-gray-700 dark:text-gray-300">{{ \Carbon\Carbon::parse($corte['fechaInicio'])->format('d/m/Y') }}</span> 
+                        al <span class="font-bold text-gray-700 dark:text-gray-300">{{ \Carbon\Carbon::parse($corte['fechaFin'])->format('d/m/Y') }}</span>
                     </p>
                 </div>
                 
@@ -43,7 +43,7 @@
                             Imprimir PDF
                         </button>
                     @elseif($this->todasConfirmadas)
-                        <x-button wire:click="$dispatch('open-modal', 'confirm-corte-general')" variant="primary" class="!py-2 !px-4 text-xs">
+                        <x-button @click="$dispatch('open-modal', 'confirm-corte-general')" variant="primary" class="!py-2 !px-4 text-xs">
                             <i class="fa-solid fa-check-double mr-2"></i>
                             Confirmar Corte
                         </x-button>
@@ -54,7 +54,7 @@
                     @endif
 
                     @if($corte['estado'] === 'Borrador')
-                        <x-button wire:click="$dispatch('open-modal', 'confirm-regenerar')" variant="secondary" class="!py-2 !px-4 text-xs">
+                        <x-button @click="$dispatch('open-modal', 'confirm-regenerar')" variant="secondary" class="!py-2 !px-4 text-xs">
                             <i class="fa-solid fa-rotate-right mr-2"></i>
                             Regenerar
                         </x-button>

@@ -10,7 +10,7 @@
         </div>
 
         <div class="mt-4 sm:mt-0">
-            <x-button wire:click="prepararNuevoCorte" variant="primary">
+            <x-button @click="$dispatch('open-modal', 'nuevo-corte-modal')" variant="primary">
                 <i class="fa-solid fa-plus mr-2"></i> Generar nuevo corte
             </x-button>
         </div>
@@ -18,12 +18,7 @@
 
     <!-- Lista -->
     <div class="bg-white dark:bg-[#131B20] rounded-3xl shadow-sm border border-gray-100 dark:border-white/5 overflow-hidden">
-        @if($cargando)
-            <div class="p-10 flex flex-col items-center justify-center text-gray-400">
-                <i class="fa-solid fa-circle-notch fa-spin text-3xl mb-3 text-green-500"></i>
-                <p class="font-bold tracking-wide">Cargando historial...</p>
-            </div>
-        @elseif(empty($cortes))
+        @if(!$cargando && empty($cortes))
             <x-table-empty-state message="No hay cortes de liquidación registrados en esta zona." />
         @else
             <div class="overflow-x-auto">
@@ -39,32 +34,45 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100 dark:divide-white/5">
-                        @foreach($cortes as $c)
-                            <tr class="hover:bg-gray-50 dark:hover:bg-white/5 transition-colors group">
-                                <td class="px-6 py-4 font-bold text-gray-900 dark:text-white">
-                                    {{ $c['folio'] ?? 'Borrador' }}
-                                </td>
-                                <td class="px-6 py-4">
-                                    <span class="text-gray-700 dark:text-gray-300">{{ \Carbon\Carbon::parse($c['fechaInicio'])->format('d/M/Y') }}</span>
-                                    <span class="text-gray-400 mx-1">-</span>
-                                    <span class="text-gray-700 dark:text-gray-300">{{ \Carbon\Carbon::parse($c['fechaFin'])->format('d/M/Y') }}</span>
-                                </td>
-                                <td class="px-6 py-4 text-right font-medium text-gray-700 dark:text-gray-300">
-                                    {{ number_format($c['toneladasTotal'], 3) }}
-                                </td>
-                                <td class="px-6 py-4 text-right font-bold text-gray-900 dark:text-white">
-                                    ${{ number_format($c['montoTotal'], 2) }}
-                                </td>
-                                <td class="px-6 py-4 text-center">
-                                    <x-status-badge :status="$c['estado']" />
-                                </td>
-                                <td class="px-6 py-4 text-center">
-                                    <a href="{{ route('corte-liquidacion.detalle', ['id' => $c['id']]) }}" class="inline-flex items-center justify-center font-bold transition-all duration-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-[#131B20] bg-gray-100 hover:bg-gray-200 text-gray-700 dark:bg-white/10 dark:hover:bg-white/20 dark:text-gray-200 shadow-sm !py-1.5 !px-3 text-xs">
-                                        <i class="fa-solid fa-eye mr-2"></i> Ver Detalles
-                                    </a>
-                                </td>
-                            </tr>
-                        @endforeach
+                        @if($cargando)
+                            @for($i = 0; $i < 4; $i++)
+                                <tr class="animate-pulse">
+                                    <td class="px-6 py-4"><div class="h-4 bg-gray-200 dark:bg-white/10 rounded w-20"></div></td>
+                                    <td class="px-6 py-4"><div class="h-4 bg-gray-200 dark:bg-white/10 rounded w-36"></div></td>
+                                    <td class="px-6 py-4"><div class="h-4 bg-gray-200 dark:bg-white/10 rounded w-16 ml-auto"></div></td>
+                                    <td class="px-6 py-4"><div class="h-4 bg-gray-200 dark:bg-white/10 rounded w-20 ml-auto"></div></td>
+                                    <td class="px-6 py-4"><div class="h-6 bg-gray-200 dark:bg-white/10 rounded-full w-24 mx-auto"></div></td>
+                                    <td class="px-6 py-4"><div class="h-8 bg-gray-200 dark:bg-white/10 rounded-xl w-28 mx-auto"></div></td>
+                                </tr>
+                            @endfor
+                        @else
+                            @foreach($cortes as $c)
+                                <tr class="hover:bg-gray-50 dark:hover:bg-white/5 transition-colors group">
+                                    <td class="px-6 py-4 font-bold text-gray-900 dark:text-white">
+                                        {{ $c['folio'] ?? 'Borrador' }}
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <span class="text-gray-700 dark:text-gray-300">{{ \Carbon\Carbon::parse($c['fechaInicio'])->format('d/m/Y') }}</span>
+                                        <span class="text-gray-400 mx-1">-</span>
+                                        <span class="text-gray-700 dark:text-gray-300">{{ \Carbon\Carbon::parse($c['fechaFin'])->format('d/m/Y') }}</span>
+                                    </td>
+                                    <td class="px-6 py-4 text-right font-medium text-gray-700 dark:text-gray-300">
+                                        {{ number_format($c['toneladasTotal'], 3) }}
+                                    </td>
+                                    <td class="px-6 py-4 text-right font-bold text-gray-900 dark:text-white">
+                                        ${{ number_format($c['montoTotal'], 2) }}
+                                    </td>
+                                    <td class="px-6 py-4 text-center">
+                                        <x-status-badge :status="$c['estado']" />
+                                    </td>
+                                    <td class="px-6 py-4 text-center">
+                                        <a href="{{ route('corte-liquidacion.detalle', ['id' => $c['corteId'] ?? $c['id']]) }}" class="inline-flex items-center justify-center font-bold transition-all duration-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-[#131B20] bg-gray-100 hover:bg-gray-200 text-gray-700 dark:bg-white/10 dark:hover:bg-white/20 dark:text-gray-200 shadow-sm !py-1.5 !px-3 text-xs">
+                                            <i class="fa-solid fa-eye mr-2"></i> Ver Detalles
+                                        </a>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        @endif
                     </tbody>
                 </table>
             </div>

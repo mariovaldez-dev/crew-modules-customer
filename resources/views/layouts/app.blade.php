@@ -53,7 +53,7 @@
 
     @auth
         <!-- Mobile Sidebar Backdrop -->
-        <div x-show="sidebarOpen" x-transition.opacity class="fixed inset-0 z-40 bg-gray-900/80 backdrop-blur-sm lg:hidden" @click="toggleSidebar()" x-cloak></div>
+        <div x-show="sidebarOpen" x-transition.opacity class="fixed inset-0 z-40 bg-gray-900/80 lg:hidden" @click="toggleSidebar()" x-cloak></div>
 
         <!-- Sidebar -->
         <x-sidebar />
@@ -127,15 +127,15 @@
             }
         }"
         class="fixed top-[90px] left-0 right-0 md:left-auto md:right-6 z-[100] px-4 pointer-events-none flex justify-center md:justify-end"
-        x-cloak>
+        x-cloak style="display:none">
 
-        <div x-show="show" x-transition:enter="transition ease-out duration-500"
+        <div x-show="show" style="display:none" x-transition:enter="transition ease-out duration-500"
             x-transition:enter-start="opacity-0 -translate-y-4 scale-95"
             x-transition:enter-end="opacity-100 translate-y-0 scale-100"
             x-transition:leave="transition ease-in duration-300"
             x-transition:leave-start="opacity-100 translate-y-0 scale-100"
             x-transition:leave-end="opacity-0 -translate-y-4 scale-95"
-            class="pointer-events-auto w-full max-w-sm overflow-hidden rounded-[1.25rem] border backdrop-blur-xl shadow-[0_20px_50px_-12px_rgba(0,0,0,0.15)] flex items-stretch transition-all duration-300 dark:border-white/10"
+            class="pointer-events-auto w-full max-w-sm overflow-hidden rounded-[1.25rem] border shadow-[0_20px_50px_-12px_rgba(0,0,0,0.15)] flex items-stretch transition-all duration-300 dark:border-white/10"
             :class="{
                 'bg-white/90 dark:bg-[#1A2227]/90 border-green-100 shadow-green-900/5 dark:shadow-green-900/20': type === 'success',
                 'bg-white/90 dark:bg-[#1A2227]/90 border-red-100 shadow-red-900/5 dark:shadow-red-900/20': type === 'error',
