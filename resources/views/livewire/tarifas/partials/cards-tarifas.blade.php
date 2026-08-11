@@ -12,7 +12,7 @@
         <div class="bg-white dark:bg-[#18232A] border border-gray-100 dark:border-white/5 rounded-3xl p-6 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
             
             {{-- Decoration --}}
-            <div class="absolute top-0 right-0 w-32 h-32 bg-green-500/5 dark:bg-green-500/10 rounded-full blur-3xl -mr-10 -mt-10 transition-transform group-hover:scale-110"></div>
+            <div class="absolute top-0 right-0 w-32 h-32 bg-green-500/5 dark:bg-green-500/10 rounded-full -mr-10 -mt-10 transition-transform group-hover:scale-110"></div>
             
             <div class="relative">
                 <div class="flex items-start justify-between mb-5">

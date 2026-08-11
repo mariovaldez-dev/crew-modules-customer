@@ -34,28 +34,17 @@ BEGIN
         -- 5. Calcular Estadísticas de Maniobras Registradas
         SELECT 
             @ToneladasTotales = ISNULL(SUM(m.num_toneladas), 0),
-            -- Si 1 es En proceso, entonces cualquier otra cosa (>1) es Liquidada
-            @ManiobrasLiquidadas = SUM(CASE WHEN m.opc_estatus > 1 THEN 1 ELSE 0 END),
-            -- Exactamente 1 es En proceso
-            @ManiobrasEnProceso = SUM(CASE WHEN m.opc_estatus = 1 THEN 1 ELSE 0 END)
+            -- Si idu_corte > 0 está asignada a un corte (Liquidada)
+            @ManiobrasLiquidadas = SUM(CASE WHEN ISNULL(m.idu_corte, 0) > 0 THEN 1 ELSE 0 END),
+            -- Si idu_corte == 0 está pendiente (En proceso)
+            @ManiobrasEnProceso = SUM(CASE WHEN ISNULL(m.idu_corte, 0) = 0 THEN 1 ELSE 0 END)
             
         FROM mov_pdm_maniobras_ejecutadas m
         INNER JOIN mae_pdm_cuadrillas c ON m.idu_cuadrilla = c.idu_cuadrilla
         WHERE (@Zona IS NULL OR c.clv_zona = @Zona) 
-          AND m.opc_estatus > 0;
+          AND m.opc_estatus = 1;
 
-        -- 6. Buscar Corte en Borrador (Solo para CO)
-        /*IF @Zona IS NOT NULL
-        BEGIN
-            SELECT TOP 1 
-                @FolioCorteActual = idu_corte, 
-                @CuadrillasEnCorte = 0 
-            FROM mae_pdm_cortes_liquidacion
-            WHERE clv_zona = @Zona AND opc_estatus = 0
-            ORDER BY fec_registro DESC;
-        END */
-
-        -- 7. Construir el JSON final
+        -- 6. Construir el JSON final
         DECLARE @JSONResult NVARCHAR(MAX) = (
             SELECT 
                 @TotalManiobras AS totalManiobras,
@@ -71,24 +60,26 @@ BEGIN
                 (
                     -- Arreglo de los 5 últimos registros
                     SELECT TOP 5 
-                        m.num_tipodocumento AS folio, 
+                        'MAN-' + RIGHT('000000' + CAST(m.idu_maniobra AS VARCHAR(20)), 6) AS folio, 
                         m.fec_registro AS fecha,
                         c.nom_cuadrilla AS cuadrillaNombre,
                         m.idu_punto_venta AS almacenNombre,
                         t.nom_maniobra AS tipoManiobraNombre,
                         m.num_toneladas AS toneladas,
-                        CASE WHEN m.opc_estatus = 1 THEN 'En proceso' ELSE 'Liquidada' END AS estado
+                        m.idu_corte AS idCorte,
+                        CASE WHEN ISNULL(m.idu_corte, 0) > 0 THEN 'Liquidada' ELSE 'En proceso' END AS estado
                     FROM mov_pdm_maniobras_ejecutadas m
                     INNER JOIN mae_pdm_cuadrillas c ON m.idu_cuadrilla = c.idu_cuadrilla
                     INNER JOIN cat_pdm_tipos_maniobras t ON m.idu_tipomaniobra = t.idu_tipomaniobra
                     WHERE (@Zona IS NULL OR c.clv_zona = @Zona)
+                      AND m.opc_estatus = 1
                     ORDER BY m.fec_registro DESC, m.idu_maniobra DESC
                     FOR JSON PATH
                 ) AS recientesRegistros
             FOR JSON PATH, WITHOUT_ARRAY_WRAPPER
         );
 
-        -- 8. Retornar el estándar de la empresa: estatus, mensaje, resultado
+        -- 7. Retornar el estándar de la empresa
         SELECT 
             0 AS estatus, 
             'Información recuperada con éxito' AS mensaje, 
@@ -96,11 +87,9 @@ BEGIN
 
     END TRY
     BEGIN CATCH
-        -- Manejo de errores por si algo falla a nivel SQL
         SELECT 
             -100 AS estatus, 
             ERROR_MESSAGE() AS mensaje, 
             '{}' AS resultado;
     END CATCH
 END
-

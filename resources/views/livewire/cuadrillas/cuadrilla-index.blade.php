@@ -10,7 +10,7 @@
         
         @if($this->rolUsuario === 'CO')
         <div>
-            <button wire:click="$dispatch('open-cuadrilla-modal')" class="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-green-600 hover:bg-green-700 text-white text-sm font-bold shadow-md shadow-green-900/10 hover:shadow-lg transition-all duration-200">
+            <button @click="$dispatch('open-cuadrilla-modal')" class="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-green-600 hover:bg-green-700 text-white text-sm font-bold shadow-md shadow-green-900/10 hover:shadow-lg transition-all duration-200">
                 <i class="fa-solid fa-plus text-xs"></i>
                 Nueva cuadrilla
             </button>
@@ -110,7 +110,7 @@
                             <td class="px-6 py-4 whitespace-nowrap text-right space-x-1">
                                 <!-- Tooltip Editar -->
                                 <div class="relative group inline-block">
-                                    <button wire:click="$dispatch('open-cuadrilla-modal', { cuadrilla: {{ json_encode($cuadrilla) }} })"
+                                    <button @click="$dispatch('open-cuadrilla-modal', { cuadrilla: {{ json_encode($cuadrilla) }} })"
                                             class="text-green-600 dark:text-green-400 transition-all duration-200 p-2.5 rounded-xl hover:bg-green-50 dark:hover:bg-green-950/30">
                                         <i class="fa-solid fa-pen-to-square text-base"></i>
                                     </button>

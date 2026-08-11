@@ -13,9 +13,16 @@ class RegistroManiobraRepository implements RegistroManiobraRepositoryInterface
 {
     public function list(array $filtros, string $zonaUsuario, string $rolUsuario): array
     {
-        try {
-            $claveZona = ($zonaUsuario === 'TODAS') ? '' : $zonaUsuario;
+        $claveZona = ($zonaUsuario === 'TODAS') ? '' : $zonaUsuario;
 
+        Log::info("[REGISTRO-MANIOBRAS] Ejecutando proc_pdm_obtener_maniobras_ejecutadas", [
+            'claveZona' => $claveZona,
+            'fechaInicio' => $filtros['fechaInicio'] ?? null,
+            'fechaFin' => $filtros['fechaFin'] ?? null,
+            'rolUsuario' => $rolUsuario
+        ]);
+
+        try {
             DB::connection('maniobras')->statement("SET ANSI_NULLS ON");
             DB::connection('maniobras')->statement("SET ANSI_WARNINGS ON");
             $results = DB::connection('maniobras')->select(
@@ -28,16 +35,25 @@ class RegistroManiobraRepository implements RegistroManiobraRepositoryInterface
             );
 
             if (empty($results)) {
+                Log::warning("[REGISTRO-MANIOBRAS] proc_pdm_obtener_maniobras_ejecutadas no devolvió ningún resultado.");
                 return [];
             }
 
             $row = $results[0];
+            Log::info("[REGISTRO-MANIOBRAS] Respuesta raw de proc_pdm_obtener_maniobras_ejecutadas", [
+                'estado' => $row->estado ?? null,
+                'mensaje' => $row->mensaje ?? null,
+                'listaManiobras_raw' => $row->listaManiobras ?? null
+            ]);
+
             if ((int) $row->estado !== 0) {
+                Log::warning("[REGISTRO-MANIOBRAS] proc_pdm_obtener_maniobras_ejecutadas devolvió estado diferente de 0: " . ($row->mensaje ?? 'Sin mensaje'));
                 return [];
             }
 
             $maniobrasJson = json_decode($row->listaManiobras, true);
             if (!is_array($maniobrasJson)) {
+                Log::error("[REGISTRO-MANIOBRAS] Error decodificando listaManiobras JSON.");
                 return [];
             }
 
@@ -45,15 +61,10 @@ class RegistroManiobraRepository implements RegistroManiobraRepositoryInterface
             $zonaFiltro = ($rolUsuario === 'AM') ? 'TODAS' : $zonaUsuario;
             $almacenesMap = $sucursalRepo->listaPuntosDeVentaPorZona($zonaFiltro);
 
-            Log::debug('[RegistroManiobraRepository@list] Inicia mapeo', [
-                'total_json' => count($maniobrasJson),
-                'filtros' => $filtros,
-                'data' => $maniobrasJson
-            ]);
-
             $maniobras = [];
             foreach ($maniobrasJson as $item) {
-                $fechaStr = $item['fecha'] ?? $item['fec_registro'] ?? date('Y-m-d');
+                $fechaRaw = $item['fecha'] ?? $item['fec_registro'] ?? date('Y-m-d');
+                $fechaStr = substr($fechaRaw, 0, 10);
                 $fecha = new \DateTimeImmutable($fechaStr);
                 
                 $almacenId = $item['idPuntoVenta'] ?? '';
@@ -77,10 +88,12 @@ class RegistroManiobraRepository implements RegistroManiobraRepositoryInterface
 
                 $estadoId = (int) ($item['estatus'] ?? 1);
                 $corteId = isset($item['idCorte']) ? (int) $item['idCorte'] : null;
+                $idManiobra = (int) ($item['idManiobra'] ?? 0);
+                $folioFormatted = !empty($item['folio']) ? $item['folio'] : ($idManiobra > 0 ? 'MAN-' . str_pad((string)$idManiobra, 6, '0', STR_PAD_LEFT) : 'S/F');
 
                 $dto = new RegistroManiobraDTO(
-                    id: (int) ($item['idManiobra'] ?? 0),
-                    folio: $item['folio'] ?? 'S/F',
+                    id: $idManiobra,
+                    folio: $folioFormatted,
                     fecha: $fecha,
                     almacenId: $almacenId,
                     almacenNombre: $almacenesMap[$almacenId] ?? $almacenId,
@@ -105,22 +118,34 @@ class RegistroManiobraRepository implements RegistroManiobraRepositoryInterface
                 $maniobras[] = $dto;
             }
             
-            Log::debug('[RegistroManiobraRepository@list] Fin mapeo', [
-                'total_maniobras_filtradas' => count($maniobras)
+            Log::info("[REGISTRO-MANIOBRAS] Total maniobras procesadas exitosamente", [
+                'total_recibidas' => count($maniobrasJson),
+                'total_filtradas' => count($maniobras)
             ]);
 
             return $maniobras;
         } catch (Exception $e) {
-            Log::error('Error en RegistroManiobraRepository@list', ['error' => $e->getMessage()]);
+            Log::error("[REGISTRO-MANIOBRAS] Error en RegistroManiobraRepository@list: " . $e->getMessage(), ['exception' => $e]);
             return [];
         }
     }
 
     public function create(ManiobraManualDTO $maniobra): string
     {
-        try {
-            $usuarioId = auth()->user()?->id ?? 0;
+        $usuarioId = auth()->user()?->id ?? 0;
+        $fechaString = $maniobra->fecha->format('Y-m-d H:i:s');
 
+        Log::info("[REGISTRO-MANIOBRAS] Ejecutando proc_pdm_administrar_maniobras_ejecutadas (Alta Manual)", [
+            'tipoManiobraId' => $maniobra->tipoManiobraId,
+            'almacenId' => $maniobra->almacenId,
+            'cuadrillaId' => $maniobra->cuadrillaId,
+            'documentoSap' => $maniobra->documentoSap,
+            'toneladas' => $maniobra->toneladas,
+            'usuarioId' => $usuarioId,
+            'fecha' => $fechaString
+        ]);
+
+        try {
             $results = DB::connection('maniobras')->select(
                 "EXEC dbo.proc_pdm_administrar_maniobras_ejecutadas
                     @idTipoManiobra = ?,
@@ -129,7 +154,8 @@ class RegistroManiobraRepository implements RegistroManiobraRepositoryInterface
                     @serieDocumento = ?,
                     @documentoSap = ?,
                     @toneladas = ?,
-                    @usuario = ?",
+                    @usuario = ?,
+                    @fecha = ?",
                 [
                     $maniobra->tipoManiobraId,
                     $maniobra->almacenId,
@@ -137,28 +163,38 @@ class RegistroManiobraRepository implements RegistroManiobraRepositoryInterface
                     0,
                     (int) $maniobra->documentoSap,
                     $maniobra->toneladas,
-                    (int) $usuarioId
+                    (int) $usuarioId,
+                    $fechaString
                 ]
             );
 
             if (empty($results)) {
+                Log::error("[REGISTRO-MANIOBRAS] No se recibió respuesta de proc_pdm_administrar_maniobras_ejecutadas.");
                 throw new Exception("No se recibió respuesta de la base de datos.");
             }
 
             $row = $results[0];
+            Log::info("[REGISTRO-MANIOBRAS] Respuesta raw de proc_pdm_administrar_maniobras_ejecutadas", [
+                'estado' => $row->estado ?? null,
+                'mensaje' => $row->mensaje ?? null
+            ]);
+
             if ((int) $row->estado !== 0) {
+                Log::warning("[REGISTRO-MANIOBRAS] Error devuelto por proc_pdm_administrar_maniobras_ejecutadas: " . ($row->mensaje ?? 'Error desconocido'));
                 throw new Exception($row->mensaje);
             }
 
             return $row->mensaje ?? 'Maniobra registrada correctamente.';
         } catch (Exception $e) {
-            Log::error('Error en RegistroManiobraRepository@create', ['error' => $e->getMessage()]);
+            Log::error("[REGISTRO-MANIOBRAS] Exception en RegistroManiobraRepository@create: " . $e->getMessage(), ['exception' => $e]);
             throw new Exception($e->getMessage());
         }
     }
 
     public function cuadrillasPorAlmacen(string $almacenId): array
     {
+        Log::info("[REGISTRO-MANIOBRAS] Consultando cuadrillas por almacén (proc_pdm_cosultar_combos 2)", ['almacenId' => $almacenId]);
+
         try {
             DB::connection('maniobras')->statement("SET ANSI_NULLS ON");
             DB::connection('maniobras')->statement("SET ANSI_WARNINGS ON");
@@ -169,9 +205,13 @@ class RegistroManiobraRepository implements RegistroManiobraRepositoryInterface
             );
 
             if (empty($results)) {
+                Log::warning("[REGISTRO-MANIOBRAS] proc_pdm_cosultar_combos 2 no devolvió ningún resultado para almacén: {$almacenId}");
                 return [];
             }
+
             $row = $results[0];
+            Log::info("[REGISTRO-MANIOBRAS] Respuesta raw de proc_pdm_cosultar_combos 2", ['row' => $row]);
+
             if ((int) $row->estado !== 0) {
                 return [];
             }
@@ -193,15 +233,19 @@ class RegistroManiobraRepository implements RegistroManiobraRepositoryInterface
                     $cuadrillas[$codigo] = $nombre;
                 }
             }
+
+            Log::info("[REGISTRO-MANIOBRAS] Cuadrillas por almacén obtenidas correctamente. Total: " . count($cuadrillas));
             return $cuadrillas;
         } catch (\Throwable $e) {
-            Log::error('Error en RegistroManiobraRepository@cuadrillasPorAlmacen', ['error' => $e->getMessage()]);
+            Log::error("[REGISTRO-MANIOBRAS] Error en cuadrillasPorAlmacen: " . $e->getMessage(), ['exception' => $e]);
             return [];
         }
     }
 
     public function tiposManiobra(): array
     {
+        Log::info("[REGISTRO-MANIOBRAS] Consultando tipos de maniobra (proc_pdm_cosultar_combos 3)");
+
         try {
             DB::connection('maniobras')->statement("SET ANSI_NULLS ON");
             DB::connection('maniobras')->statement("SET ANSI_WARNINGS ON");
@@ -211,9 +255,13 @@ class RegistroManiobraRepository implements RegistroManiobraRepositoryInterface
             );
 
             if (empty($results)) {
+                Log::warning("[REGISTRO-MANIOBRAS] proc_pdm_cosultar_combos 3 no devolvió ningún resultado.");
                 return [];
             }
+
             $row = $results[0];
+            Log::info("[REGISTRO-MANIOBRAS] Respuesta raw de proc_pdm_cosultar_combos 3", ['row' => $row]);
+
             if ((int) $row->estado !== 0) {
                 return [];
             }
@@ -235,9 +283,11 @@ class RegistroManiobraRepository implements RegistroManiobraRepositoryInterface
                     $tipos[$codigo] = $nombre;
                 }
             }
+
+            Log::info("[REGISTRO-MANIOBRAS] Tipos de maniobra obtenidos correctamente. Total: " . count($tipos));
             return $tipos;
         } catch (\Throwable $e) {
-            Log::error('Error en RegistroManiobraRepository@tiposManiobra', ['error' => $e->getMessage()]);
+            Log::error("[REGISTRO-MANIOBRAS] Error en tiposManiobra: " . $e->getMessage(), ['exception' => $e]);
             return [];
         }
     }

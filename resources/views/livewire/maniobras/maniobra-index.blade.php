@@ -9,7 +9,7 @@
         </div>
         
         <div>
-            <button wire:click="$dispatch('open-maniobra-modal')" class="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-green-600 hover:bg-green-700 text-white text-sm font-bold shadow-md shadow-green-900/10 hover:shadow-lg transition-all duration-200">
+            <button @click="$dispatch('open-maniobra-modal')" class="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-green-600 hover:bg-green-700 text-white text-sm font-bold shadow-md shadow-green-900/10 hover:shadow-lg transition-all duration-200">
                 <i class="fa-solid fa-plus text-xs"></i>
                 Nueva maniobra
             </button>
@@ -62,8 +62,8 @@
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-right">
                                 <div class="relative group inline-block">
-                                    <button wire:click="$dispatch('open-maniobra-modal', { maniobra: {{ json_encode($maniobra->toArray()) }} })"
-                                            class="text-green-600 dark:text-green-400 transition-all duration-200 p-2.5 rounded-xl hover:bg-green-50 dark:hover:bg-green-950/30">
+                                    <button @click="$dispatch('open-maniobra-modal', { maniobra: {{ json_encode($maniobra->toArray()) }} })"
+                                            class="text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-300 transition-colors p-2 rounded-xl hover:bg-green-50 dark:hover:bg-green-950/30">
                                         <i class="fa-solid fa-pen-to-square text-base"></i>
                                     </button>
                                     <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block bg-gray-900 dark:bg-gray-800 text-white text-[10px] py-1 px-2 rounded-lg font-bold whitespace-nowrap shadow-md z-10 pointer-events-none">

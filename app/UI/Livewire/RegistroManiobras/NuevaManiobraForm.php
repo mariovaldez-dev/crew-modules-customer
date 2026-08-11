@@ -73,11 +73,22 @@ class NuevaManiobraForm extends Component
     {
         $this->validate([
             'fecha' => 'required|date|before_or_equal:today',
-            'almacenId' => 'required|string',
-            'cuadrillaId' => 'required|integer',
-            'tipoManiobraId' => 'required|integer',
-            'toneladas' => 'required|numeric|min:0.001|decimal:0,3',
+            'almacenId' => 'required',
+            'cuadrillaId' => 'required',
+            'tipoManiobraId' => 'required',
+            'toneladas' => 'required|numeric|min:0.001',
             'documentoSap' => 'nullable|string|max:50',
+        ], [
+            'fecha.required' => 'La fecha es obligatoria.',
+            'fecha.date' => 'La fecha debe tener un formato válido.',
+            'fecha.before_or_equal' => 'La fecha no puede ser posterior a hoy.',
+            'almacenId.required' => 'El almacén es obligatorio.',
+            'cuadrillaId.required' => 'La cuadrilla es obligatoria.',
+            'tipoManiobraId.required' => 'El tipo de maniobra es obligatorio.',
+            'toneladas.required' => 'Las toneladas son obligatorias.',
+            'toneladas.numeric' => 'Las toneladas deben ser un valor numérico.',
+            'toneladas.min' => 'Las toneladas deben ser mayores a 0.',
+            'documentoSap.max' => 'El documento SAP no debe exceder 50 caracteres.',
         ]);
 
         try {

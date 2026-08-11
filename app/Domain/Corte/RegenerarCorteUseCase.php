@@ -8,8 +8,8 @@ class RegenerarCorteUseCase
     {
     }
 
-    public function execute(int $corteId, string $zona): void
+    public function execute(int $corteId, string $zona): array
     {
-        $this->repository->regenerar($corteId);
+        return $this->repository->regenerar($corteId);
     }
 }

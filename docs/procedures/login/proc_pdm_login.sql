@@ -10,12 +10,14 @@ BEGIN
 	DECLARE @mensaje VARCHAR(500) = 'OK';
 	DECLARE @codigoAsesor INT = 0;
 	DECLARE @nombreAsesor VARCHAR(500) = '';
-	DECLARE @zonaAsesor VARCHAR(500) = '';	
+	DECLARE @zonaAsesor VARCHAR(500) = '';
+	DECLARE @zonaNombre VARCHAR(500) = '';	
 	DECLARE @rol SMALLINT
     SELECT  
         @codigoAsesor = age.Code,  
         @nombreAsesor = age.Name,
 		@zonaAsesor = age.U_serieSucursal,
+		@zonaNombre = o.SlpName,
 		@rol = (CASE WHEN age.U_Tipo = 'AM' THEN 1 ELSE 2 END)
     FROM SAP.SBO_Impulsora_PROD.dbo.[@USUARIOS_PUNTOVENTA] AS age 
     JOIN SAP.SBO_Impulsora_PROD.dbo.[OSLP] AS o ON o.Memo = age.U_SerieSucursal AND o.Active  = 'Y'
@@ -36,6 +38,7 @@ BEGIN
 				@codigoAsesor AS [codigoAsesor], 
 				@nombreAsesor AS [nombreAsesor],
 				@zonaAsesor AS [zonaAsesor],
+				@zonaNombre AS [zonaNombre],
 				@rol AS [rolAsesor]
 
 
