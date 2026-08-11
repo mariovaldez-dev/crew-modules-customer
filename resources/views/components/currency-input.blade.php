@@ -1,8 +1,8 @@
 @props(['disabled' => false, 'id' => null])
 
 <div class="relative w-full">
-    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-        <span class="text-gray-500 dark:text-gray-400 sm:text-sm">$</span>
+    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none z-10">
+        <span class="text-gray-500 dark:text-gray-400 text-sm font-semibold">$</span>
     </div>
     <input 
         type="number" 

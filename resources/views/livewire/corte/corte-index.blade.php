@@ -23,7 +23,7 @@
         @else
             <div class="overflow-x-auto">
                 <table class="w-full text-sm text-left">
-                    <thead class="text-xs text-gray-500 bg-gray-50/50 dark:bg-white/5 uppercase border-b border-gray-100 dark:border-white/5">
+                    <thead class="text-xs text-gray-500 bg-green-600 uppercase border-b border-gray-100 dark:border-white/5">
                         <tr>
                             <th class="px-6 py-4 font-black tracking-wider">Folio</th>
                             <th class="px-6 py-4 font-black tracking-wider">Periodo</th>

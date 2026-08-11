@@ -1,15 +1,25 @@
-@props(['status'])
+@props(['status', 'solid' => false])
 
 @php
     $normalizado = strtolower(trim($status));
 
-    $classes = match($normalizado) {
-        'activo', 'a', 'confirmado' => 'bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 border-emerald-500/30 shadow-sm shadow-emerald-500/10',
-        'inactivo', 'i'        => 'bg-rose-500/15 text-rose-800 dark:text-rose-300 border-rose-500/30 shadow-sm shadow-rose-500/10',
-        'en proceso', 'sin confirmar', 'borrador' => 'bg-amber-500/15 text-amber-800 dark:text-amber-300 border-amber-500/30 shadow-sm shadow-amber-500/10',
-        'liquidado', 'liquidada'=> 'bg-indigo-500/15 text-indigo-800 dark:text-indigo-300 border-indigo-500/30 shadow-sm shadow-indigo-500/10',
-        default                => 'bg-gray-500/15 text-gray-800 dark:text-gray-300 border-gray-500/30 shadow-sm'
-    };
+    if ($solid) {
+        $classes = match($normalizado) {
+            'activo', 'a', 'confirmado' => 'bg-white text-emerald-800 border-white shadow-sm font-bold',
+            'inactivo', 'i'        => 'bg-white text-rose-800 border-white shadow-sm font-bold',
+            'en proceso', 'sin confirmar', 'borrador' => 'bg-amber-100 text-amber-900 border-amber-200 shadow-sm font-bold',
+            'liquidado', 'liquidada'=> 'bg-indigo-100 text-indigo-900 border-indigo-200 shadow-sm font-bold',
+            default                => 'bg-white text-gray-800 border-white shadow-sm font-bold'
+        };
+    } else {
+        $classes = match($normalizado) {
+            'activo', 'a', 'confirmado' => 'bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 border-emerald-500/30 shadow-sm shadow-emerald-500/10',
+            'inactivo', 'i'        => 'bg-rose-500/15 text-rose-800 dark:text-rose-300 border-rose-500/30 shadow-sm shadow-rose-500/10',
+            'en proceso', 'sin confirmar', 'borrador' => 'bg-amber-500/15 text-amber-800 dark:text-amber-300 border-amber-500/30 shadow-sm shadow-amber-500/10',
+            'liquidado', 'liquidada'=> 'bg-indigo-500/15 text-indigo-800 dark:text-indigo-300 border-indigo-500/30 shadow-sm shadow-indigo-500/10',
+            default                => 'bg-gray-500/15 text-gray-800 dark:text-gray-300 border-gray-500/30 shadow-sm'
+        };
+    }
 
     $label = match($normalizado) {
         'activo', 'a'          => 'Activo',

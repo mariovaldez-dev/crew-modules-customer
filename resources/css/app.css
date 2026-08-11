@@ -203,12 +203,29 @@ input[type=number] {
 .pb-3 { padding-bottom: 0.75rem !important; }
 
 .pl-1 { padding-left: 0.25rem !important; }
+.pl-2 { padding-left: 0.5rem !important; }
 .pl-3 { padding-left: 0.75rem !important; }
 .pl-4 { padding-left: 1rem !important; }
+.pl-5 { padding-left: 1.25rem !important; }
+.pl-6 { padding-left: 1.5rem !important; }
+.pl-7 { padding-left: 1.75rem !important; }
+.pl-8 { padding-left: 2rem !important; }
+.pl-9 { padding-left: 2.25rem !important; }
+.pl-10 { padding-left: 2.5rem !important; }
 .pl-11 { padding-left: 2.75rem !important; }
 .pl-12 { padding-left: 3rem !important; }
 
+.pr-1 { padding-right: 0.25rem !important; }
+.pr-2 { padding-right: 0.5rem !important; }
+.pr-3 { padding-right: 0.75rem !important; }
 .pr-4 { padding-right: 1rem !important; }
+.pr-5 { padding-right: 1.25rem !important; }
+.pr-6 { padding-right: 1.5rem !important; }
+.pr-7 { padding-right: 1.75rem !important; }
+.pr-8 { padding-right: 2rem !important; }
+.pr-9 { padding-right: 2.25rem !important; }
+.pr-10 { padding-right: 2.5rem !important; }
+.pr-11 { padding-right: 2.75rem !important; }
 .pr-12 { padding-right: 3rem !important; }
 
 /* =============================================================================
@@ -396,6 +413,8 @@ input[type=number] {
 .border-red-200 { border-color: #fecaca !important; }
 .border-emerald-500\/30 { border-color: rgba(16, 185, 129, 0.3) !important; }
 .border-rose-500\/30 { border-color: rgba(244, 63, 94, 0.3) !important; }
+.hover\:bg-rose-500\/25:hover { background-color: rgba(244, 63, 94, 0.25) !important; }
+.hover\:border-rose-500\/50:hover { border-color: rgba(244, 63, 94, 0.5) !important; }
 .border-amber-500\/30 { border-color: rgba(245, 158, 11, 0.3) !important; }
 .border-indigo-500\/30 { border-color: rgba(99, 102, 241, 0.3) !important; }
 .border-gray-500\/30 { border-color: rgba(107, 114, 128, 0.3) !important; }
@@ -789,6 +808,8 @@ select:focus {
 .transition-shadow { transition-property: box-shadow !important; transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1) !important; transition-duration: 150ms !important; }
 .transition-transform { transition-property: transform !important; transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1) !important; transition-duration: 150ms !important; }
 
+.duration-75 { transition-duration: 75ms !important; }
+.duration-100 { transition-duration: 100ms !important; }
 .duration-150 { transition-duration: 150ms !important; }
 .duration-200 { transition-duration: 200ms !important; }
 .duration-300 { transition-duration: 300ms !important; }
