@@ -2,11 +2,11 @@
     <!-- Header Page -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-            <h1 class="text-3xl font-black tracking-tight text-gray-900 dark:text-white">
+            <h1 class="text-2xl font-black tracking-tight text-gray-900 dark:text-white">
                 Bienvenido de nuevo, {{ explode(' ', trim(auth()->user()->name))[0] }}
             </h1>
-            <p class="text-lg text-gray-400 dark:text-gray-500 font-bold tracking-widest mt-1">
-                    {{ $zonaNombre }} &middot; Rol: {{ $rol === 'AM' ? 'Administrador de Maniobras' : 'Coordinadora de Almacén' }}
+            <p class="text-sm text-gray-400 dark:text-gray-500 font-medium mt-1">
+                {{ $zonaNombre }} &middot; Rol: {{ $rol === 'AM' ? 'Administrador de Maniobras' : 'Coordinadora de Almacén' }}
             </p>
         </div>
         
@@ -81,7 +81,7 @@
                             <i class="fa-solid fa-boxes-stacked text-lg"></i>
                         </div>
                         <div>
-                            <h3 class="font-bold text-gray-900 dark:text-white group-hover:text-green-700 dark:group-hover:text-green-400 transition-colors">Catálogo de maniobras</h3>
+                            <h3 class="text-sm font-bold text-gray-900 dark:text-white group-hover:text-green-700 dark:group-hover:text-green-400 transition-colors">Catálogo de maniobras</h3>
                             <p class="text-xs text-gray-400 dark:text-gray-500 font-medium">Conceptos autorizados y estatus.</p>
                         </div>
                     </div>
@@ -96,7 +96,7 @@
                         <i class="fa-solid fa-users-gear text-lg"></i>
                     </div>
                     <div>
-                        <h3 class="font-bold text-gray-900 dark:text-white group-hover:text-blue-700 dark:group-hover:text-blue-400 transition-colors">Cuentas de cuadrillas</h3>
+                        <h3 class="text-sm font-bold text-gray-900 dark:text-white group-hover:text-blue-700 dark:group-hover:text-blue-400 transition-colors">Cuentas de cuadrillas</h3>
                         <p class="text-xs text-gray-400 dark:text-gray-500 font-medium">Equipos y configuración de tarifas.</p>
                     </div>
                 </div>
@@ -110,7 +110,7 @@
                         <i class="fa-solid fa-clipboard-list text-lg"></i>
                     </div>
                     <div>
-                        <h3 class="font-bold text-gray-900 dark:text-white group-hover:text-purple-700 dark:group-hover:text-purple-400 transition-colors">Bitácora de maniobras</h3>
+                        <h3 class="text-sm font-bold text-gray-900 dark:text-white group-hover:text-purple-700 dark:group-hover:text-purple-400 transition-colors">Bitácora de maniobras</h3>
                         <p class="text-xs text-gray-400 dark:text-gray-500 font-medium">Registro manual y consulta.</p>
                     </div>
                 </div>
@@ -124,7 +124,7 @@
                         <i class="fa-solid fa-hand-holding-dollar text-lg"></i>
                     </div>
                     <div>
-                        <h3 class="font-bold text-gray-900 dark:text-white group-hover:text-orange-700 dark:group-hover:text-orange-400 transition-colors">Consulta de tarifas</h3>
+                        <h3 class="text-sm font-bold text-gray-900 dark:text-white group-hover:text-orange-700 dark:group-hover:text-orange-400 transition-colors">Consulta de tarifas</h3>
                         <p class="text-xs text-gray-400 dark:text-gray-500 font-medium">Listado por cuadrilla y zona.</p>
                     </div>
                 </div>
@@ -139,7 +139,7 @@
                             <i class="fa-solid fa-file-invoice-dollar text-lg"></i>
                         </div>
                         <div>
-                            <h3 class="font-bold text-gray-900 dark:text-white group-hover:text-teal-700 dark:group-hover:text-teal-400 transition-colors">Corte de liquidación</h3>
+                            <h3 class="text-sm font-bold text-gray-900 dark:text-white group-hover:text-teal-700 dark:group-hover:text-teal-400 transition-colors">Corte de liquidación</h3>
                             <p class="text-xs text-gray-400 dark:text-gray-500 font-medium">Generación y firma de cortes.</p>
                         </div>
                     </div>
@@ -152,7 +152,7 @@
         <div class="bg-white dark:bg-[#131B20] border border-gray-100 dark:border-white/5 rounded-3xl p-6 shadow-sm space-y-6">
             <div class="flex items-center justify-between pb-2">
                 <div>
-                    <h3 class="text-lg font-black text-gray-900 dark:text-white">Últimas maniobras</h3>
+                    <h3 class="text-base font-bold text-gray-900 dark:text-white">Últimas maniobras</h3>
                     <p class="text-xs text-gray-400 dark:text-gray-500 font-semibold mt-0.5">Las operaciones más recientes registradas en tu zona.</p>
                 </div>
                 <a href="{{ route('registro-maniobras.index') }}" class="inline-flex items-center gap-1 text-xs font-bold text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 transition-colors">

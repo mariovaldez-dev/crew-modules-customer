@@ -16,7 +16,7 @@
             </x-button>
             
             @if($this->rolUsuario === 'CO')
-                <x-button wire:click="$dispatch('open-nueva-maniobra-modal')" variant="primary">
+                <x-button @click="$dispatch('open-nueva-maniobra-modal')" variant="primary">
                     <i class="fa-solid fa-plus mr-2"></i>
                     Alta manual
                 </x-button>
@@ -28,7 +28,7 @@
     <div class="bg-gradient-to-br from-white to-gray-50 dark:from-[#131B20] dark:to-[#171E24] p-6 rounded-[2rem] shadow-sm border border-gray-100 dark:border-white/5 relative">
         <!-- Decoración de fondo sutil contenida -->
         <div class="absolute inset-0 overflow-hidden rounded-[2rem] pointer-events-none">
-            <div class="absolute top-0 right-0 -mt-16 -mr-16 w-32 h-32 bg-green-500/5 dark:bg-green-500/10 rounded-full blur-2xl pointer-events-none"></div>
+            <div class="absolute top-0 right-0 -mt-16 -mr-16 w-32 h-32 bg-green-500/5 dark:bg-green-500/10 rounded-full pointer-events-none"></div>
         </div>
         <div class="flex flex-wrap gap-4 items-end relative z-10">
             <!-- Search -->

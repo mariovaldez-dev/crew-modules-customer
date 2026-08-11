@@ -6,7 +6,7 @@
                 <i class="fa-solid fa-arrow-left"></i> Volver a Cortes
             </a>
             <h1 class="text-2xl md:text-3xl font-black text-gray-900 dark:text-white flex items-center gap-3">
-                <i class="fa-solid fa-file-invoice-dollar text-green-500"></i>
+                <i class="fa-solid fa-file-invoice-dollar text-green-600"></i>
                 Detalle del Corte
             </h1>
         </div>
@@ -23,39 +23,39 @@
     @else
         <div class="bg-white dark:bg-[#131B20] rounded-3xl shadow-sm border border-gray-100 dark:border-white/5 overflow-hidden">
             <!-- Header del Corte -->
-            <div class="p-6 border-b border-gray-100 dark:border-white/5 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gray-50/50 dark:bg-[#0B1115]/50">
+            <div class="p-6 border-b border-gray-100 dark:border-white/5 flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <h2 class="text-2xl font-black text-gray-900 dark:text-white flex items-center gap-3">
                         Corte {{ $corte['folio'] ?? 'Borrador' }}
                     </h2>
                     <p class="text-sm text-gray-500 mt-1">
-                        Periodo: <span class="font-bold text-gray-700 dark:text-gray-300">{{ \Carbon\Carbon::parse($corte['fechaInicio'])->format('d/M/Y') }}</span> 
-                        al <span class="font-bold text-gray-700 dark:text-gray-300">{{ \Carbon\Carbon::parse($corte['fechaFin'])->format('d/M/Y') }}</span>
+                        Periodo: <span class="font-bold text-gray-700 dark:text-gray-300">{{ \Carbon\Carbon::parse($corte['fechaInicio'])->format('d/m/Y') }}</span> 
+                        al <span class="font-bold text-gray-700 dark:text-gray-300">{{ \Carbon\Carbon::parse($corte['fechaFin'])->format('d/m/Y') }}</span>
                     </p>
                 </div>
                 
                 <div class="flex items-center gap-3">
-                    <x-status-badge :status="$corte['estado']" />
+                    <x-status-badge :status="$corte['estado']" :solid="false" />
                     
                     @if($corte['estado'] === 'Confirmado')
-                        <button type="button" @click="$dispatch('open-pdf-modal')" class="inline-flex items-center justify-center font-bold transition-all duration-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-[#131B20] bg-gray-100 hover:bg-gray-200 text-gray-700 dark:bg-white/10 dark:hover:bg-white/20 dark:text-gray-200 shadow-sm !py-2 !px-4 text-xs">
-                            <i class="fa-solid fa-print mr-2"></i>
+                        <button type="button" @click="$dispatch('open-pdf-modal')" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold transition-all duration-150 bg-white text-rose-700 border border-white shadow-sm hover:bg-gray-100 cursor-pointer">
+                            <i class="fa-solid fa-file-pdf text-xs"></i>
                             Imprimir PDF
                         </button>
                     @elseif($this->todasConfirmadas)
-                        <x-button wire:click="$dispatch('open-modal', 'confirm-corte-general')" variant="primary" class="!py-2 !px-4 text-xs">
-                            <i class="fa-solid fa-check-double mr-2"></i>
+                        <x-button @click="$dispatch('open-modal', 'confirm-corte-general')" variant="secondary" class="!py-2 !px-4 text-xs bg-white text-green-700 hover:bg-gray-100 border-white font-bold">
+                            <i class="fa-solid fa-check-double mr-1.5"></i>
                             Confirmar Corte
                         </x-button>
                     @else
-                        <span class="text-xs font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500">
+                        <span class="text-xs font-bold uppercase tracking-wider text-green-100">
                             Confirme todas las cuadrillas para habilitar el corte
                         </span>
                     @endif
 
                     @if($corte['estado'] === 'Borrador')
-                        <x-button wire:click="$dispatch('open-modal', 'confirm-regenerar')" variant="secondary" class="!py-2 !px-4 text-xs">
-                            <i class="fa-solid fa-rotate-right mr-2"></i>
+                        <x-button @click="$dispatch('open-modal', 'confirm-regenerar')" variant="secondary" class="!py-2.5 !px-4 text-xs gap-2">
+                            <i class="fa-solid fa-rotate-right mr-1.5"></i>
                             Regenerar
                         </x-button>
                     @endif
@@ -86,20 +86,18 @@
 
             <!-- Tabla de Cuadrillas -->
             @if(empty($corte['cuadrillas']))
-                <div class="p-10">
-                    <x-table-empty-state message="No hay maniobras registradas en este periodo." />
-                </div>
+                <x-table-empty-state message="No hay cuadrillas registradas en este corte." />
             @else
                 <div class="overflow-x-auto">
                     <table class="w-full text-sm text-left border-collapse">
-                        <thead class="text-xs text-gray-500 bg-gray-50/50 dark:bg-white/5 uppercase border-b border-gray-100 dark:border-white/5">
+                        <thead class="bg-green-600 text-white text-[11px] font-black uppercase tracking-wider border-b border-gray-100 dark:border-white/5">
                             <tr>
-                                <th class="px-6 py-4 font-black tracking-wider">Cuadrilla</th>
-                                <th class="px-6 py-4 font-black tracking-wider">Punto de Venta</th>
-                                <th class="px-6 py-4 font-black tracking-wider text-right">Toneladas</th>
-                                <th class="px-6 py-4 font-black tracking-wider text-right">Total Pagar</th>
-                                <th class="px-6 py-4 font-black tracking-wider text-center">Estatus</th>
-                                <th class="px-6 py-4 font-black tracking-wider text-center">Acciones</th>
+                                <th class="px-6 py-4">Cuadrilla</th>
+                                <th class="px-6 py-4">Punto de Venta</th>
+                                <th class="px-6 py-4 text-right">Toneladas</th>
+                                <th class="px-6 py-4 text-right">Total Pagar</th>
+                                <th class="px-6 py-4 text-center">Estatus</th>
+                                <th class="px-6 py-4 text-center">Acciones</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100 dark:divide-white/5">
@@ -121,11 +119,11 @@
                                         ${{ number_format($cuadrilla['montoCuadrilla'], 2) }}
                                     </td>
                                     <td class="px-6 py-4 text-center">
-                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold {{ $cuadrilla['estaConfirmada'] ? 'bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-400' : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-500/10 dark:text-yellow-400' }}">
+                                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border {{ $cuadrilla['estaConfirmada'] ? 'bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 border-emerald-500/30 shadow-sm shadow-emerald-500/10' : 'bg-amber-500/15 text-amber-800 dark:text-amber-300 border-amber-500/30 shadow-sm shadow-amber-500/10' }}">
                                             @if($cuadrilla['estaConfirmada'])
-                                                <i class="fa-solid fa-check"></i> Confirmada
+                                                <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span> Confirmada
                                             @else
-                                                <i class="fa-regular fa-clock"></i> Pendiente
+                                                <span class="h-1.5 w-1.5 rounded-full bg-amber-500"></span> Pendiente
                                             @endif
                                         </span>
                                     </td>

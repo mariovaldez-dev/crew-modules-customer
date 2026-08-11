@@ -7,18 +7,9 @@ AS
 BEGIN
     SET NOCOUNT ON;
     BEGIN TRY
-        DECLARE @CorteID INT = NULL;
-        DECLARE @EstatusCorte INT = NULL;
-
-        -- Buscar el corte más reciente de la zona (idealmente el borrador si existe, si no, el último confirmado)
-        SELECT TOP 1 @CorteID = idu_corte, @EstatusCorte = opc_estatus
-        FROM mae_pdm_cortes_liquidacion
-        WHERE clv_zona = @Zona
-        ORDER BY opc_estatus ASC, fec_registro DESC; -- Prioriza 0 (borrador)
-
-        IF @CorteID IS NULL
+        IF NOT EXISTS (SELECT 1 FROM mae_pdm_cortes_liquidacion WHERE clv_zona = @Zona)
         BEGIN
-            SELECT 404 AS estatus, 'No hay cortes para esta zona.' AS mensaje, '{}' AS resultado;
+            SELECT 404 AS estatus, 'No hay cortes para esta zona.' AS mensaje, '[]' AS resultado;
             RETURN;
         END
 
@@ -66,15 +57,15 @@ BEGIN
                     FOR JSON PATH
                 ) AS cuadrillas
             FROM mae_pdm_cortes_liquidacion corte
-            WHERE corte.idu_corte = @CorteID
-            FOR JSON PATH, WITHOUT_ARRAY_WRAPPER
+            WHERE corte.clv_zona = @Zona
+            ORDER BY corte.fec_registro DESC
+            FOR JSON PATH
         );
 
-        SELECT 0 AS estatus, 'Corte consultado correctamente' AS mensaje, ISNULL(@JSONResult, '{}') AS resultado;
+        SELECT 0 AS estatus, 'Cortes consultados correctamente' AS mensaje, ISNULL(@JSONResult, '[]') AS resultado;
 
     END TRY
     BEGIN CATCH
-        SELECT 500 AS estatus, ERROR_MESSAGE() AS mensaje, '{}' AS resultado;
+        SELECT 500 AS estatus, ERROR_MESSAGE() AS mensaje, '[]' AS resultado;
     END CATCH
 END
-GO

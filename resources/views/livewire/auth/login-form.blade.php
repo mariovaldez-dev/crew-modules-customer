@@ -62,7 +62,6 @@
             gap: 10px;
             background: rgba(255, 255, 255, .10);
             border: 1px solid rgba(255, 255, 255, .18);
-            backdrop-filter: blur(6px);
             padding: 10px 18px;
             border-radius: 999px;
             font-size: 13px;
@@ -105,7 +104,6 @@
             border-radius: 999px;
             font-size: 14px;
             color: rgba(255, 255, 255, .94);
-            backdrop-filter: blur(6px);
         }
 
         .login-right {
@@ -122,7 +120,6 @@
             width: 100%;
             max-width: 470px;
             background: rgba(255, 255, 255, .92);
-            backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, .9);
             border-radius: var(--radius-xl);
             box-shadow: var(--shadow);
@@ -414,7 +411,7 @@
                 </p>
 
                 {{-- Mensajes de Error Custom --}}
-                <div x-show="hasError || $wire.errors.length > 0" x-cloak>
+                <div x-show="hasError || $wire.errors.length > 0" x-cloak style="display:none">
                     <div class="alert-custom">
                         <strong>Hay problemas con tu inicio de sesión.</strong>
                         <ul>
@@ -460,8 +457,8 @@
                     </div>
 
                     <button type="submit" class="btn-login" wire:loading.attr="disabled">
-                        <span wire:loading.remove wire:target="login">Iniciar sesión</span>
-                        <span wire:loading wire:target="login" class="flex items-center gap-2">
+                        <span wire:loading.remove wire:target="login" style="display:inline">Iniciar sesión</span>
+                        <span wire:loading wire:target="login" class="inline-flex items-center gap-2" style="display:none">
                             <i class="fa-solid fa-circle-notch fa-spin"></i> Verificando...
                         </span>
                     </button>

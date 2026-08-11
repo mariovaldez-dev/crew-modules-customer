@@ -9,25 +9,15 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-    @if(file_exists(public_path('build/manifest.json')))
-        @vite(['resources/css/app.css', 'resources/js/app.js'])
-    @else
-        <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
-        <script>
-            tailwind.config = {
-                darkMode: 'class',
-                theme: {
-                    extend: {
-                        colors: {
-                            green: {
-                                50: '#f4f7f5', 100: '#e3ece6', 200: '#c7d8ce', 300: '#9ebba9', 400: '#749983', 500: '#4A7C59', 600: '#1f7a2f', 700: '#2a4430', 800: '#1d2f21', 900: '#082312',
-                            }
-                        }
-                    }
-                }
-            }
-        </script>
-    @endif
+
+        <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.bunny.net">
+    <link href="https://fonts.bunny.net/css?family=figtree:400,600&display=swap" rel="stylesheet" />
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Styles -->
     <script>
         function applyTheme() {
             if (localStorage.getItem('color-theme') === 'dark' || (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
@@ -39,6 +29,8 @@
         applyTheme();
         document.addEventListener('livewire:navigated', applyTheme);
     </script>
+
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
     @livewireStyles
     @stack('styles')
 </head>
@@ -53,7 +45,7 @@
 
     @auth
         <!-- Mobile Sidebar Backdrop -->
-        <div x-show="sidebarOpen" x-transition.opacity class="fixed inset-0 z-40 bg-gray-900/80 backdrop-blur-sm lg:hidden" @click="toggleSidebar()" x-cloak></div>
+        <div x-show="sidebarOpen" x-transition.opacity class="fixed inset-0 z-40 bg-gray-900/80 lg:hidden" @click="toggleSidebar()" x-cloak></div>
 
         <!-- Sidebar -->
         <x-sidebar />
@@ -114,16 +106,34 @@
             type: 'success',
             timer: null,
             init() {
-                window.addEventListener('notify', (event) => {
+                const handleNotify = (event) => {
+                    let detail = event.detail;
+                    if (Array.isArray(detail) && detail.length > 0) {
+                        detail = detail[0];
+                    }
+                    const msg = typeof detail === 'string' ? detail : (detail?.message || '');
+                    const typeVal = (typeof detail === 'object' && detail?.type) ? detail.type : 'success';
+
+                    if (!msg) return;
+
                     this.show = false; 
                     setTimeout(() => {
-                        this.message = event.detail.message;
-                        this.type = event.detail.type || 'success';
+                        this.message = msg;
+                        this.type = typeVal;
                         this.show = true;
                         if (this.timer) clearTimeout(this.timer);
                         this.timer = setTimeout(() => this.show = false, 4500);
                     }, 50);
-                });
+                };
+
+                window.addEventListener('notify', handleNotify);
+                if (window.Livewire) {
+                    window.Livewire.on('notify', (data) => handleNotify({ detail: data }));
+                } else {
+                    document.addEventListener('livewire:init', () => {
+                        window.Livewire.on('notify', (data) => handleNotify({ detail: data }));
+                    });
+                }
             }
         }"
         class="fixed top-[90px] left-0 right-0 md:left-auto md:right-6 z-[100] px-4 pointer-events-none flex justify-center md:justify-end"
@@ -135,7 +145,7 @@
             x-transition:leave="transition ease-in duration-300"
             x-transition:leave-start="opacity-100 translate-y-0 scale-100"
             x-transition:leave-end="opacity-0 -translate-y-4 scale-95"
-            class="pointer-events-auto w-full max-w-sm overflow-hidden rounded-[1.25rem] border backdrop-blur-xl shadow-[0_20px_50px_-12px_rgba(0,0,0,0.15)] flex items-stretch transition-all duration-300 dark:border-white/10"
+            class="pointer-events-auto w-full max-w-sm overflow-hidden rounded-[1.25rem] border shadow-[0_20px_50px_-12px_rgba(0,0,0,0.15)] flex items-stretch transition-all duration-300 dark:border-white/10"
             :class="{
                 'bg-white/90 dark:bg-[#1A2227]/90 border-green-100 shadow-green-900/5 dark:shadow-green-900/20': type === 'success',
                 'bg-white/90 dark:bg-[#1A2227]/90 border-red-100 shadow-red-900/5 dark:shadow-red-900/20': type === 'error',
