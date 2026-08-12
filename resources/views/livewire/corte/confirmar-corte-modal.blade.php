@@ -60,7 +60,7 @@
                     </div>
 
                     <!-- Footer -->
-                    <div class="px-6 py-4 bg-gray-50 dark:bg-[#0d1519] border-t border-gray-100 dark:border-white/10 flex gap-3 justify-end">
+                    <div class="px-6 py-4 bg-gray-50 dark:bg-white/5 border-t border-gray-100 dark:border-white/5 flex gap-3 justify-end rounded-b-2xl">
                         <button 
                             @click="open = false" 
                             type="button"
