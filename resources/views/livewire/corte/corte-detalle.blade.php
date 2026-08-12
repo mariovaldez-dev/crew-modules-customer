@@ -1,4 +1,4 @@
-<div class="px-4 sm:px-6 lg:px-8 py-8 w-full max-w-9xl mx-auto" wire:init="loadData">
+<div class="px-4 sm:px-6 lg:px-8 py-8 w-full max-w-9xl mx-auto" wire:init="loadData" x-data>
     <!-- Header -->
     <div class="sm:flex sm:justify-between sm:items-center mb-8">
         <div>
@@ -154,7 +154,7 @@
             message="¿Estás seguro que deseas confirmar el corte general? Una vez confirmado, se asignarán folios formales y no podrás regenerarlo ni modificar las maniobras incluidas."
             confirmAction="confirmarCorteGeneral"
             confirmText="Confirmar Corte"
-            variant="primary"
+            confirmColor="primary"
         />
 
         <!-- Modal Regenerar -->
