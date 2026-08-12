@@ -14,7 +14,7 @@
         <!-- Backdrop -->
         <div 
             x-show="open"
-            class="fixed inset-0 bg-gray-900/75"
+            class="fixed inset-0 bg-gray-900/40"
             @click="open = false"
         ></div>
 

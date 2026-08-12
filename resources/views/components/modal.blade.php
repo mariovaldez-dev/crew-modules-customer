@@ -58,7 +58,7 @@ $maxWidthClass = match ($maxWidth) {
     <!-- Backdrop -->
     <div
         x-show="show"
-        class="fixed inset-0 bg-gray-900/75"
+        class="fixed inset-0 bg-gray-900/40"
         x-on:click="!loading ? show = false : null"
     ></div>
 

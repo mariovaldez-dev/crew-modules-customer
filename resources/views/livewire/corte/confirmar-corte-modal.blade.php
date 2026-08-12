@@ -14,7 +14,7 @@
         <!-- Backdrop -->
         <div 
             x-show="open"
-            class="fixed inset-0 bg-gray-900/75"
+            class="fixed inset-0 bg-gray-900/40"
             @click="open = false"
         ></div>
 
@@ -51,7 +51,7 @@
                         </p>
 
                         <!-- Advertencia -->
-                        <div class="flex gap-3 p-3 rounded-xl bg-red-50 dark:bg-red-950/30 border border-red-100 dark:border-red-900/40">
+                        <div class="flex gap-3 p-3 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-100 dark:border-red-900/40">
                             <i class="fa-solid fa-triangle-exclamation text-red-500 mt-0.5 text-sm shrink-0"></i>
                             <p class="text-xs text-red-700 dark:text-red-400 leading-relaxed">
                                 Una vez confirmado <strong class="text-red-800 dark:text-red-300">no podrás regenerar el corte</strong> ni modificar las maniobras incluidas.
