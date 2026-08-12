@@ -29,10 +29,13 @@ BEGIN
 				M.num_tipodocumento as numeroTipoDocumento,
 				M.num_documentosap as numeroDocumentoSAP,
 				M.num_toneladas as numeroToneladas,
-				M.opc_estatus as estatus,
 				M.idu_corte as idCorte,
-				ISNULL(CL.opc_estatus, 0) as estatusCorte,
-				CASE WHEN CC.idu_corte IS NOT NULL THEN 1 ELSE 0 END as estaConfirmada,
+				-- 0 = En proceso | 1 = Confirmada (cuadrilla confirmada, corte en borrador) | 2 = Liquidada (corte general confirmado)
+				CASE
+					WHEN ISNULL(CL.opc_estatus, 0) = 1 THEN 2
+					WHEN CC.idu_corte IS NOT NULL        THEN 1
+					ELSE                                      0
+				END AS estatusCiclo,
                 M.fec_registro as fecha
 			FROM dbo.mov_pdm_maniobras_ejecutadas M
 			INNER JOIN dbo.cat_pdm_tipos_maniobras TM

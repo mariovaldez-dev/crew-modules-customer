@@ -22,18 +22,11 @@ class ListRegistroManiobrasUseCase
         // o crear un clon. La hice mutable en el DTO para este propósito.
 
         foreach ($maniobras as $maniobra) {
-            if (!$maniobra->corteId || $maniobra->corteId <= 0) {
-                $maniobra->estado = 'En proceso';
-            } elseif ($maniobra->estatusCorte === 1) {
-                // Corte General ha sido verificado y confirmado -> Liquidada
-                $maniobra->estado = 'Liquidada';
-            } elseif ($maniobra->estaConfirmada) {
-                // La cuadrilla fue confirmada en el detalle del corte, pero el corte general sigue en borrador -> Confirmada
-                $maniobra->estado = 'Confirmada';
-            } else {
-                // Maniobra en corte borrador pero cuadrilla sin confirmar -> En proceso
-                $maniobra->estado = 'En proceso';
-            }
+            $maniobra->estado = match ($maniobra->estatusCiclo) {
+                2       => 'Liquidada',
+                1       => 'Confirmada',
+                default => 'En proceso',
+            };
         }
 
         return $maniobras;

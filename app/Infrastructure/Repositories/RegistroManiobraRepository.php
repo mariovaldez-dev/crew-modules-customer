@@ -94,12 +94,11 @@ class RegistroManiobraRepository implements RegistroManiobraRepositoryInterface
                     if (!$match) continue;
                 }
 
-                $corteId   = isset($item['idCorte']) ? (int) $item['idCorte'] : (isset($item['IDCORTE']) ? (int) $item['IDCORTE'] : null);
+                $corteId        = isset($item['idCorte']) ? (int) $item['idCorte'] : (isset($item['IDCORTE']) ? (int) $item['IDCORTE'] : null);
                 $cuadrillaIdVal = (int) ($item['idCuadrilla'] ?? $item['IDCUADRILLA'] ?? 0);
 
-                // Valores que el SP calcula internamente (JOINs a cortes y confirmacion)
-                $estatusCorte    = (int) ($item['estatusCorte']    ?? $item['ESTATUSCORTE']    ?? 0);
-                $estaConfirmada  = (bool) ($item['estaConfirmada'] ?? $item['ESTACONFIRMADA']  ?? false);
+                // El SP calcula el ciclo de vida completo: 0 = En proceso | 1 = Confirmada | 2 = Liquidada
+                $estatusCiclo = (int) ($item['estatusCiclo'] ?? $item['ESTATUSCICLO'] ?? 0);
 
                 $idManiobra = (int) ($item['idManiobra'] ?? $item['IDMANIOBRA'] ?? 0);
                 $folioFormatted = !empty($item['folio']) ? $item['folio'] : ($idManiobra > 0 ? 'MAN-' . str_pad((string)$idManiobra, 6, '0', STR_PAD_LEFT) : 'S/F');
@@ -118,24 +117,17 @@ class RegistroManiobraRepository implements RegistroManiobraRepositoryInterface
                     tipoManiobraNombre: $item['nombreManiobra'] ?? $item['NOMBREMANIOBRA'] ?? '',
                     toneladas: (float) ($item['numeroToneladas'] ?? $item['NUMEROTONELADAS'] ?? 0),
                     corteId: $corteId,
-                    estatusCorte: $estatusCorte,
-                    estaConfirmada: $estaConfirmada,
+                    estatusCiclo: $estatusCiclo,
                     origen: $item['origen'] ?? $item['ORIGEN'] ?? 'APP',
-                    estado: 'En proceso',
                     documentoSap: $item['numeroDocumentoSAP'] ?? $item['NUMERODOCUMENTOSAP'] ?? null
                 );
 
                 if (!empty($filtros['estado'])) {
-                    // El estado final lo calcula el UseCase; aquí hacemos un pre-cálculo
-                    // idéntico para poder filtrar antes de armar el array de resultados.
-                    if ($estatusCorte === 1) {
-                        $estadoCalculado = 'Liquidada';
-                    } elseif ($estaConfirmada) {
-                        $estadoCalculado = 'Confirmada';
-                    } else {
-                        $estadoCalculado = 'En proceso';
-                    }
-
+                    $estadoCalculado = match ($estatusCiclo) {
+                        2       => 'Liquidada',
+                        1       => 'Confirmada',
+                        default => 'En proceso',
+                    };
                     if (mb_strtolower($estadoCalculado) !== mb_strtolower($filtros['estado'])) {
                         continue;
                     }

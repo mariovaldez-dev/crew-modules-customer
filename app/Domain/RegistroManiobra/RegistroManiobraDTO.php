@@ -16,10 +16,10 @@ class RegistroManiobraDTO
         public readonly string $tipoManiobraNombre,
         public readonly float $toneladas,
         public readonly ?int $corteId,
-        public readonly ?int $estatusCorte = null,
-        public readonly bool $estaConfirmada = false,
+        // 0 = En proceso | 1 = Confirmada | 2 = Liquidada — calculado por el SP
+        public readonly int $estatusCiclo = 0,
         public readonly string $origen = 'APP', // 'APP' o 'MANUAL'
-        public string $estado = 'En proceso', // Calculado por el UseCase
+        public string $estado = 'En proceso',   // Mapeado a string por el UseCase
         public readonly ?string $documentoSap = null
     ) {}
 
