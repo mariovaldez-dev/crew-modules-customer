@@ -14,9 +14,13 @@ class CuadrillaRepository implements CuadrillaRepositoryInterface
     public function list(array $filtros, string $zonaUsuario): array
     {
         try {
-            $claveZona = ($zonaUsuario === 'TODAS') ? '' : $zonaUsuario;
+            $context = session()->get('usuario_contexto');
+            $isAm = ($context instanceof \App\Domain\Shared\UsuarioContexto && ($context->isAdministrador() || $context->tipo === 'AM'))
+                || $zonaUsuario === 'TODAS' || $zonaUsuario === 'AM' || $zonaUsuario === '';
 
-            Log::info("CONSULTA REAL A BD (SP): proc_consultar_cuadrillas", ['claveZona' => $claveZona]);
+            $claveZona = $isAm ? '' : $zonaUsuario;
+
+            Log::info("CONSULTA REAL A BD (SP): proc_consultar_cuadrillas", ['claveZona' => $claveZona, 'isAm' => $isAm, 'zonaUsuario' => $zonaUsuario]);
 
             DB::connection('maniobras')->statement("SET ANSI_NULLS ON");
             DB::connection('maniobras')->statement("SET ANSI_WARNINGS ON");

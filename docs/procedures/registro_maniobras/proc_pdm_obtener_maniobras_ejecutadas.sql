@@ -22,6 +22,7 @@ BEGIN
 				TM.nom_maniobra as nombreManiobra,
 				M.num_tarifa_maniobra as numeroTarifaManiobra,
 				M.idu_punto_venta as idPuntoVenta,
+				pun.WhsName as nombrePuntoVenta,
 				M.idu_cuadrilla as idCuadrilla,
 				C.nom_cuadrilla as nombreCuadrilla,
 				C.nom_lider_cuadrilla as nombreLiderCuadrilla,

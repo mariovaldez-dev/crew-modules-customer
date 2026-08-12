@@ -13,10 +13,15 @@ class RegistroManiobraRepository implements RegistroManiobraRepositoryInterface
 {
     public function list(array $filtros, string $zonaUsuario, string $rolUsuario): array
     {
-        $claveZona = ($zonaUsuario === 'TODAS') ? '' : $zonaUsuario;
+        $context = session()->get('usuario_contexto');
+        $isAm = ($context instanceof \App\Domain\Shared\UsuarioContexto && ($context->isAdministrador() || $context->tipo === 'AM'))
+            || $rolUsuario === 'AM' || $zonaUsuario === 'TODAS' || $zonaUsuario === 'AM' || $zonaUsuario === '';
+
+        $claveZona = $isAm ? '' : $zonaUsuario;
 
         Log::info("CONSULTA REAL A BD (SP): proc_pdm_obtener_maniobras_ejecutadas", [
             'claveZona' => $claveZona,
+            'isAm' => $isAm,
             'fechaInicio' => $filtros['fechaInicio'] ?? null,
             'fechaFin' => $filtros['fechaFin'] ?? null,
             'rolUsuario' => $rolUsuario
@@ -57,7 +62,7 @@ class RegistroManiobraRepository implements RegistroManiobraRepositoryInterface
             }
 
             $sucursalRepo = app(\App\Domain\Shared\Repositories\SucursalRepositoryInterface::class);
-            $zonaFiltro = ($rolUsuario === 'AM') ? 'TODAS' : $zonaUsuario;
+            $zonaFiltro = $isAm ? 'TODAS' : $zonaUsuario;
             $almacenesMap = $sucursalRepo->listaPuntosDeVentaPorZona($zonaFiltro);
 
             $maniobras = [];
@@ -91,12 +96,14 @@ class RegistroManiobraRepository implements RegistroManiobraRepositoryInterface
                 $idManiobra = (int) ($item['idManiobra'] ?? $item['IDMANIOBRA'] ?? 0);
                 $folioFormatted = !empty($item['folio']) ? $item['folio'] : ($idManiobra > 0 ? 'MAN-' . str_pad((string)$idManiobra, 6, '0', STR_PAD_LEFT) : 'S/F');
 
+                $nombrePuntoVenta = $item['nombrePuntoVenta'] ?? $item['NOMBREPUNTOVENTA'] ?? $item['nombreAlmacen'] ?? $item['NOMBREALMACEN'] ?? null;
+
                 $dto = new RegistroManiobraDTO(
                     id: $idManiobra,
                     folio: $folioFormatted,
                     fecha: $fecha,
                     almacenId: $almacenId,
-                    almacenNombre: $almacenesMap[$almacenId] ?? $almacenId,
+                    almacenNombre: $nombrePuntoVenta ?? ($almacenesMap[$almacenId] ?? $almacenId),
                     cuadrillaId: (int) ($item['idCuadrilla'] ?? $item['IDCUADRILLA'] ?? 0),
                     cuadrillaNombre: $item['nombreCuadrilla'] ?? $item['NOMBRECUADRILLA'] ?? '',
                     tipoManiobraId: (int) ($item['idTipoManiobra'] ?? $item['IDTIPOMANIOBRA'] ?? 0),

@@ -43,21 +43,21 @@
                             Imprimir PDF
                         </button>
                     @elseif($this->todasConfirmadas)
-                        <button x-data type="button" @click="window.dispatchEvent(new CustomEvent('open-modal', { detail: 'confirm-corte-general', bubbles: true }))" class="inline-flex items-center justify-center px-4 py-2 text-xs font-bold rounded-2xl transition-all duration-200 bg-green-600 text-white hover:bg-green-500 shadow-lg shadow-green-900/20 border border-green-500 hover:-translate-y-0.5 active:scale-95">
+                        <x-button wire:click="abrirConfirmarGeneral" variant="primary" class="!py-2 !px-4 text-xs font-bold">
                             <i class="fa-solid fa-check-double mr-1.5"></i>
                             Confirmar Corte
-                        </button>
+                        </x-button>
                     @else
-                        <span class="text-xs font-bold uppercase tracking-wider text-green-100">
+                        <span class="text-xs font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500">
                             Confirme todas las cuadrillas para habilitar el corte
                         </span>
                     @endif
 
                     @if($corte['estado'] === 'Borrador')
-                        <button x-data type="button" @click="window.dispatchEvent(new CustomEvent('open-modal', { detail: 'confirm-regenerar', bubbles: true }))" class="inline-flex items-center justify-center px-4 py-2.5 text-xs font-bold rounded-2xl transition-all duration-200 bg-white dark:bg-white/5 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-white/10 shadow-sm hover:shadow-md hover:-translate-y-0.5 active:scale-95 gap-2">
+                        <x-button wire:click="abrirRegenerar" variant="secondary" class="!py-2.5 !px-4 text-xs gap-2">
                             <i class="fa-solid fa-rotate-right mr-1.5"></i>
                             Regenerar
-                        </button>
+                        </x-button>
                     @endif
                 </div>
             </div>
@@ -143,28 +143,11 @@
                 </div>
             @endif
         </div>
-        <!-- Modales -->
-        @include('livewire.corte.resumen-maniobras-modal')
-        @include('livewire.corte.pdf-preview-modal')
-
-        <!-- Modal Confirmación General -->
-        <x-confirm-modal 
-            name="confirm-corte-general"
-            title="Confirmar Corte de Liquidación"
-            message="¿Estás seguro que deseas confirmar el corte general? Una vez confirmado, se asignarán folios formales y no podrás regenerarlo ni modificar las maniobras incluidas."
-            confirmAction="confirmarCorteGeneral"
-            confirmText="Confirmar Corte"
-            confirmColor="primary"
-        />
-
-        <!-- Modal Regenerar -->
-        <x-confirm-modal 
-            name="confirm-regenerar"
-            title="Regenerar Corte"
-            message="¿Estás seguro que deseas regenerar el corte? Esto recalculará los importes e incluirá nuevas maniobras que cumplan con los criterios de fecha."
-            confirmAction="regenerar"
-            confirmText="Sí, Regenerar"
-            variant="secondary"
-        />
     @endif
+
+    <!-- Modales -->
+    @include('livewire.corte.resumen-maniobras-modal')
+    @include('livewire.corte.pdf-preview-modal')
+    @include('livewire.corte.confirmar-corte-modal')
+    @include('livewire.corte.regenerar-corte-modal')
 </div>

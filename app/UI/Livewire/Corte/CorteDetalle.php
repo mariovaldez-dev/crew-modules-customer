@@ -19,6 +19,7 @@ class CorteDetalle extends Component
     public ?array $corte = null;
     public bool $cargando = true;
     public ?int $cuadrillaIndexSeleccionada = null;
+    public ?string $modalConfirmarTipo = null;
 
     protected $listeners = [
         'corte-actualizado' => '$refresh',
@@ -83,14 +84,14 @@ class CorteDetalle extends Component
 
     public function abrirConfirmarGeneral(): void
     {
-        \Illuminate\Support\Facades\Log::info("[CORTE-LIQUIDACION] [UI-Detalle] Despachando open-modal para confirm-corte-general");
-        $this->dispatch('open-modal', 'confirm-corte-general');
+        \Illuminate\Support\Facades\Log::info("[CORTE-LIQUIDACION] [UI-Detalle] Abriendo modal confirm-corte-general");
+        $this->dispatch('open-confirmar-general', corteId: $this->corteId);
     }
 
     public function abrirRegenerar(): void
     {
-        \Illuminate\Support\Facades\Log::info("[CORTE-LIQUIDACION] [UI-Detalle] Despachando open-modal para confirm-regenerar");
-        $this->dispatch('open-modal', 'confirm-regenerar');
+        \Illuminate\Support\Facades\Log::info("[CORTE-LIQUIDACION] [UI-Detalle] Abriendo modal confirm-regenerar");
+        $this->dispatch('open-confirmar-regenerar', corteId: $this->corteId);
     }
 
     public function confirmarCorteGeneral(ConfirmarCorteGeneralUseCase $useCase, ConsultarCorteUseCase $consultarUseCase)
@@ -101,8 +102,6 @@ class CorteDetalle extends Component
                 $res = $useCase->execute($this->corte['corteId'], $this->zonaUsuario);
                 \Illuminate\Support\Facades\Log::info("[CORTE-LIQUIDACION] [UI-Detalle] Corte general ID: {$this->corteId} confirmado exitosamente.", ['res' => $res]);
                 $this->dispatch('notify', ['message' => 'Corte confirmado y folios asignados', 'type' => 'success']);
-                $this->dispatch('close-modal', 'confirm-corte-general');
-                
                 return redirect()->route('corte-liquidacion.index');
             }
         } catch (Exception $e) {
@@ -124,9 +123,6 @@ class CorteDetalle extends Component
 
                 \Illuminate\Support\Facades\Log::info("[CORTE-LIQUIDACION] [UI-Detalle] Corte ID regenerado exitosamente. Nuevo ID: {$this->corteId}");
                 $this->dispatch('notify', ['message' => 'Corte regenerado exitosamente', 'type' => 'success']);
-                $this->dispatch('close-modal', 'confirm-regenerar');
-                
-                // Recargar datos del nuevo borrador en la misma pantalla
                 $this->loadData($consultarUseCase);
             }
         } catch (Exception $e) {
