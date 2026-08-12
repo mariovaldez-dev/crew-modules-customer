@@ -40,18 +40,7 @@
                 @endif
             </div>
 
-            <!-- Filter PV -->
-            <div class="w-full sm:w-64">
-                @if($readyToLoad)
-                    <x-label value="Punto de Venta" />
-                    <x-select wire:model.live="filters.puntoVentaId"
-                              :options="['' => 'Selecciona un Punto de Venta'] + $puntosVenta"
-                              placeholder="Selecciona un Punto de Venta" />
-                @else
-                    <div class="h-6 w-24 mb-2 rounded-lg bg-gray-200 dark:bg-white/10 animate-pulse"></div>
-                    <div class="h-12 w-full rounded-2xl bg-gray-200 dark:bg-white/10 animate-pulse"></div>
-                @endif
-            </div>
+
 
             <!-- Filter Lider -->
             <div class="w-full sm:w-64">

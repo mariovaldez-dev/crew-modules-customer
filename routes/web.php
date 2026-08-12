@@ -43,10 +43,9 @@ Route::middleware(['auth', 'role.operaciones'])->group(function () {
 
     // Cortes de Liquidación
     Route::get('/corte-liquidacion', CorteIndex::class)->name('corte-liquidacion.index');
-    Route::get('/corte-liquidacion/{id}', CorteDetalle::class)->name('corte-liquidacion.detalle');
 
     // Descarga / Impresión de Reporte PDF del Corte
-    Route::get('/corte-liquidacion/pdf/{id}', function (int $id, GenerarPdfCorteUseCase $useCase, ConsultarCorteUseCase $consultarUseCase) {
+    Route::get('/corte-liquidacion/pdf/{id}.pdf', function (int $id, Request $request, GenerarPdfCorteUseCase $useCase, ConsultarCorteUseCase $consultarUseCase) {
         try {
             $corte = $consultarUseCase->execute($id);
             if (!$corte) {
@@ -56,18 +55,26 @@ Route::middleware(['auth', 'role.operaciones'])->group(function () {
             $folio = $corte['folio'] ?? 'Borrador';
             $fechaInicio = \Carbon\Carbon::parse($corte['fechaInicio'])->format('d-m-Y');
             $fechaFin = \Carbon\Carbon::parse($corte['fechaFin'])->format('d-m-Y');
-            $filename = "corte_{$folio}_{$fechaInicio}_al_{$fechaFin}.pdf";
+            $cleanFolio = preg_replace('/[^A-Za-z0-9_\-]/', '_', $folio);
+            $filename = "corte_{$cleanFolio}_{$fechaInicio}_al_{$fechaFin}.pdf";
 
             $pdfContent = $useCase->execute($id);
 
+            $dispositionType = $request->boolean('download') ? 'attachment' : 'inline';
+
             return response($pdfContent, 200, [
                 'Content-Type' => 'application/pdf',
-                'Content-Disposition' => 'inline; filename="'.$filename.'"',
+                'Content-Disposition' => $dispositionType . '; filename="' . $filename . '"',
+                'Content-Length' => (string) strlen($pdfContent),
+                'Cache-Control' => 'private, must-revalidate, max-age=0',
+                'Pragma' => 'public',
             ]);
         } catch (\Exception $e) {
             abort(500, $e->getMessage());
         }
-    })->name('corte-liquidacion.pdf');
+    })->where('id', '[0-9]+')->name('corte-liquidacion.pdf');
+
+    Route::get('/corte-liquidacion/{id}', CorteDetalle::class)->where('id', '[0-9]+')->name('corte-liquidacion.detalle');
 
 });
 

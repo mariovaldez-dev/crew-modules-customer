@@ -6,49 +6,49 @@ use App\Domain\Shared\Repositories\SucursalRepositoryInterface;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Exception;
 
 class SucursalRepository implements SucursalRepositoryInterface
 {
     public function listaPuntosDeVentaPorZona(string $zona): array
     {
-        return Cache::remember("pvs_zona_{$zona}", 300, function () use ($zona) {
+        return Cache::remember("pvs_zona_{$zona}", 3600, function () use ($zona) {
             Log::debug('[SucursalRepo::listaPuntosDeVentaPorZona] INICIO CONSULTA SP', ['zona' => $zona]);
 
             try {
+                $paramZona = ($zona === 'TODAS') ? '' : $zona;
+
                 DB::connection('maniobras')->statement("SET ANSI_NULLS ON");
                 DB::connection('maniobras')->statement("SET ANSI_WARNINGS ON");
-                $paramZona = ($zona === 'TODAS') ? '' : $zona;
-                $response = DB::connection('maniobras')->select(
+
+                $results = DB::connection('maniobras')->select(
                     "EXEC proc_pdm_cosultar_combos 1, ?",
                     [$paramZona]
                 );
 
-                if (empty($response)) {
+                if (empty($results)) {
                     return [];
                 }
 
-                $result = $response[0];
+                $response = $results[0];
 
-                if ($result->estado !== 0) {
-                    throw new Exception($result->mensaje);
+                if (!isset($response->estado) || (int) $response->estado !== 0) {
+                    return [];
                 }
 
-                $pvsList = $result->combo ?? null;
-
-                if (is_string($pvsList)) {
-                    $pvsList = json_decode($pvsList, true);
+                if (empty($response->combo)) {
+                    return [];
                 }
 
-                if (empty($pvsList)) {
-                    $pvsList = $response;
+                $comboData = is_string($response->combo) ? json_decode($response->combo, true) : $response->combo;
+                if (!is_array($comboData)) {
+                    return [];
                 }
 
                 $mapped = [];
-                foreach ($pvsList as $item) {
-                    $item   = is_array($item) ? $item : (array) $item;
-                    $codigo = trim($item['codigo'] ?? '');
-                    $nombre = trim($item['nombre'] ?? '');
+                foreach ($comboData as $item) {
+                    $item   = (array) $item;
+                    $codigo = trim($item['codigo'] ?? $item['CODIGO'] ?? '');
+                    $nombre = trim($item['nombre'] ?? $item['NOMBRE'] ?? '');
 
                     if ($codigo !== '') {
                         $mapped[$codigo] = $nombre;
@@ -60,7 +60,6 @@ class SucursalRepository implements SucursalRepositoryInterface
                 Log::error('Error en SucursalRepository@listaPuntosDeVentaPorZona', [
                     'zona'  => $zona,
                     'error' => $e->getMessage(),
-                    'trace' => $e->getTraceAsString(),
                 ]);
                 return [];
             }
@@ -69,47 +68,43 @@ class SucursalRepository implements SucursalRepositoryInterface
 
     public function listaLideresPorZona(string $zona): array
     {
-        return Cache::remember("lideres_zona_{$zona}", 300, function () use ($zona) {
+        return Cache::remember("lideres_zona_{$zona}", 3600, function () use ($zona) {
             Log::debug('[SucursalRepo::listaLideresPorZona] INICIO CONSULTA SP', ['zona' => $zona]);
 
             try {
+                $paramZona = ($zona === 'TODAS') ? '' : $zona;
+
                 DB::connection('maniobras')->statement("SET ANSI_NULLS ON");
                 DB::connection('maniobras')->statement("SET ANSI_WARNINGS ON");
 
-                $query = "EXEC proc_pdm_cosultar_combos 4";
-                $bindings = [];
-                
-                if ($zona !== '' && $zona !== 'TODAS') {
-                    $query .= ", ?";
-                    $bindings[] = $zona;
-                }
+                $results = DB::connection('maniobras')->select(
+                    "EXEC proc_pdm_cosultar_combos 4, ?",
+                    [$paramZona]
+                );
 
-                $response = DB::connection('maniobras')->select($query, $bindings);
-
-                if (empty($response)) {
+                if (empty($results)) {
                     return [];
                 }
 
-                $result = $response[0];
+                $response = $results[0];
 
-                if (isset($result->estado) && $result->estado !== 0) {
-                    throw new Exception($result->mensaje ?? 'Error desconocido del SP');
+                if (!isset($response->estado) || (int) $response->estado !== 0) {
+                    return [];
                 }
 
-                $comboData = $result->combo ?? null;
-
-                if (is_string($comboData)) {
-                    $comboData = json_decode($comboData, true);
+                if (empty($response->combo)) {
+                    return [];
                 }
 
-                if (empty($comboData)) {
-                    $comboData = $response;
+                $comboData = is_string($response->combo) ? json_decode($response->combo, true) : $response->combo;
+                if (!is_array($comboData)) {
+                    return [];
                 }
 
                 $mapped = [];
                 foreach ($comboData as $item) {
-                    $item   = is_array($item) ? $item : (array) $item;
-                    $nombre = trim($item['nombre'] ?? '');
+                    $item   = (array) $item;
+                    $nombre = trim($item['nombre'] ?? $item['NOMBRE'] ?? '');
 
                     if ($nombre !== '') {
                         $mapped[$nombre] = $nombre;
@@ -121,7 +116,6 @@ class SucursalRepository implements SucursalRepositoryInterface
                 Log::error('Error en SucursalRepository@listaLideresPorZona', [
                     'zona'  => $zona,
                     'error' => $e->getMessage(),
-                    'trace' => $e->getTraceAsString(),
                 ]);
                 return [];
             }

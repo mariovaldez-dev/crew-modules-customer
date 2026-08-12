@@ -6,7 +6,6 @@ use App\Domain\Cuadrilla\CuadrillaDTO;
 use App\Domain\Cuadrilla\CuadrillaRepositoryInterface;
 use App\Domain\Cuadrilla\TarifasManiobra;
 use Illuminate\Support\Facades\DB;
-use Exception;
 use Illuminate\Support\Facades\Log;
 
 class CuadrillaRepository implements CuadrillaRepositoryInterface
@@ -15,13 +14,13 @@ class CuadrillaRepository implements CuadrillaRepositoryInterface
     public function list(array $filtros, string $zonaUsuario): array
     {
         try {
-            $claveZona = ($zonaUsuario === 'TODAS') ? '' : $zonaUsuario;
+            $context = session()->get('usuario_contexto');
+            $isAm = ($context instanceof \App\Domain\Shared\UsuarioContexto && ($context->isAdministrador() || $context->tipo === 'AM'))
+                || $zonaUsuario === 'TODAS' || $zonaUsuario === 'AM' || $zonaUsuario === '';
 
-            Log::debug('[CuadrillaRepo::list] INICIO', [
-                'zonaUsuario' => $zonaUsuario,
-                'claveZona'   => $claveZona,
-                'filtros'     => $filtros,
-            ]);
+            $claveZona = $isAm ? '' : $zonaUsuario;
+
+            Log::info("CONSULTA REAL A BD (SP): proc_consultar_cuadrillas", ['claveZona' => $claveZona, 'isAm' => $isAm, 'zonaUsuario' => $zonaUsuario]);
 
             DB::connection('maniobras')->statement("SET ANSI_NULLS ON");
             DB::connection('maniobras')->statement("SET ANSI_WARNINGS ON");
@@ -31,41 +30,25 @@ class CuadrillaRepository implements CuadrillaRepositoryInterface
                 [$claveZona]
             );
 
-            Log::debug('[CuadrillaRepo::list] Respuesta cruda del SP', [
-                'total_rows'   => count($results),
-                'primera_fila' => !empty($results) ? (array) $results[0] : null,
-            ]);
-
             if (empty($results)) {
-                Log::warning('[CuadrillaRepo::list] SP no devolvió filas');
                 return [];
             }
 
-            $row = $results[0];
+            $response = $results[0];
 
-            Log::debug('[CuadrillaRepo::list] Estado del SP', [
-                'estado'  => $row->estado ?? 'N/A',
-                'mensaje' => $row->mensaje ?? 'N/A',
-            ]);
-
-            if ((int) $row->estado !== 0) {
-                Log::warning('[CuadrillaRepo::list] SP devolvió estado de error', [
-                    'estado'  => $row->estado,
-                    'mensaje' => $row->mensaje ?? 'sin mensaje',
-                ]);
+            if (!isset($response->estado) || (int) $response->estado !== 0) {
                 return [];
             }
 
-            $cuadrillasJson = json_decode($row->listaCuadrillas, true);
+            $rawLista = $response->listaCuadrillas ?? $response->listacuadrillas ?? $response->LISTACUADRILLAS ?? null;
 
-            Log::debug('[CuadrillaRepo::list] JSON decodificado', [
-                'json_error'    => json_last_error_msg(),
-                'total_items'   => is_array($cuadrillasJson) ? count($cuadrillasJson) : 'NO ES ARRAY',
-                'muestra'       => is_array($cuadrillasJson) ? array_slice($cuadrillasJson, 0, 2) : null,
-            ]);
+            if (empty($rawLista)) {
+                return [];
+            }
 
-            if (!is_array($cuadrillasJson)) {
-                Log::warning('[CuadrillaRepo::list] listaCuadrillas no es un array válido');
+            $cuadrillasData = is_string($rawLista) ? json_decode($rawLista, true) : $rawLista;
+
+            if (!is_array($cuadrillasData)) {
                 return [];
             }
 
@@ -73,36 +56,31 @@ class CuadrillaRepository implements CuadrillaRepositoryInterface
             $pvFiltro = trim($filtros['puntoVentaId'] ?? '');
 
             $cuadrillas = [];
-            $descartados = ['search' => 0, 'pv' => 0];
+            foreach ($cuadrillasData as $item) {
+                $itemArray = (array) $item;
+                $nombre = $itemArray['nombreCuadrilla'] ?? $itemArray['NOMBRECUADRILLA'] ?? '';
+                $lider  = $itemArray['liderCuadrilla']  ?? $itemArray['LIDERCUADRILLA']  ?? '';
+                $pv     = $itemArray['puntoVenta']       ?? $itemArray['PUNTOVENTA']       ?? '';
 
-            foreach ($cuadrillasJson as $item) {
                 if ($search !== '' &&
-                    stripos($item['nombreCuadrilla'], $search) === false &&
-                    stripos($item['liderCuadrilla'],  $search) === false
+                    stripos($nombre, $search) === false &&
+                    stripos($lider,  $search) === false
                 ) {
-                    $descartados['search']++;
                     continue;
                 }
 
-                if ($pvFiltro !== '' && $item['puntoVenta'] !== $pvFiltro) {
-                    $descartados['pv']++;
+                if ($pvFiltro !== '' && $pv !== $pvFiltro) {
                     continue;
                 }
 
-                $cuadrillas[] = $this->mapRowToDTO($item);
+                $cuadrillas[] = $this->mapRowToDTO($itemArray);
             }
 
-            Log::debug('[CuadrillaRepo::list] Resultado final', [
-                'total_devueltas' => count($cuadrillas),
-                'descartados'     => $descartados,
-            ]);
-
             return $cuadrillas;
-        } catch (Exception $e) {
-            Log::error('[CuadrillaRepo::list] Excepción', [
-                'zonaUsuario' => $zonaUsuario,
-                'error'       => $e->getMessage(),
-                'trace'       => $e->getTraceAsString(),
+        } catch (\Throwable $e) {
+            Log::error('Error en CuadrillaRepository@list', [
+                'zona'  => $zonaUsuario,
+                'error' => $e->getMessage(),
             ]);
             return [];
         }
@@ -111,15 +89,13 @@ class CuadrillaRepository implements CuadrillaRepositoryInterface
     public function findById(int $id): ?CuadrillaDTO
     {
         try {
-            Log::debug('[CuadrillaRepo::findById] INICIO', ['id_buscado' => $id]);
-
             $context = session()->get('usuario_contexto');
             $claveZona = '';
             if ($context instanceof \App\Domain\Shared\UsuarioContexto && $context->tipo !== 'AM') {
                 $claveZona = $context->zona;
             }
 
-            Log::debug('[CuadrillaRepo::findById] Parámetro de zona', ['claveZona' => $claveZona]);
+            Log::info("CONSULTA REAL A BD (SP): proc_consultar_cuadrillas (findById)", ['id' => $id, 'claveZona' => $claveZona]);
 
             DB::connection('maniobras')->statement("SET ANSI_NULLS ON");
             DB::connection('maniobras')->statement("SET ANSI_WARNINGS ON");
@@ -129,50 +105,41 @@ class CuadrillaRepository implements CuadrillaRepositoryInterface
                 [$claveZona]
             );
 
-            Log::debug('[CuadrillaRepo::findById] Respuesta cruda del SP', [
-                'total_rows'   => count($results),
-                'primera_fila' => !empty($results) ? (array) $results[0] : null,
-            ]);
-
             if (empty($results)) {
-                Log::warning('[CuadrillaRepo::findById] SP no devolvió filas');
                 return null;
             }
 
-            $row = $results[0];
-            Log::debug('[CuadrillaRepo::findById] Estado del SP', [
-                'estado'  => $row->estado ?? 'N/A',
-                'mensaje' => $row->mensaje ?? 'N/A',
-            ]);
+            $response = $results[0];
 
-            if ((int) $row->estado !== 0) {
-                Log::warning('[CuadrillaRepo::findById] SP devolvió estado de error', [
-                    'estado'  => $row->estado,
-                    'mensaje' => $row->mensaje ?? 'sin mensaje',
-                ]);
+            if (!isset($response->estado) || (int) $response->estado !== 0) {
                 return null;
             }
 
-            $cuadrillasJson = json_decode($row->listaCuadrillas, true);
-            if (!is_array($cuadrillasJson)) {
-                Log::warning('[CuadrillaRepo::findById] listaCuadrillas no es un array válido');
+            $rawLista = $response->listaCuadrillas ?? $response->listacuadrillas ?? $response->LISTACUADRILLAS ?? null;
+
+            if (empty($rawLista)) {
                 return null;
             }
 
-            foreach ($cuadrillasJson as $item) {
-                if ((int) $item['idCuadrilla'] === $id) {
-                    Log::debug('[CuadrillaRepo::findById] Cuadrilla encontrada', ['id' => $id]);
-                    return $this->mapRowToDTO($item);
+            $cuadrillasData = is_string($rawLista) ? json_decode($rawLista, true) : $rawLista;
+
+            if (!is_array($cuadrillasData)) {
+                return null;
+            }
+
+            foreach ($cuadrillasData as $item) {
+                $itemArray = (array) $item;
+                $itemId = (int) ($itemArray['idCuadrilla'] ?? $itemArray['IDCUADRILLA'] ?? 0);
+                if ($itemId === $id) {
+                    return $this->mapRowToDTO($itemArray);
                 }
             }
 
-            Log::warning('[CuadrillaRepo::findById] Cuadrilla no encontrada en la lista', ['id_buscado' => $id]);
             return null;
-        } catch (Exception $e) {
-            Log::error('[CuadrillaRepo::findById] Excepción', [
+        } catch (\Throwable $e) {
+            Log::error('Error en CuadrillaRepository@findById', [
                 'id'    => $id,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
             ]);
             return null;
         }
@@ -181,33 +148,33 @@ class CuadrillaRepository implements CuadrillaRepositoryInterface
     public function create(CuadrillaDTO $cuadrilla): CuadrillaDTO
     {
         try {
-            $usuarioId  = (int) (auth()->user()?->id ?? 0);
-            $listaTarifas = $this->tarifasToJson($cuadrilla->tarifas);
-
+            $usuarioId = (int) (auth()->user()?->id ?? 0);
             $context = session()->get('usuario_contexto');
-            $claveZona = '';
-            if ($context instanceof \App\Domain\Shared\UsuarioContexto && $context->tipo !== 'AM') {
-                $claveZona = $context->zona;
-            }
+            $zona = ($context instanceof \App\Domain\Shared\UsuarioContexto) ? $context->zona : '';
+
+            Log::info("CONSULTA REAL A BD (SP): proc_pdm_administrar_cuadrillas (Opcion = 1)", ['nombre' => $cuadrilla->nombre, 'zona' => $zona]);
+
+            DB::connection('maniobras')->statement("SET ANSI_NULLS ON");
+            DB::connection('maniobras')->statement("SET ANSI_WARNINGS ON");
 
             $results = DB::connection('maniobras')->select(
-                "EXEC proc_pdm_administrar_cuadrillas
-                    @Opcion          = 1,
-                    @zona            = ?,
-                    @nombreCuadrilla = ?,
-                    @liderCuadrilla  = ?,
-                    @miembros        = ?,
-                    @puntoVenta      = ?,
-                    @listaTarifas    = ?,
-                    @usuario         = ?",
+                "EXEC proc_pdm_administrar_cuadrillas 
+                    @Opcion = 1, 
+                    @zona = ?, 
+                    @nombreCuadrilla = ?, 
+                    @liderCuadrilla = ?, 
+                    @miembros = ?, 
+                    @puntoVenta = ?, 
+                    @listaTarifas = ?, 
+                    @usuario = ?",
                 [
-                    $claveZona,
+                    $zona,
                     $cuadrilla->nombre,
                     $cuadrilla->lider,
                     $cuadrilla->miembros,
                     $cuadrilla->puntoVentaId,
-                    $listaTarifas,
-                    $usuarioId,
+                    $this->tarifasToJson($cuadrilla->tarifas),
+                    $usuarioId
                 ]
             );
 
@@ -215,59 +182,51 @@ class CuadrillaRepository implements CuadrillaRepositoryInterface
                 throw new Exception('No se recibió respuesta de la base de datos.');
             }
 
-            $row = $results[0];
-            if ((int) $row->estado !== 0) {
-                throw new Exception($row->mensaje);
-            }
-            $idGenerado = isset($row->idCuadrilla) ? (int) $row->idCuadrilla : (isset($row->id) ? (int) $row->id : null);
+            $response = $results[0];
 
-            return new CuadrillaDTO(
-                id:          $idGenerado,
-                nombre:      $cuadrilla->nombre,
-                lider:       $cuadrilla->lider,
-                miembros:    $cuadrilla->miembros,
-                puntoVentaId: $cuadrilla->puntoVentaId,
-                zona:        $cuadrilla->zona,
-                tarifas:     $cuadrilla->tarifas
-            );
-        } catch (Exception $e) {
+            if (!isset($response->estado) || (int) $response->estado !== 0) {
+                throw new Exception($response->mensaje ?? 'Error al crear cuadrilla');
+            }
+
+            return $cuadrilla;
+        } catch (\Throwable $e) {
             Log::error('Error en CuadrillaRepository@create', ['error' => $e->getMessage()]);
-            throw new Exception($e->getMessage());
+            throw $e;
         }
     }
 
     public function update(int $id, CuadrillaDTO $cuadrilla): CuadrillaDTO
     {
         try {
-            $usuarioId    = (int) (auth()->user()?->id ?? 0);
-            $listaTarifas = $this->tarifasToJson($cuadrilla->tarifas);
-
+            $usuarioId = (int) (auth()->user()?->id ?? 0);
             $context = session()->get('usuario_contexto');
-            $claveZona = '';
-            if ($context instanceof \App\Domain\Shared\UsuarioContexto && $context->tipo !== 'AM') {
-                $claveZona = $context->zona;
-            }
+            $zona = ($context instanceof \App\Domain\Shared\UsuarioContexto) ? $context->zona : '';
+
+            Log::info("CONSULTA REAL A BD (SP): proc_pdm_administrar_cuadrillas (Opcion = 2)", ['id' => $id, 'nombre' => $cuadrilla->nombre]);
+
+            DB::connection('maniobras')->statement("SET ANSI_NULLS ON");
+            DB::connection('maniobras')->statement("SET ANSI_WARNINGS ON");
 
             $results = DB::connection('maniobras')->select(
-                "EXEC proc_pdm_administrar_cuadrillas
-                    @Opcion          = 2,
-                    @zona            = ?,
-                    @idCuadrilla     = ?,
-                    @nombreCuadrilla = ?,
-                    @liderCuadrilla  = ?,
-                    @miembros        = ?,
-                    @puntoVenta      = ?,
-                    @listaTarifas    = ?,
-                    @usuario         = ?",
+                "EXEC proc_pdm_administrar_cuadrillas 
+                    @Opcion = 2, 
+                    @zona = ?, 
+                    @idCuadrilla = ?, 
+                    @nombreCuadrilla = ?, 
+                    @liderCuadrilla = ?, 
+                    @miembros = ?, 
+                    @puntoVenta = ?, 
+                    @listaTarifas = ?, 
+                    @usuario = ?",
                 [
-                    $claveZona,
+                    $zona,
                     $id,
                     $cuadrilla->nombre,
                     $cuadrilla->lider,
                     $cuadrilla->miembros,
                     $cuadrilla->puntoVentaId,
-                    $listaTarifas,
-                    $usuarioId,
+                    $this->tarifasToJson($cuadrilla->tarifas),
+                    $usuarioId
                 ]
             );
 
@@ -275,23 +234,16 @@ class CuadrillaRepository implements CuadrillaRepositoryInterface
                 throw new Exception('No se recibió respuesta de la base de datos.');
             }
 
-            $row = $results[0];
-            if ((int) $row->estado !== 0) {
-                throw new Exception($row->mensaje);
+            $response = $results[0];
+
+            if (!isset($response->estado) || (int) $response->estado !== 0) {
+                throw new Exception($response->mensaje ?? 'Error al actualizar cuadrilla');
             }
 
-            return new CuadrillaDTO(
-                id:          $id,
-                nombre:      $cuadrilla->nombre,
-                lider:       $cuadrilla->lider,
-                miembros:    $cuadrilla->miembros,
-                puntoVentaId: $cuadrilla->puntoVentaId,
-                zona:        $cuadrilla->zona,
-                tarifas:     $cuadrilla->tarifas
-            );
-        } catch (Exception $e) {
-            Log::error('Error en CuadrillaRepository@update', ['error' => $e->getMessage()]);
-            throw new Exception($e->getMessage());
+            return $cuadrilla;
+        } catch (\Throwable $e) {
+            Log::error('Error en CuadrillaRepository@update', ['id' => $id, 'error' => $e->getMessage()]);
+            throw $e;
         }
     }
 
@@ -300,39 +252,46 @@ class CuadrillaRepository implements CuadrillaRepositoryInterface
         try {
             $usuarioId = (int) (auth()->user()?->id ?? 0);
 
+            Log::info("CONSULTA REAL A BD (SP): proc_pdm_administrar_cuadrillas (Opcion = 3)", ['id' => $id]);
+
+            DB::connection('maniobras')->statement("SET ANSI_NULLS ON");
+            DB::connection('maniobras')->statement("SET ANSI_WARNINGS ON");
+
             $results = DB::connection('maniobras')->select(
-                "EXEC proc_pdm_administrar_cuadrillas
-                    @Opcion      = 3,
-                    @idCuadrilla = ?,
-                    @usuario     = ?",
-                [$id, $usuarioId]
+                "EXEC proc_pdm_administrar_cuadrillas 
+                    @Opcion = 3, 
+                    @idCuadrilla = ?, 
+                    @usuario = ?",
+                [
+                    $id,
+                    $usuarioId
+                ]
             );
 
             if (empty($results)) {
-                return false;
+                throw new Exception('No se recibió respuesta de la base de datos.');
             }
 
-            $row = $results[0];
-            if ((int) $row->estado !== 0) {
-                throw new Exception($row->mensaje);
+            $response = $results[0];
+
+            if (!isset($response->estado) || (int) $response->estado !== 0) {
+                throw new Exception($response->mensaje ?? 'Error al eliminar cuadrilla');
             }
 
             return true;
-        } catch (Exception $e) {
-            Log::error('Error en CuadrillaRepository@delete', ['error' => $e->getMessage()]);
-            throw new Exception($e->getMessage());
+        } catch (\Throwable $e) {
+            Log::error('Error en CuadrillaRepository@delete', ['id' => $id, 'error' => $e->getMessage()]);
+            throw $e;
         }
     }
 
     public function hasLiquidacionesEnProceso(int $cuadrillaId): bool
     {
-        // La validación de eliminación la procesa el SP proc_pdm_administrar_cuadrillas @Opcion = 3
         return false;
     }
 
     public function hasManiobrasEnProceso(int $cuadrillaId): bool
     {
-        // La validación de eliminación la procesa el SP proc_pdm_administrar_cuadrillas @Opcion = 3
         return false;
     }
 
@@ -351,7 +310,7 @@ class CuadrillaRepository implements CuadrillaRepositoryInterface
                 }
             }
             return false;
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             Log::error('Error en CuadrillaRepository@exists', ['error' => $e->getMessage()]);
             return false;
         }
@@ -373,21 +332,25 @@ class CuadrillaRepository implements CuadrillaRepositoryInterface
 
     private function mapRowToDTO(array $item): CuadrillaDTO
     {
-        $tarifasArray = is_string($item['listaTarifas'] ?? null)
-            ? json_decode($item['listaTarifas'], true)
-            : ($item['listaTarifas'] ?? []);
+        $rawTarifas = $item['listaTarifas'] ?? $item['LISTATARIFAS'] ?? $item['listatarifas'] ?? [];
+        $tarifasArray = is_string($rawTarifas) ? json_decode($rawTarifas, true) : $rawTarifas;
 
         $tarifasMap = [];
         foreach ((array) $tarifasArray as $t) {
-            $tarifasMap[(int) $t['idTipoManiobra']] = (float) $t['tarifa'];
+            $tArr = (array) $t;
+            $tipoId = (int) ($tArr['idTipoManiobra'] ?? $tArr['IDTIPOMANIOBRA'] ?? 0);
+            $tarifaVal = (float) ($tArr['tarifa'] ?? $tArr['TARIFA'] ?? 0);
+            if ($tipoId > 0) {
+                $tarifasMap[$tipoId] = $tarifaVal;
+            }
         }
 
         return new CuadrillaDTO(
-            id:           (int) $item['idCuadrilla'],
-            nombre:       $item['nombreCuadrilla'],
-            lider:        $item['liderCuadrilla'],
-            miembros:     (int) $item['miembros'],
-            puntoVentaId: (string) $item['puntoVenta'],
+            id:           (int) ($item['idCuadrilla'] ?? $item['IDCUADRILLAS'] ?? $item['IDCUADRILLA'] ?? 0),
+            nombre:       (string) ($item['nombreCuadrilla'] ?? $item['NOMBRECUADRILLA'] ?? ''),
+            lider:        (string) ($item['liderCuadrilla'] ?? $item['LIDERCUADRILLA'] ?? ''),
+            miembros:     (int) ($item['miembros'] ?? $item['MIEMBROS'] ?? 0),
+            puntoVentaId: (string) ($item['puntoVenta'] ?? $item['PUNTOVENTA'] ?? ''),
             zona:         '',
             tarifas:      TarifasManiobra::fromDynamic($tarifasMap)
         );

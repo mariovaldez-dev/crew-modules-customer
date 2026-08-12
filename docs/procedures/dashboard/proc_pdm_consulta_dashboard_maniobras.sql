@@ -32,15 +32,17 @@ BEGIN
         WHERE (@Zona IS NULL OR clv_zona = @Zona) AND opc_estatus = 1;
 
         -- 5. Calcular Estadísticas de Maniobras Registradas
+        --    Liquidada   = corte general confirmado (opc_estatus = 1)
+        --    Confirmada  = cuadrilla confirmada en corte borrador
+        --    En proceso  = sin corte o en borrador sin confirmación de cuadrilla
         SELECT 
-            @ToneladasTotales = ISNULL(SUM(m.num_toneladas), 0),
-            -- Si idu_corte > 0 está asignada a un corte (Liquidada)
-            @ManiobrasLiquidadas = SUM(CASE WHEN ISNULL(m.idu_corte, 0) > 0 THEN 1 ELSE 0 END),
-            -- Si idu_corte == 0 está pendiente (En proceso)
-            @ManiobrasEnProceso = SUM(CASE WHEN ISNULL(m.idu_corte, 0) = 0 THEN 1 ELSE 0 END)
+            @ToneladasTotales    = ISNULL(SUM(m.num_toneladas), 0),
+            @ManiobrasLiquidadas = SUM(CASE WHEN ISNULL(CL.opc_estatus, 0) = 1 THEN 1 ELSE 0 END),
+            @ManiobrasEnProceso  = SUM(CASE WHEN ISNULL(CL.opc_estatus, 0) = 1 THEN 0 ELSE 1 END)
             
         FROM mov_pdm_maniobras_ejecutadas m
         INNER JOIN mae_pdm_cuadrillas c ON m.idu_cuadrilla = c.idu_cuadrilla
+        LEFT JOIN dbo.mae_pdm_cortes_liquidacion CL ON m.idu_corte = CL.idu_corte
         WHERE (@Zona IS NULL OR c.clv_zona = @Zona) 
           AND m.opc_estatus = 1;
 
@@ -59,18 +61,28 @@ BEGIN
                 ) AS corteActual,
                 (
                     -- Arreglo de los 5 últimos registros
+                    -- estatusCiclo: 0 = En proceso | 1 = Confirmada | 2 = Liquidada
                     SELECT TOP 5 
                         'MAN-' + RIGHT('000000' + CAST(m.idu_maniobra AS VARCHAR(20)), 6) AS folio, 
                         m.fec_registro AS fecha,
                         c.nom_cuadrilla AS cuadrillaNombre,
-                        m.idu_punto_venta AS almacenNombre,
+                        ISNULL(pun.WhsName, m.idu_punto_venta) AS almacenNombre,
                         t.nom_maniobra AS tipoManiobraNombre,
                         m.num_toneladas AS toneladas,
                         m.idu_corte AS idCorte,
-                        CASE WHEN ISNULL(m.idu_corte, 0) > 0 THEN 'Liquidada' ELSE 'En proceso' END AS estado
+                        CASE
+                            WHEN ISNULL(CL2.opc_estatus, 0) = 1 THEN 'Liquidada'
+                            WHEN CC.idu_corte IS NOT NULL         THEN 'Confirmada'
+                            ELSE                                       'En proceso'
+                        END AS estado
                     FROM mov_pdm_maniobras_ejecutadas m
                     INNER JOIN mae_pdm_cuadrillas c ON m.idu_cuadrilla = c.idu_cuadrilla
                     INNER JOIN cat_pdm_tipos_maniobras t ON m.idu_tipomaniobra = t.idu_tipomaniobra
+                    LEFT JOIN SAP.SBO_Impulsora_PROD.dbo.OWHS AS pun
+                        ON pun.WhsCode = c.idu_punto_venta COLLATE SQL_Latin1_General_CP850_CI_AS
+                    LEFT JOIN dbo.mae_pdm_cortes_liquidacion CL2 ON m.idu_corte = CL2.idu_corte
+                    LEFT JOIN dbo.mov_pdm_cortes_cuadrillas_confirmacion CC
+                        ON m.idu_corte = CC.idu_corte AND m.idu_cuadrilla = CC.idu_cuadrilla
                     WHERE (@Zona IS NULL OR c.clv_zona = @Zona)
                       AND m.opc_estatus = 1
                     ORDER BY m.fec_registro DESC, m.idu_maniobra DESC
