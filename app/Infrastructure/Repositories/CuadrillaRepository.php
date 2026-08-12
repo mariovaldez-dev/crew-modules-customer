@@ -38,22 +38,33 @@ class CuadrillaRepository implements CuadrillaRepositoryInterface
                 return [];
             }
 
-            $row = $results[0];
+            $rawFirst = (array) $results[0];
+            $first = [];
+            foreach ($rawFirst as $k => $v) {
+                $first[strtolower($k)] = $v;
+            }
 
             Log::debug('[CuadrillaRepo::list] Estado del SP', [
-                'estado'  => $row->estado ?? 'N/A',
-                'mensaje' => $row->mensaje ?? 'N/A',
+                'estado'  => $first['estado'] ?? 'N/A',
+                'mensaje' => $first['mensaje'] ?? 'N/A',
             ]);
 
-            if ((int) $row->estado !== 0) {
+            if (isset($first['estado']) && (int) $first['estado'] !== 0) {
                 Log::warning('[CuadrillaRepo::list] SP devolvió estado de error', [
-                    'estado'  => $row->estado,
-                    'mensaje' => $row->mensaje ?? 'sin mensaje',
+                    'estado'  => $first['estado'] ?? null,
+                    'mensaje' => $first['mensaje'] ?? 'sin mensaje',
                 ]);
                 return [];
             }
 
-            $cuadrillasJson = json_decode($row->listaCuadrillas, true);
+            $rawJson = $first['listacuadrillas'] ?? null;
+            if (is_string($rawJson)) {
+                $cuadrillasJson = json_decode($rawJson, true);
+            } elseif (is_array($rawJson)) {
+                $cuadrillasJson = $rawJson;
+            } else {
+                $cuadrillasJson = null;
+            }
 
             Log::debug('[CuadrillaRepo::list] JSON decodificado', [
                 'json_error'    => json_last_error_msg(),
@@ -62,7 +73,7 @@ class CuadrillaRepository implements CuadrillaRepositoryInterface
             ]);
 
             if (!is_array($cuadrillasJson)) {
-                Log::warning('[CuadrillaRepo::list] listaCuadrillas no es un array válido');
+                Log::warning('[CuadrillaRepo::list] listacuadrillas no es un array válido');
                 return [];
             }
 
@@ -133,23 +144,36 @@ class CuadrillaRepository implements CuadrillaRepositoryInterface
                 return null;
             }
 
-            $row = $results[0];
+            $rawFirst = (array) $results[0];
+            $first = [];
+            foreach ($rawFirst as $k => $v) {
+                $first[strtolower($k)] = $v;
+            }
+
             Log::debug('[CuadrillaRepo::findById] Estado del SP', [
-                'estado'  => $row->estado ?? 'N/A',
-                'mensaje' => $row->mensaje ?? 'N/A',
+                'estado'  => $first['estado'] ?? 'N/A',
+                'mensaje' => $first['mensaje'] ?? 'N/A',
             ]);
 
-            if ((int) $row->estado !== 0) {
+            if (isset($first['estado']) && (int) $first['estado'] !== 0) {
                 Log::warning('[CuadrillaRepo::findById] SP devolvió estado de error', [
-                    'estado'  => $row->estado,
-                    'mensaje' => $row->mensaje ?? 'sin mensaje',
+                    'estado'  => $first['estado'] ?? null,
+                    'mensaje' => $first['mensaje'] ?? 'sin mensaje',
                 ]);
                 return null;
             }
 
-            $cuadrillasJson = json_decode($row->listaCuadrillas, true);
+            $rawJson = $first['listacuadrillas'] ?? null;
+            if (is_string($rawJson)) {
+                $cuadrillasJson = json_decode($rawJson, true);
+            } elseif (is_array($rawJson)) {
+                $cuadrillasJson = $rawJson;
+            } else {
+                $cuadrillasJson = null;
+            }
+
             if (!is_array($cuadrillasJson)) {
-                Log::warning('[CuadrillaRepo::findById] listaCuadrillas no es un array válido');
+                Log::warning('[CuadrillaRepo::findById] listacuadrillas no es un array válido');
                 return null;
             }
 
