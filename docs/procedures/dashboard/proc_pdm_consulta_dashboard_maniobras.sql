@@ -66,7 +66,7 @@ BEGIN
                         'MAN-' + RIGHT('000000' + CAST(m.idu_maniobra AS VARCHAR(20)), 6) AS folio, 
                         m.fec_registro AS fecha,
                         c.nom_cuadrilla AS cuadrillaNombre,
-                        m.idu_punto_venta AS almacenNombre,
+                        ISNULL(pun.WhsName, m.idu_punto_venta) AS almacenNombre,
                         t.nom_maniobra AS tipoManiobraNombre,
                         m.num_toneladas AS toneladas,
                         m.idu_corte AS idCorte,
@@ -78,6 +78,8 @@ BEGIN
                     FROM mov_pdm_maniobras_ejecutadas m
                     INNER JOIN mae_pdm_cuadrillas c ON m.idu_cuadrilla = c.idu_cuadrilla
                     INNER JOIN cat_pdm_tipos_maniobras t ON m.idu_tipomaniobra = t.idu_tipomaniobra
+                    LEFT JOIN SAP.SBO_Impulsora_PROD.dbo.OWHS AS pun
+                        ON pun.WhsCode = c.idu_punto_venta COLLATE SQL_Latin1_General_CP850_CI_AS
                     LEFT JOIN dbo.mae_pdm_cortes_liquidacion CL2 ON m.idu_corte = CL2.idu_corte
                     LEFT JOIN dbo.mov_pdm_cortes_cuadrillas_confirmacion CC
                         ON m.idu_corte = CC.idu_corte AND m.idu_cuadrilla = CC.idu_cuadrilla
