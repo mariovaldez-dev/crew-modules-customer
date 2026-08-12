@@ -93,7 +93,8 @@ class RegistroManiobraRepository implements RegistroManiobraRepositoryInterface
 
                 $estadoId = (int) ($item['estatus'] ?? $item['ESTATUS'] ?? 1);
                 $corteId = isset($item['idCorte']) ? (int) $item['idCorte'] : (isset($item['IDCORTE']) ? (int) $item['IDCORTE'] : null);
-                $estatusCorte = (int) ($item['estatusCorte'] ?? $item['ESTATUSCORTE'] ?? $item['estatus_corte'] ?? 0);
+                $rawEstatusCorte = $item['estatusCorte'] ?? $item['ESTATUSCORTE'] ?? $item['estatus_corte'] ?? null;
+                $estatusCorte = $rawEstatusCorte !== null ? (int) $rawEstatusCorte : null;
                 $idManiobra = (int) ($item['idManiobra'] ?? $item['IDMANIOBRA'] ?? 0);
                 $folioFormatted = !empty($item['folio']) ? $item['folio'] : ($idManiobra > 0 ? 'MAN-' . str_pad((string)$idManiobra, 6, '0', STR_PAD_LEFT) : 'S/F');
 

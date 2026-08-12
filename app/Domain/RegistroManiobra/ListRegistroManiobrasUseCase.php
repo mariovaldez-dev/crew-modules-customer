@@ -22,7 +22,15 @@ class ListRegistroManiobrasUseCase
         // o crear un clon. La hice mutable en el DTO para este propósito.
 
         foreach ($maniobras as $maniobra) {
-            $maniobra->estado = ($maniobra->corteId > 0 && $maniobra->estatusCorte === 1) ? 'Liquidada' : 'En proceso';
+            if (!$maniobra->corteId || $maniobra->corteId <= 0) {
+                $maniobra->estado = 'En proceso';
+            } elseif ($maniobra->estatusCorte === 0) {
+                // Si el SP devuelve explícitamente estatusCorte = 0 (Corte en Borrador en BD)
+                $maniobra->estado = 'En proceso';
+            } else {
+                // Si estatusCorte es 1 (Confirmado) o null (si el SP en BD aún no expone la columna estatusCorte)
+                $maniobra->estado = 'Liquidada';
+            }
         }
 
         return $maniobras;

@@ -16,7 +16,7 @@ class RegistroManiobraDTO
         public readonly string $tipoManiobraNombre,
         public readonly float $toneladas,
         public readonly ?int $corteId,
-        public readonly int $estatusCorte = 0,
+        public readonly ?int $estatusCorte = null,
         public readonly string $origen = 'APP', // 'APP' o 'MANUAL'
         public string $estado = 'En proceso', // Calculado por el UseCase
         public readonly ?string $documentoSap = null
