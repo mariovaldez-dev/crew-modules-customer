@@ -195,7 +195,7 @@ class RegistroManiobraRepository implements RegistroManiobraRepositoryInterface
 
         try {
             $results = DB::connection('maniobras')->select(
-                "SET NOCOUNT ON; SET ANSI_NULLS ON; SET ANSI_WARNINGS ON; EXEC proc_pdm_cosultar_combos 2, ?",
+                "EXEC proc_pdm_cosultar_combos 2, ?",
                 [$almacenId]
             );
 
@@ -243,7 +243,7 @@ class RegistroManiobraRepository implements RegistroManiobraRepositoryInterface
 
         try {
             $results = DB::connection('maniobras')->select(
-                "SET NOCOUNT ON; SET ANSI_NULLS ON; SET ANSI_WARNINGS ON; EXEC proc_pdm_cosultar_combos 3"
+                "EXEC proc_pdm_cosultar_combos 3"
             );
 
             if (empty($results)) {
