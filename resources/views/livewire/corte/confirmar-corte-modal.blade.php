@@ -14,12 +14,6 @@
         <!-- Backdrop -->
         <div 
             x-show="open"
-            x-transition:enter="transition ease-out duration-200"
-            x-transition:enter-start="opacity-0"
-            x-transition:enter-end="opacity-100"
-            x-transition:leave="transition ease-in duration-150"
-            x-transition:leave-start="opacity-100"
-            x-transition:leave-end="opacity-0"
             class="fixed inset-0 bg-gray-900/75"
             @click="open = false"
         ></div>
@@ -29,12 +23,6 @@
             <div class="flex min-h-full items-center justify-center p-4">
                 <div 
                     x-show="open"
-                    x-transition:enter="transition ease-out duration-200"
-                    x-transition:enter-start="opacity-0 scale-95"
-                    x-transition:enter-end="opacity-100 scale-100"
-                    x-transition:leave="transition ease-in duration-150"
-                    x-transition:leave-start="opacity-100 scale-100"
-                    x-transition:leave-end="opacity-0 scale-95"
                     class="relative w-full sm:max-w-sm overflow-hidden rounded-2xl bg-white dark:bg-[#131B20] shadow-2xl border border-gray-100 dark:border-white/5"
                 >
                     <!-- Header con color de alerta positiva -->
@@ -72,7 +60,7 @@
                     </div>
 
                     <!-- Footer -->
-                    <div class="px-6 py-4 bg-gray-50 dark:bg-white/[0.03] border-t border-gray-100 dark:border-white/5 flex gap-3 justify-end">
+                    <div class="px-6 py-4 bg-gray-50 dark:bg-[#0d1519] border-t border-gray-100 dark:border-white/10 flex gap-3 justify-end">
                         <button 
                             @click="open = false" 
                             type="button"
