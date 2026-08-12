@@ -20,7 +20,7 @@
             x-transition:leave="transition ease-in duration-150"
             x-transition:leave-start="opacity-100"
             x-transition:leave-end="opacity-0"
-            class="fixed inset-0 bg-gray-950/50 backdrop-blur-sm"
+            class="fixed inset-0 bg-gray-900/75"
             @click="open = false"
         ></div>
 
@@ -38,7 +38,7 @@
                     class="relative w-full sm:max-w-sm overflow-hidden rounded-2xl bg-white dark:bg-[#131B20] shadow-2xl border border-gray-100 dark:border-white/5"
                 >
                     <!-- Header con color ámbar -->
-                    <div class="bg-amber-50 dark:bg-amber-950/30 border-b border-amber-100 dark:border-amber-900/30 px-6 py-4 flex items-center justify-between">
+                    <div class="bg-amber-50 dark:bg-amber-950/30 px-6 py-4 flex items-center justify-between">
                         <div class="flex items-center gap-3">
                             <div class="w-9 h-9 rounded-xl bg-amber-500 flex items-center justify-center shrink-0">
                                 <i class="fa-solid fa-rotate-right text-white text-sm"></i>
@@ -50,7 +50,7 @@
                         </div>
                         <button 
                             @click="open = false" 
-                            class="w-7 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-black/5 dark:hover:bg-white/10 transition-all"
+                            class="w-7 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 hover:bg-black/5 dark:hover:bg-white/10 transition-all"
                         >
                             <i class="fa-solid fa-xmark text-sm"></i>
                         </button>
@@ -66,7 +66,7 @@
                         <div class="flex gap-3 p-3 rounded-xl bg-blue-50 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900/40">
                             <i class="fa-solid fa-circle-info text-blue-500 mt-0.5 text-sm shrink-0"></i>
                             <p class="text-xs text-blue-700 dark:text-blue-400 leading-relaxed">
-                                El corte permanecerá en <strong>Borrador</strong> y se resetearán las confirmaciones de cuadrillas.
+                                El corte permanecerá en <strong class="text-blue-800 dark:text-blue-300">Borrador</strong> y se resetearán las confirmaciones de cuadrillas.
                             </p>
                         </div>
                     </div>

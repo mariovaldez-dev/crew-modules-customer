@@ -20,7 +20,7 @@
             x-transition:leave="transition ease-in duration-150"
             x-transition:leave-start="opacity-100"
             x-transition:leave-end="opacity-0"
-            class="fixed inset-0 bg-gray-950/50 backdrop-blur-sm"
+            class="fixed inset-0 bg-gray-900/75"
             @click="open = false"
         ></div>
 
@@ -38,7 +38,7 @@
                     class="relative w-full sm:max-w-sm overflow-hidden rounded-2xl bg-white dark:bg-[#131B20] shadow-2xl border border-gray-100 dark:border-white/5"
                 >
                     <!-- Header con color de alerta positiva -->
-                    <div class="bg-emerald-50 dark:bg-emerald-950/40 border-b border-emerald-100 dark:border-emerald-900/40 px-6 py-4 flex items-center justify-between">
+                    <div class="bg-emerald-50 dark:bg-emerald-950/40 px-6 py-4 flex items-center justify-between">
                         <div class="flex items-center gap-3">
                             <div class="w-9 h-9 rounded-xl bg-emerald-500 flex items-center justify-center shrink-0">
                                 <i class="fa-solid fa-check text-white text-sm"></i>
@@ -50,7 +50,7 @@
                         </div>
                         <button 
                             @click="open = false" 
-                            class="w-7 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-black/5 dark:hover:bg-white/10 transition-all"
+                            class="w-7 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 hover:bg-black/5 dark:hover:bg-white/10 transition-all"
                         >
                             <i class="fa-solid fa-xmark text-sm"></i>
                         </button>
@@ -66,7 +66,7 @@
                         <div class="flex gap-3 p-3 rounded-xl bg-red-50 dark:bg-red-950/30 border border-red-100 dark:border-red-900/40">
                             <i class="fa-solid fa-triangle-exclamation text-red-500 mt-0.5 text-sm shrink-0"></i>
                             <p class="text-xs text-red-700 dark:text-red-400 leading-relaxed">
-                                Una vez confirmado <strong>no podrás regenerar el corte</strong> ni modificar las maniobras incluidas.
+                                Una vez confirmado <strong class="text-red-800 dark:text-red-300">no podrás regenerar el corte</strong> ni modificar las maniobras incluidas.
                             </p>
                         </div>
                     </div>
