@@ -65,22 +65,8 @@ class RegistroManiobraRepository implements RegistroManiobraRepositoryInterface
             $zonaFiltro = $isAm ? 'TODAS' : $zonaUsuario;
             $almacenesMap = $sucursalRepo->listaPuntosDeVentaPorZona($zonaFiltro);
 
-            $confirmadasSet = [];
-            try {
-                $confirmacionesRaw = DB::connection('maniobras')
-                    ->table('mov_pdm_cortes_cuadrillas_confirmacion')
-                    ->get();
-                foreach ($confirmacionesRaw as $c) {
-                    $cArr = (array) $c;
-                    $cId = (int) ($cArr['idu_corte'] ?? $cArr['IDU_CORTE'] ?? 0);
-                    $cuadId = (int) ($cArr['idu_cuadrilla'] ?? $cArr['IDU_CUADRILLA'] ?? 0);
-                    if ($cId > 0 && $cuadId > 0) {
-                        $confirmadasSet["{$cId}_{$cuadId}"] = true;
-                    }
-                }
-            } catch (\Throwable $e) {
-                Log::warning('[RegistroManiobraRepo] Error consultando mov_pdm_cortes_cuadrillas_confirmacion: ' . $e->getMessage());
-            }
+            // El SP ya resuelve estatusCorte y estaConfirmada via JOINs internos.
+            // No se hacen consultas adicionales a tablas desde PHP.
 
             $maniobras = [];
             foreach ($maniobrasJson as $item) {
@@ -108,16 +94,12 @@ class RegistroManiobraRepository implements RegistroManiobraRepositoryInterface
                     if (!$match) continue;
                 }
 
-                $estadoId = (int) ($item['estatus'] ?? $item['ESTATUS'] ?? 1);
-                $corteId = isset($item['idCorte']) ? (int) $item['idCorte'] : (isset($item['IDCORTE']) ? (int) $item['IDCORTE'] : null);
+                $corteId   = isset($item['idCorte']) ? (int) $item['idCorte'] : (isset($item['IDCORTE']) ? (int) $item['IDCORTE'] : null);
                 $cuadrillaIdVal = (int) ($item['idCuadrilla'] ?? $item['IDCUADRILLA'] ?? 0);
-                $rawEstatusCorte = $item['estatusCorte'] ?? $item['ESTATUSCORTE'] ?? $item['estatus_corte'] ?? null;
-                $estatusCorte = $rawEstatusCorte !== null ? (int) $rawEstatusCorte : null;
 
-                $estaConfirmadaVal = !empty($item['estaConfirmada']) 
-                    || !empty($item['ESTACONFIRMADA']) 
-                    || !empty($item['esta_confirmada'])
-                    || ($corteId > 0 && $cuadrillaIdVal > 0 && isset($confirmadasSet["{$corteId}_{$cuadrillaIdVal}"]));
+                // Valores que el SP calcula internamente (JOINs a cortes y confirmacion)
+                $estatusCorte    = (int) ($item['estatusCorte']    ?? $item['ESTATUSCORTE']    ?? 0);
+                $estaConfirmada  = (bool) ($item['estaConfirmada'] ?? $item['ESTACONFIRMADA']  ?? false);
 
                 $idManiobra = (int) ($item['idManiobra'] ?? $item['IDMANIOBRA'] ?? 0);
                 $folioFormatted = !empty($item['folio']) ? $item['folio'] : ($idManiobra > 0 ? 'MAN-' . str_pad((string)$idManiobra, 6, '0', STR_PAD_LEFT) : 'S/F');
@@ -137,14 +119,23 @@ class RegistroManiobraRepository implements RegistroManiobraRepositoryInterface
                     toneladas: (float) ($item['numeroToneladas'] ?? $item['NUMEROTONELADAS'] ?? 0),
                     corteId: $corteId,
                     estatusCorte: $estatusCorte,
-                    estaConfirmada: $estaConfirmadaVal,
+                    estaConfirmada: $estaConfirmada,
                     origen: $item['origen'] ?? $item['ORIGEN'] ?? 'APP',
                     estado: 'En proceso',
                     documentoSap: $item['numeroDocumentoSAP'] ?? $item['NUMERODOCUMENTOSAP'] ?? null
                 );
 
                 if (!empty($filtros['estado'])) {
-                    $estadoCalculado = $corteId ? 'Liquidada' : 'En proceso';
+                    // El estado final lo calcula el UseCase; aquí hacemos un pre-cálculo
+                    // idéntico para poder filtrar antes de armar el array de resultados.
+                    if ($estatusCorte === 1) {
+                        $estadoCalculado = 'Liquidada';
+                    } elseif ($estaConfirmada) {
+                        $estadoCalculado = 'Confirmada';
+                    } else {
+                        $estadoCalculado = 'En proceso';
+                    }
+
                     if (mb_strtolower($estadoCalculado) !== mb_strtolower($filtros['estado'])) {
                         continue;
                     }
