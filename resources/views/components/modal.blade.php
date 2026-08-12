@@ -17,7 +17,14 @@ $maxWidthClass = match ($maxWidth) {
         loading: false,
         checkName(detail) {
             const name = '{{ $name }}';
-            return detail === name || (Array.isArray(detail) && detail[0] === name) || (detail && detail.name === name);
+            if (!detail) return false;
+            if (detail === name) return true;
+            if (typeof detail === 'string' && detail === name) return true;
+            if (Array.isArray(detail) && (detail[0] === name || detail.includes(name))) return true;
+            if (typeof detail === 'object') {
+                if (detail[0] === name || detail.name === name || detail.id === name) return true;
+            }
+            return false;
         },
         init() {
             const setLoad = (val) => { this.loading = val; };

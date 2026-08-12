@@ -43,7 +43,7 @@
                             Imprimir PDF
                         </button>
                     @elseif($this->todasConfirmadas)
-                        <x-button @click="$dispatch('open-modal', 'confirm-corte-general')" variant="primary" class="!py-2 !px-4 text-xs font-bold">
+                        <x-button @click="$dispatch('open-modal', 'confirm-corte-general'); window.dispatchEvent(new CustomEvent('open-modal', { detail: 'confirm-corte-general' }))" variant="primary" class="!py-2 !px-4 text-xs font-bold">
                             <i class="fa-solid fa-check-double mr-1.5"></i>
                             Confirmar Corte
                         </x-button>
@@ -54,7 +54,7 @@
                     @endif
 
                     @if($corte['estado'] === 'Borrador')
-                        <x-button @click="$dispatch('open-modal', 'confirm-regenerar')" variant="secondary" class="!py-2.5 !px-4 text-xs gap-2">
+                        <x-button @click="$dispatch('open-modal', 'confirm-regenerar'); window.dispatchEvent(new CustomEvent('open-modal', { detail: 'confirm-regenerar' }))" variant="secondary" class="!py-2.5 !px-4 text-xs gap-2">
                             <i class="fa-solid fa-rotate-right mr-1.5"></i>
                             Regenerar
                         </x-button>
