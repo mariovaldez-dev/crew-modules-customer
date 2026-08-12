@@ -23,36 +23,42 @@ class SucursalRepository implements SucursalRepositoryInterface
                 );
 
                 if (empty($response)) {
+                    Log::warning('[SucursalRepo::listaPuntosDeVentaPorZona] Respuesta vacía de DB');
                     return [];
                 }
 
-                $result = $response[0];
-
-                if (isset($result->estado) && (int) $result->estado !== 0) {
-                    throw new Exception($result->mensaje ?? 'Error del SP');
+                $rawFirst = (array) $response[0];
+                $first = [];
+                foreach ($rawFirst as $k => $v) {
+                    $first[strtolower($k)] = $v;
                 }
 
-                $pvsList = $result->combo ?? null;
-
-                if (is_string($pvsList)) {
-                    $pvsList = json_decode($pvsList, true);
+                if (isset($first['estado']) && (int) $first['estado'] !== 0) {
+                    Log::warning('[SucursalRepo::listaPuntosDeVentaPorZona] SP devolvió estado distinto de 0', ['row' => $first]);
+                    return [];
                 }
 
-                if (empty($pvsList)) {
-                    $pvsList = $response;
+                $comboData = $first['combo'] ?? null;
+                if (is_string($comboData)) {
+                    $comboData = json_decode($comboData, true);
+                }
+
+                if (empty($comboData) || !is_array($comboData)) {
+                    $comboData = $response;
                 }
 
                 $mapped = [];
-                foreach ($pvsList as $item) {
+                foreach ($comboData as $item) {
                     $item   = is_array($item) ? $item : (array) $item;
-                    $codigo = trim($item['codigo'] ?? '');
-                    $nombre = trim($item['nombre'] ?? '');
+                    $codigo = trim($item['codigo'] ?? $item['CODIGO'] ?? '');
+                    $nombre = trim($item['nombre'] ?? $item['NOMBRE'] ?? '');
 
                     if ($codigo !== '') {
                         $mapped[$codigo] = $nombre;
                     }
                 }
 
+                Log::info('[SucursalRepo::listaPuntosDeVentaPorZona] Puntos de venta mapeados exitosamente', ['count' => count($mapped)]);
                 return $mapped;
             } catch (\Throwable $e) {
                 Log::error('Error en SucursalRepository@listaPuntosDeVentaPorZona', [
@@ -82,35 +88,41 @@ class SucursalRepository implements SucursalRepositoryInterface
                 $response = DB::connection('maniobras')->select($query, $bindings);
 
                 if (empty($response)) {
+                    Log::warning('[SucursalRepo::listaLideresPorZona] Respuesta vacía de DB');
                     return [];
                 }
 
-                $result = $response[0];
-
-                if (isset($result->estado) && (int) $result->estado !== 0) {
-                    throw new Exception($result->mensaje ?? 'Error desconocido del SP');
+                $rawFirst = (array) $response[0];
+                $first = [];
+                foreach ($rawFirst as $k => $v) {
+                    $first[strtolower($k)] = $v;
                 }
 
-                $comboData = $result->combo ?? null;
+                if (isset($first['estado']) && (int) $first['estado'] !== 0) {
+                    Log::warning('[SucursalRepo::listaLideresPorZona] SP devolvió estado distinto de 0', ['row' => $first]);
+                    return [];
+                }
 
+                $comboData = $first['combo'] ?? null;
                 if (is_string($comboData)) {
                     $comboData = json_decode($comboData, true);
                 }
 
-                if (empty($comboData)) {
+                if (empty($comboData) || !is_array($comboData)) {
                     $comboData = $response;
                 }
 
                 $mapped = [];
                 foreach ($comboData as $item) {
                     $item   = is_array($item) ? $item : (array) $item;
-                    $nombre = trim($item['nombre'] ?? '');
+                    $nombre = trim($item['nombre'] ?? $item['NOMBRE'] ?? '');
 
                     if ($nombre !== '') {
                         $mapped[$nombre] = $nombre;
                     }
                 }
 
+                Log::info('[SucursalRepo::listaLideresPorZona] Líderes mapeados exitosamente', ['count' => count($mapped)]);
                 return $mapped;
             } catch (\Throwable $e) {
                 Log::error('Error en SucursalRepository@listaLideresPorZona', [
