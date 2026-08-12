@@ -27,6 +27,8 @@ class SucursalRepository implements SucursalRepositoryInterface
                     return [];
                 }
 
+                Log::info('[SucursalRepo::listaPuntosDeVentaPorZona] Respuesta cruda del SP', ['response' => $response]);
+
                 $rawFirst = (array) $response[0];
                 $first = [];
                 foreach ($rawFirst as $k => $v) {
@@ -91,6 +93,8 @@ class SucursalRepository implements SucursalRepositoryInterface
                     Log::warning('[SucursalRepo::listaLideresPorZona] Respuesta vacía de DB');
                     return [];
                 }
+
+                Log::info('[SucursalRepo::listaLideresPorZona] Respuesta cruda del SP', ['response' => $response]);
 
                 $rawFirst = (array) $response[0];
                 $first = [];
