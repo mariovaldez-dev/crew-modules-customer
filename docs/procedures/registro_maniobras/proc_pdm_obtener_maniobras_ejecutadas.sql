@@ -32,6 +32,7 @@ BEGIN
 				M.opc_estatus as estatus,
 				M.idu_corte as idCorte,
 				ISNULL(CL.opc_estatus, 0) as estatusCorte,
+				CASE WHEN CC.idu_corte IS NOT NULL THEN 1 ELSE 0 END as estaConfirmada,
                 M.fec_registro as fecha
 			FROM dbo.mov_pdm_maniobras_ejecutadas M
 			INNER JOIN dbo.cat_pdm_tipos_maniobras TM
@@ -42,6 +43,8 @@ BEGIN
 				ON pun.WhsCode = C.idu_punto_venta COLLATE SQL_Latin1_General_CP850_CI_AS
 			LEFT JOIN dbo.mae_pdm_cortes_liquidacion CL
 				ON M.idu_corte = CL.idu_corte
+			LEFT JOIN dbo.mov_pdm_cortes_cuadrillas_confirmacion CC
+				ON M.idu_corte = CC.idu_corte AND M.idu_cuadrilla = CC.idu_cuadrilla
 			WHERE
 				M.opc_estatus = 1
 				AND C.opc_estatus = 1 

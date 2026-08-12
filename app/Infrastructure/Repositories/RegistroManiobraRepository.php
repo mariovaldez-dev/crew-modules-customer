@@ -95,6 +95,7 @@ class RegistroManiobraRepository implements RegistroManiobraRepositoryInterface
                 $corteId = isset($item['idCorte']) ? (int) $item['idCorte'] : (isset($item['IDCORTE']) ? (int) $item['IDCORTE'] : null);
                 $rawEstatusCorte = $item['estatusCorte'] ?? $item['ESTATUSCORTE'] ?? $item['estatus_corte'] ?? null;
                 $estatusCorte = $rawEstatusCorte !== null ? (int) $rawEstatusCorte : null;
+                $estaConfirmadaVal = !empty($item['estaConfirmada']) || !empty($item['ESTACONFIRMADA']) || !empty($item['esta_confirmada']);
                 $idManiobra = (int) ($item['idManiobra'] ?? $item['IDMANIOBRA'] ?? 0);
                 $folioFormatted = !empty($item['folio']) ? $item['folio'] : ($idManiobra > 0 ? 'MAN-' . str_pad((string)$idManiobra, 6, '0', STR_PAD_LEFT) : 'S/F');
 
@@ -113,6 +114,7 @@ class RegistroManiobraRepository implements RegistroManiobraRepositoryInterface
                     toneladas: (float) ($item['numeroToneladas'] ?? $item['NUMEROTONELADAS'] ?? 0),
                     corteId: $corteId,
                     estatusCorte: $estatusCorte,
+                    estaConfirmada: $estaConfirmadaVal,
                     origen: $item['origen'] ?? $item['ORIGEN'] ?? 'APP',
                     estado: 'En proceso',
                     documentoSap: $item['numeroDocumentoSAP'] ?? $item['NUMERODOCUMENTOSAP'] ?? null

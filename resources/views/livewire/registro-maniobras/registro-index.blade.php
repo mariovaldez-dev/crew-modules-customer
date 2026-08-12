@@ -72,7 +72,7 @@
                 <div class="{{ !$readyToLoad ? 'hidden' : 'block' }}">
                     @if($readyToLoad)
                         <x-select wire:model.live="filters.estado" 
-                                  :options="['' => 'Todos', 'En proceso' => 'En proceso', 'Liquidada' => 'Liquidada']" 
+                                  :options="['' => 'Todos', 'En proceso' => 'En proceso', 'Confirmada' => 'Confirmada', 'Liquidada' => 'Liquidada']" 
                                   placeholder="Todos" />
                     @endif
                 </div>

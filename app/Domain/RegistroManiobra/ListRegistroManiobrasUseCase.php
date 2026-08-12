@@ -24,12 +24,15 @@ class ListRegistroManiobrasUseCase
         foreach ($maniobras as $maniobra) {
             if (!$maniobra->corteId || $maniobra->corteId <= 0) {
                 $maniobra->estado = 'En proceso';
-            } elseif ($maniobra->estatusCorte === 0) {
-                // Si el SP devuelve explícitamente estatusCorte = 0 (Corte en Borrador en BD)
-                $maniobra->estado = 'En proceso';
-            } else {
-                // Si estatusCorte es 1 (Confirmado) o null (si el SP en BD aún no expone la columna estatusCorte)
+            } elseif ($maniobra->estatusCorte === 1) {
+                // Corte General ha sido verificado y confirmado -> Liquidada
                 $maniobra->estado = 'Liquidada';
+            } elseif ($maniobra->estaConfirmada) {
+                // La cuadrilla fue confirmada en el detalle del corte, pero el corte general sigue en borrador -> Confirmada
+                $maniobra->estado = 'Confirmada';
+            } else {
+                // Maniobra en corte borrador pero cuadrilla sin confirmar -> En proceso
+                $maniobra->estado = 'En proceso';
             }
         }
 
