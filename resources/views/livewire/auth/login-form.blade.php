@@ -1,4 +1,4 @@
-<div class="fixed inset-0 overflow-y-auto bg-[#f4f7f5] z-[60]" x-data="{ hasError: @entangle('hasError') }">
+<div class="fixed inset-0 overflow-y-auto bg-[#f4f7f5] dark:bg-[#0B0F12] z-[60]" x-data="{ hasError: @entangle('hasError') }">
     {{-- Font Awesome 6 --}}
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 
@@ -364,6 +364,99 @@
                 height: 52px;
             }
         }
+
+        /* ==================== DARK MODE ==================== */
+        .dark .login-right {
+            background:
+                radial-gradient(circle at top right, rgba(31, 143, 58, 0.12), transparent 35%),
+                #0B0F12;
+        }
+
+        .dark .login-card {
+            background: rgba(19, 27, 32, 0.95);
+            border-color: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+        }
+
+        .dark .login-title {
+            color: #ffffff;
+        }
+
+        .dark .login-subtitle {
+            color: #9ca3af;
+        }
+
+        .dark .form-label {
+            color: #d1d5db;
+        }
+
+        .dark .input-icon {
+            color: #6b7280;
+        }
+
+        .dark .form-control {
+            background: #18232a;
+            border-color: rgba(255, 255, 255, 0.12);
+            color: #ffffff;
+        }
+
+        .dark .form-control::placeholder {
+            color: #6b7280;
+        }
+
+        .dark .form-control:focus {
+            border-color: #22c55e;
+            box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.2);
+            background: #18232a;
+        }
+
+        .dark .toggle-password {
+            color: #9ca3af;
+        }
+
+        .dark .toggle-password:hover {
+            color: #22c55e;
+        }
+
+        .dark .login-footer {
+            color: #6b7280;
+        }
+
+        .dark .alert-custom {
+            background: rgba(69, 10, 10, 0.4);
+            border-color: rgba(127, 29, 29, 0.5);
+            color: #f87171;
+        }
+
+        .theme-toggle-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.85);
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 50;
+            color: #4b5563;
+            transition: all .2s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        }
+
+        .dark .theme-toggle-btn {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.12);
+            color: #fbbf24;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .theme-toggle-btn:hover {
+            transform: scale(1.06);
+        }
     </style>
 
     <div class="login-wrapper">
@@ -397,7 +490,24 @@
             </div>
         </div>
 
-        <div class="login-right">
+        <div class="login-right relative" x-data="{ 
+            isDark: document.documentElement.classList.contains('dark'),
+            toggleTheme() {
+                if (document.documentElement.classList.contains('dark')) {
+                    document.documentElement.classList.remove('dark');
+                    localStorage.setItem('color-theme', 'light');
+                    this.isDark = false;
+                } else {
+                    document.documentElement.classList.add('dark');
+                    localStorage.setItem('color-theme', 'dark');
+                    this.isDark = true;
+                }
+            }
+        }">
+            <!-- Toggle Theme Button -->
+            <button @click="toggleTheme" type="button" class="theme-toggle-btn" title="Cambiar Tema">
+                <i class="fa-solid" :class="isDark ? 'fa-sun text-amber-400 text-lg' : 'fa-moon text-gray-600 text-lg'"></i>
+            </button>
             <div class="login-card">
 
                 <div class="login-logo-img">
