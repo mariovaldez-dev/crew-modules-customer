@@ -144,27 +144,44 @@ class CuadrillaRepository implements CuadrillaRepositoryInterface
     public function create(CuadrillaDTO $cuadrilla): CuadrillaDTO
     {
         try {
-            Log::info('[CuadrillaRepo::create] Guardando cuadrilla', ['nombre' => $cuadrilla->nombre]);
+            $usuarioId = (int) (auth()->user()?->id ?? 0);
+            $context = session()->get('usuario_contexto');
+            $zona = ($context instanceof \App\Domain\Shared\UsuarioContexto) ? $context->zona : '';
+
+            Log::info("CONSULTA REAL A BD (SP): proc_pdm_administrar_cuadrillas (Opcion = 1)", ['nombre' => $cuadrilla->nombre, 'zona' => $zona]);
 
             DB::connection('maniobras')->statement("SET ANSI_NULLS ON");
             DB::connection('maniobras')->statement("SET ANSI_WARNINGS ON");
 
             $results = DB::connection('maniobras')->select(
-                "EXEC proc_pdm_administrar_cuadrillas @Opcion = 1, @NombreCuadrilla = ?, @LiderCuadrilla = ?, @Miembros = ?, @PuntoVenta = ?, @TarifasJSON = ?",
+                "EXEC proc_pdm_administrar_cuadrillas 
+                    @Opcion = 1, 
+                    @zona = ?, 
+                    @nombreCuadrilla = ?, 
+                    @liderCuadrilla = ?, 
+                    @miembros = ?, 
+                    @puntoVenta = ?, 
+                    @listaTarifas = ?, 
+                    @usuario = ?",
                 [
+                    $zona,
                     $cuadrilla->nombre,
                     $cuadrilla->lider,
                     $cuadrilla->miembros,
                     $cuadrilla->puntoVentaId,
                     $this->tarifasToJson($cuadrilla->tarifas),
+                    $usuarioId
                 ]
             );
 
-            if (!empty($results)) {
-                $row = $results[0];
-                if ((int) ($row->estado ?? -1) !== 0) {
-                    throw new \Exception($row->mensaje ?? 'Error al crear cuadrilla');
-                }
+            if (empty($results)) {
+                throw new Exception('No se recibió respuesta de la base de datos.');
+            }
+
+            $response = $results[0];
+
+            if (!isset($response->estado) || (int) $response->estado !== 0) {
+                throw new Exception($response->mensaje ?? 'Error al crear cuadrilla');
             }
 
             return $cuadrilla;
@@ -177,28 +194,46 @@ class CuadrillaRepository implements CuadrillaRepositoryInterface
     public function update(int $id, CuadrillaDTO $cuadrilla): CuadrillaDTO
     {
         try {
-            Log::info('[CuadrillaRepo::update] Actualizando cuadrilla', ['id' => $id, 'nombre' => $cuadrilla->nombre]);
+            $usuarioId = (int) (auth()->user()?->id ?? 0);
+            $context = session()->get('usuario_contexto');
+            $zona = ($context instanceof \App\Domain\Shared\UsuarioContexto) ? $context->zona : '';
+
+            Log::info("CONSULTA REAL A BD (SP): proc_pdm_administrar_cuadrillas (Opcion = 2)", ['id' => $id, 'nombre' => $cuadrilla->nombre]);
 
             DB::connection('maniobras')->statement("SET ANSI_NULLS ON");
             DB::connection('maniobras')->statement("SET ANSI_WARNINGS ON");
 
             $results = DB::connection('maniobras')->select(
-                "EXEC proc_pdm_administrar_cuadrillas @Opcion = 2, @IdCuadrilla = ?, @NombreCuadrilla = ?, @LiderCuadrilla = ?, @Miembros = ?, @PuntoVenta = ?, @TarifasJSON = ?",
+                "EXEC proc_pdm_administrar_cuadrillas 
+                    @Opcion = 2, 
+                    @zona = ?, 
+                    @idCuadrilla = ?, 
+                    @nombreCuadrilla = ?, 
+                    @liderCuadrilla = ?, 
+                    @miembros = ?, 
+                    @puntoVenta = ?, 
+                    @listaTarifas = ?, 
+                    @usuario = ?",
                 [
+                    $zona,
                     $id,
                     $cuadrilla->nombre,
                     $cuadrilla->lider,
                     $cuadrilla->miembros,
                     $cuadrilla->puntoVentaId,
                     $this->tarifasToJson($cuadrilla->tarifas),
+                    $usuarioId
                 ]
             );
 
-            if (!empty($results)) {
-                $row = $results[0];
-                if ((int) ($row->estado ?? -1) !== 0) {
-                    throw new \Exception($row->mensaje ?? 'Error al actualizar cuadrilla');
-                }
+            if (empty($results)) {
+                throw new Exception('No se recibió respuesta de la base de datos.');
+            }
+
+            $response = $results[0];
+
+            if (!isset($response->estado) || (int) $response->estado !== 0) {
+                throw new Exception($response->mensaje ?? 'Error al actualizar cuadrilla');
             }
 
             return $cuadrilla;
@@ -211,21 +246,32 @@ class CuadrillaRepository implements CuadrillaRepositoryInterface
     public function delete(int $id): bool
     {
         try {
-            Log::info('[CuadrillaRepo::delete] Eliminando cuadrilla', ['id' => $id]);
+            $usuarioId = (int) (auth()->user()?->id ?? 0);
+
+            Log::info("CONSULTA REAL A BD (SP): proc_pdm_administrar_cuadrillas (Opcion = 3)", ['id' => $id]);
 
             DB::connection('maniobras')->statement("SET ANSI_NULLS ON");
             DB::connection('maniobras')->statement("SET ANSI_WARNINGS ON");
 
             $results = DB::connection('maniobras')->select(
-                "EXEC proc_pdm_administrar_cuadrillas @Opcion = 3, @IdCuadrilla = ?",
-                [$id]
+                "EXEC proc_pdm_administrar_cuadrillas 
+                    @Opcion = 3, 
+                    @idCuadrilla = ?, 
+                    @usuario = ?",
+                [
+                    $id,
+                    $usuarioId
+                ]
             );
 
-            if (!empty($results)) {
-                $row = $results[0];
-                if ((int) ($row->estado ?? -1) !== 0) {
-                    throw new \Exception($row->mensaje ?? 'Error al eliminar cuadrilla');
-                }
+            if (empty($results)) {
+                throw new Exception('No se recibió respuesta de la base de datos.');
+            }
+
+            $response = $results[0];
+
+            if (!isset($response->estado) || (int) $response->estado !== 0) {
+                throw new Exception($response->mensaje ?? 'Error al eliminar cuadrilla');
             }
 
             return true;
