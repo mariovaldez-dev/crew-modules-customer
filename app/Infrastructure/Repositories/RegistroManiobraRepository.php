@@ -24,7 +24,7 @@ class RegistroManiobraRepository implements RegistroManiobraRepositoryInterface
 
         try {
             $results = DB::connection('maniobras')->select(
-                "EXEC proc_pdm_obtener_maniobras_ejecutadas @ClaveZona = ?, @FechaInicio = ?, @FechaFin = ?",
+                "SET NOCOUNT ON; SET ANSI_NULLS ON; SET ANSI_WARNINGS ON; EXEC proc_pdm_obtener_maniobras_ejecutadas @ClaveZona = ?, @FechaInicio = ?, @FechaFin = ?",
                 [
                     $claveZona,
                     $filtros['fechaInicio'] ?? null,

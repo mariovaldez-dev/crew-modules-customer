@@ -19,9 +19,9 @@ class TarifaRepository implements TarifaRepositoryInterface
                 Log::debug('[TarifaRepository@consultarTarifas] Ejecutando SP', ['zona' => $claveZona]);
                 
                 if ($claveZona) {
-                    $resultados = DB::connection('maniobras')->select('EXEC proc_pdm_consultar_tarifas ?', [$claveZona]);
+                    $resultados = DB::connection('maniobras')->select('SET NOCOUNT ON; SET ANSI_NULLS ON; SET ANSI_WARNINGS ON; EXEC proc_pdm_consultar_tarifas ?', [$claveZona]);
                 } else {
-                    $resultados = DB::connection('maniobras')->select('EXEC proc_pdm_consultar_tarifas');
+                    $resultados = DB::connection('maniobras')->select('SET NOCOUNT ON; SET ANSI_NULLS ON; SET ANSI_WARNINGS ON; EXEC proc_pdm_consultar_tarifas');
                 }
 
                 if (empty($resultados)) {
