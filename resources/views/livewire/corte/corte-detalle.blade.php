@@ -43,7 +43,7 @@
                             Imprimir PDF
                         </button>
                     @elseif($this->todasConfirmadas)
-                        <x-button @click="$dispatch('open-modal', 'confirm-corte-general')" variant="secondary" class="!py-2 !px-4 text-xs bg-white text-green-700 hover:bg-gray-100 border-white font-bold">
+                        <x-button @click="$dispatch('open-modal', 'confirm-corte-general')" variant="primary" class="!py-2 !px-4 text-xs font-bold">
                             <i class="fa-solid fa-check-double mr-1.5"></i>
                             Confirmar Corte
                         </x-button>

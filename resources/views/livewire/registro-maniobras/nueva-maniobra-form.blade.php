@@ -14,7 +14,7 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div class="col-span-1 sm:col-span-2">
                         <x-label for="fecha" value="Fecha *" />
-                        <x-date-input id="fecha" wire:model="fecha" />
+                        <x-date-input id="fecha" wire:model="fecha" disabled />
                         @error('fecha') <span class="text-xs text-red-500 mt-1 block font-medium">{{ $message }}</span> @enderror
                     </div>
 
