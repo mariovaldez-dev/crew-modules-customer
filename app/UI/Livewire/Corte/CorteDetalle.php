@@ -81,6 +81,18 @@ class CorteDetalle extends Component
         }
     }
 
+    public function abrirConfirmarGeneral(): void
+    {
+        \Illuminate\Support\Facades\Log::info("[CORTE-LIQUIDACION] [UI-Detalle] Despachando open-modal para confirm-corte-general");
+        $this->dispatch('open-modal', 'confirm-corte-general');
+    }
+
+    public function abrirRegenerar(): void
+    {
+        \Illuminate\Support\Facades\Log::info("[CORTE-LIQUIDACION] [UI-Detalle] Despachando open-modal para confirm-regenerar");
+        $this->dispatch('open-modal', 'confirm-regenerar');
+    }
+
     public function confirmarCorteGeneral(ConfirmarCorteGeneralUseCase $useCase, ConsultarCorteUseCase $consultarUseCase)
     {
         \Illuminate\Support\Facades\Log::info("[CORTE-LIQUIDACION] [UI-Detalle] Confirmando corte general ID: {$this->corteId}");
