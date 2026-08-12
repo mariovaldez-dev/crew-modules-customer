@@ -18,7 +18,7 @@ class SucursalRepository implements SucursalRepositoryInterface
             try {
                 $paramZona = ($zona === 'TODAS') ? '' : $zona;
                 $response = DB::connection('maniobras')->select(
-                    "SET ANSI_NULLS ON; SET ANSI_WARNINGS ON; EXEC proc_pdm_cosultar_combos 1, ?",
+                    "SET NOCOUNT ON; SET ANSI_NULLS ON; SET ANSI_WARNINGS ON; EXEC proc_pdm_cosultar_combos 1, ?",
                     [$paramZona]
                 );
 
@@ -71,7 +71,7 @@ class SucursalRepository implements SucursalRepositoryInterface
             Log::debug('[SucursalRepo::listaLideresPorZona] INICIO CONSULTA SP', ['zona' => $zona]);
 
             try {
-                $query = "SET ANSI_NULLS ON; SET ANSI_WARNINGS ON; EXEC proc_pdm_cosultar_combos 4";
+                $query = "SET NOCOUNT ON; SET ANSI_NULLS ON; SET ANSI_WARNINGS ON; EXEC proc_pdm_cosultar_combos 4";
                 $bindings = [];
                 
                 if ($zona !== '' && $zona !== 'TODAS') {

@@ -24,7 +24,7 @@ class CuadrillaRepository implements CuadrillaRepositoryInterface
             ]);
 
             $results = DB::connection('maniobras')->select(
-                "SET ANSI_NULLS ON; SET ANSI_WARNINGS ON; EXEC proc_consultar_cuadrillas @ClaveZona = ?",
+                "SET NOCOUNT ON; SET ANSI_NULLS ON; SET ANSI_WARNINGS ON; EXEC proc_consultar_cuadrillas @ClaveZona = ?",
                 [$claveZona]
             );
 
@@ -119,7 +119,7 @@ class CuadrillaRepository implements CuadrillaRepositoryInterface
             Log::debug('[CuadrillaRepo::findById] Parámetro de zona', ['claveZona' => $claveZona]);
 
             $results = DB::connection('maniobras')->select(
-                "SET ANSI_NULLS ON; SET ANSI_WARNINGS ON; EXEC proc_consultar_cuadrillas @ClaveZona = ?",
+                "SET NOCOUNT ON; SET ANSI_NULLS ON; SET ANSI_WARNINGS ON; EXEC proc_consultar_cuadrillas @ClaveZona = ?",
                 [$claveZona]
             );
 

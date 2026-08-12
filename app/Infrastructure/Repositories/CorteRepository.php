@@ -15,7 +15,7 @@ class CorteRepository implements CorteRepositoryInterface
         try {
             $pdo = DB::connection('maniobras')->getPdo();
 
-            $stmt = $pdo->prepare("SET ANSI_NULLS ON; SET ANSI_WARNINGS ON; " . $spCall);
+            $stmt = $pdo->prepare("SET NOCOUNT ON; SET ANSI_NULLS ON; SET ANSI_WARNINGS ON; " . $spCall);
             $stmt->execute($params);
 
             $row = null;
