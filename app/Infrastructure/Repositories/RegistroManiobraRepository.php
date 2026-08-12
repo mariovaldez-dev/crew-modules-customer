@@ -65,6 +65,23 @@ class RegistroManiobraRepository implements RegistroManiobraRepositoryInterface
             $zonaFiltro = $isAm ? 'TODAS' : $zonaUsuario;
             $almacenesMap = $sucursalRepo->listaPuntosDeVentaPorZona($zonaFiltro);
 
+            $confirmadasSet = [];
+            try {
+                $confirmacionesRaw = DB::connection('maniobras')
+                    ->table('mov_pdm_cortes_cuadrillas_confirmacion')
+                    ->get();
+                foreach ($confirmacionesRaw as $c) {
+                    $cArr = (array) $c;
+                    $cId = (int) ($cArr['idu_corte'] ?? $cArr['IDU_CORTE'] ?? 0);
+                    $cuadId = (int) ($cArr['idu_cuadrilla'] ?? $cArr['IDU_CUADRILLA'] ?? 0);
+                    if ($cId > 0 && $cuadId > 0) {
+                        $confirmadasSet["{$cId}_{$cuadId}"] = true;
+                    }
+                }
+            } catch (\Throwable $e) {
+                Log::warning('[RegistroManiobraRepo] Error consultando mov_pdm_cortes_cuadrillas_confirmacion: ' . $e->getMessage());
+            }
+
             $maniobras = [];
             foreach ($maniobrasJson as $item) {
                 $item = (array) $item;
@@ -93,9 +110,15 @@ class RegistroManiobraRepository implements RegistroManiobraRepositoryInterface
 
                 $estadoId = (int) ($item['estatus'] ?? $item['ESTATUS'] ?? 1);
                 $corteId = isset($item['idCorte']) ? (int) $item['idCorte'] : (isset($item['IDCORTE']) ? (int) $item['IDCORTE'] : null);
+                $cuadrillaIdVal = (int) ($item['idCuadrilla'] ?? $item['IDCUADRILLA'] ?? 0);
                 $rawEstatusCorte = $item['estatusCorte'] ?? $item['ESTATUSCORTE'] ?? $item['estatus_corte'] ?? null;
                 $estatusCorte = $rawEstatusCorte !== null ? (int) $rawEstatusCorte : null;
-                $estaConfirmadaVal = !empty($item['estaConfirmada']) || !empty($item['ESTACONFIRMADA']) || !empty($item['esta_confirmada']);
+
+                $estaConfirmadaVal = !empty($item['estaConfirmada']) 
+                    || !empty($item['ESTACONFIRMADA']) 
+                    || !empty($item['esta_confirmada'])
+                    || ($corteId > 0 && $cuadrillaIdVal > 0 && isset($confirmadasSet["{$corteId}_{$cuadrillaIdVal}"]));
+
                 $idManiobra = (int) ($item['idManiobra'] ?? $item['IDMANIOBRA'] ?? 0);
                 $folioFormatted = !empty($item['folio']) ? $item['folio'] : ($idManiobra > 0 ? 'MAN-' . str_pad((string)$idManiobra, 6, '0', STR_PAD_LEFT) : 'S/F');
 
@@ -107,7 +130,7 @@ class RegistroManiobraRepository implements RegistroManiobraRepositoryInterface
                     fecha: $fecha,
                     almacenId: $almacenId,
                     almacenNombre: $nombrePuntoVenta ?? ($almacenesMap[$almacenId] ?? $almacenId),
-                    cuadrillaId: (int) ($item['idCuadrilla'] ?? $item['IDCUADRILLA'] ?? 0),
+                    cuadrillaId: $cuadrillaIdVal,
                     cuadrillaNombre: $item['nombreCuadrilla'] ?? $item['NOMBRECUADRILLA'] ?? '',
                     tipoManiobraId: (int) ($item['idTipoManiobra'] ?? $item['IDTIPOMANIOBRA'] ?? 0),
                     tipoManiobraNombre: $item['nombreManiobra'] ?? $item['NOMBREMANIOBRA'] ?? '',
