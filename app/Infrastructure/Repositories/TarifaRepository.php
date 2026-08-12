@@ -6,7 +6,6 @@ use App\Domain\Tarifa\TarifaRepositoryInterface;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Exception;
 
 class TarifaRepository implements TarifaRepositoryInterface
 {
@@ -14,9 +13,9 @@ class TarifaRepository implements TarifaRepositoryInterface
     {
         $cacheKey = "tarifas_zona_" . ($claveZona ?: 'TODAS');
 
-        return Cache::remember($cacheKey, 300, function () use ($claveZona) {
+        return Cache::remember($cacheKey, 3600, function () use ($claveZona) {
             try {
-                Log::debug('[TarifaRepository@consultarTarifas] Ejecutando SP', ['zona' => $claveZona]);
+                Log::info("CONSULTA REAL A BD (SP): proc_pdm_consultar_tarifas", ['zona' => $claveZona]);
                 
                 DB::connection('maniobras')->statement("SET ANSI_NULLS ON");
                 DB::connection('maniobras')->statement("SET ANSI_WARNINGS ON");
@@ -31,32 +30,23 @@ class TarifaRepository implements TarifaRepositoryInterface
                     return [];
                 }
 
-                $row = (array) $resultados[0];
-                
-                if (isset($row['estado']) && (int)$row['estado'] !== 0) {
-                    $mensaje = $row['mensaje'] ?? 'Error desconocido devuelto por el SP';
-                    Log::error('[TarifaRepository] Error en SP', ['estado' => $row['estado'], 'mensaje' => $mensaje]);
-                    throw new Exception($mensaje);
-                }
-                
-                $jsonString = $row['listaCuadrillas'] ?? null;
-                
-                if (!$jsonString) {
+                $response = $resultados[0];
+
+                if (!isset($response->estado) || (int) $response->estado !== 0) {
                     return [];
                 }
-                
-                $datos = json_decode($jsonString, true);
-                
-                if (json_last_error() !== JSON_ERROR_NONE) {
-                    Log::error('[TarifaRepository@consultarTarifas] Error decodificando JSON', ['error' => json_last_error_msg(), 'json' => $jsonString]);
-                    throw new Exception("Error al procesar el formato de tarifas devuelto por el servidor.");
+
+                $rawLista = $response->listaCuadrillas ?? $response->listacuadrillas ?? $response->LISTACUADRILLAS ?? null;
+
+                if (empty($rawLista)) {
+                    return [];
                 }
 
-                return $datos;
-
-            } catch (Exception $e) {
+                $datos = is_string($rawLista) ? json_decode($rawLista, true) : $rawLista;
+                return is_array($datos) ? $datos : [];
+            } catch (\Throwable $e) {
                 Log::error('[TarifaRepository@consultarTarifas] Error SQL: ' . $e->getMessage());
-                throw new Exception("Ocurrió un error al consultar las tarifas: " . $e->getMessage());
+                return [];
             }
         });
     }
