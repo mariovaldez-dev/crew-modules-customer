@@ -14,7 +14,6 @@ class CorteRepository implements CorteRepositoryInterface
         Log::info("[CORTE-LIQUIDACION] Executing $spNombre", ['call' => $spCall, 'params' => $params]);
         try {
             $pdo = DB::connection('maniobras')->getPdo();
-            $pdo->exec("SET NOCOUNT ON; SET ANSI_NULLS ON; SET ANSI_WARNINGS OFF;");
 
             $stmt = $pdo->prepare($spCall);
             $stmt->execute($params);

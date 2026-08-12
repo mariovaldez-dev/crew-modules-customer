@@ -16,8 +16,6 @@ class SucursalRepository implements SucursalRepositoryInterface
             Log::debug('[SucursalRepo::listaPuntosDeVentaPorZona] INICIO CONSULTA SP', ['zona' => $zona]);
 
             try {
-                DB::connection('maniobras')->statement("SET ANSI_NULLS ON");
-                DB::connection('maniobras')->statement("SET ANSI_WARNINGS ON");
                 $paramZona = ($zona === 'TODAS') ? '' : $zona;
                 $response = DB::connection('maniobras')->select(
                     "EXEC proc_pdm_cosultar_combos 1, ?",
@@ -30,8 +28,8 @@ class SucursalRepository implements SucursalRepositoryInterface
 
                 $result = $response[0];
 
-                if ($result->estado !== 0) {
-                    throw new Exception($result->mensaje);
+                if (isset($result->estado) && (int) $result->estado !== 0) {
+                    throw new Exception($result->mensaje ?? 'Error del SP');
                 }
 
                 $pvsList = $result->combo ?? null;
@@ -73,9 +71,6 @@ class SucursalRepository implements SucursalRepositoryInterface
             Log::debug('[SucursalRepo::listaLideresPorZona] INICIO CONSULTA SP', ['zona' => $zona]);
 
             try {
-                DB::connection('maniobras')->statement("SET ANSI_NULLS ON");
-                DB::connection('maniobras')->statement("SET ANSI_WARNINGS ON");
-
                 $query = "EXEC proc_pdm_cosultar_combos 4";
                 $bindings = [];
                 
@@ -92,7 +87,7 @@ class SucursalRepository implements SucursalRepositoryInterface
 
                 $result = $response[0];
 
-                if (isset($result->estado) && $result->estado !== 0) {
+                if (isset($result->estado) && (int) $result->estado !== 0) {
                     throw new Exception($result->mensaje ?? 'Error desconocido del SP');
                 }
 

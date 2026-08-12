@@ -18,8 +18,6 @@ class TarifaRepository implements TarifaRepositoryInterface
             try {
                 Log::debug('[TarifaRepository@consultarTarifas] Ejecutando SP', ['zona' => $claveZona]);
                 
-                DB::connection('maniobras')->getPdo()->exec("SET ANSI_NULLS ON; SET ANSI_WARNINGS ON;");
-                
                 if ($claveZona) {
                     $resultados = DB::connection('maniobras')->select('EXEC proc_pdm_consultar_tarifas ?', [$claveZona]);
                 } else {

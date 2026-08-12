@@ -17,8 +17,6 @@ class DashboardRepository implements DashboardRepositoryInterface
             $zonaParam = ($zonaUsuario === 'TODAS' || empty($zonaUsuario)) ? null : $zonaUsuario;
 
             $pdo = DB::connection('maniobras')->getPdo();
-            $pdo->exec("SET ANSI_NULLS ON; SET ANSI_WARNINGS ON;");
-
             $stmt = $pdo->prepare("EXEC proc_pdm_dashboard_inicio :zona");
             $stmt->execute(['zona' => $zonaParam]);
             

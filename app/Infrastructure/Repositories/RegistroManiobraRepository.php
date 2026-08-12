@@ -23,8 +23,6 @@ class RegistroManiobraRepository implements RegistroManiobraRepositoryInterface
         ]);
 
         try {
-            DB::connection('maniobras')->statement("SET ANSI_NULLS ON");
-            DB::connection('maniobras')->statement("SET ANSI_WARNINGS ON");
             $results = DB::connection('maniobras')->select(
                 "EXEC proc_pdm_obtener_maniobras_ejecutadas @ClaveZona = ?, @FechaInicio = ?, @FechaFin = ?",
                 [
@@ -196,9 +194,6 @@ class RegistroManiobraRepository implements RegistroManiobraRepositoryInterface
         Log::info("[REGISTRO-MANIOBRAS] Consultando cuadrillas por almacén (proc_pdm_cosultar_combos 2)", ['almacenId' => $almacenId]);
 
         try {
-            DB::connection('maniobras')->statement("SET ANSI_NULLS ON");
-            DB::connection('maniobras')->statement("SET ANSI_WARNINGS ON");
-
             $results = DB::connection('maniobras')->select(
                 "EXEC proc_pdm_cosultar_combos 2, ?",
                 [$almacenId]
@@ -247,9 +242,6 @@ class RegistroManiobraRepository implements RegistroManiobraRepositoryInterface
         Log::info("[REGISTRO-MANIOBRAS] Consultando tipos de maniobra (proc_pdm_cosultar_combos 3)");
 
         try {
-            DB::connection('maniobras')->statement("SET ANSI_NULLS ON");
-            DB::connection('maniobras')->statement("SET ANSI_WARNINGS ON");
-
             $results = DB::connection('maniobras')->select(
                 "EXEC proc_pdm_cosultar_combos 3"
             );
