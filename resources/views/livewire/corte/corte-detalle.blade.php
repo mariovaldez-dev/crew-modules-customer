@@ -1,4 +1,4 @@
-<div class="px-4 sm:px-6 lg:px-8 py-8 w-full max-w-9xl mx-auto" wire:init="loadData" x-data>
+<div class="px-4 sm:px-6 lg:px-8 py-8 w-full max-w-9xl mx-auto" wire:init="loadData">
     <!-- Header -->
     <div class="sm:flex sm:justify-between sm:items-center mb-8">
         <div>
@@ -43,10 +43,10 @@
                             Imprimir PDF
                         </button>
                     @elseif($this->todasConfirmadas)
-                        <x-button wire:click="abrirConfirmarGeneral" variant="primary" class="!py-2 !px-4 text-xs font-bold">
+                        <button x-data type="button" @click="window.dispatchEvent(new CustomEvent('open-modal', { detail: 'confirm-corte-general', bubbles: true }))" class="inline-flex items-center justify-center px-4 py-2 text-xs font-bold rounded-2xl transition-all duration-200 bg-green-600 text-white hover:bg-green-500 shadow-lg shadow-green-900/20 border border-green-500 hover:-translate-y-0.5 active:scale-95">
                             <i class="fa-solid fa-check-double mr-1.5"></i>
                             Confirmar Corte
-                        </x-button>
+                        </button>
                     @else
                         <span class="text-xs font-bold uppercase tracking-wider text-green-100">
                             Confirme todas las cuadrillas para habilitar el corte
@@ -54,10 +54,10 @@
                     @endif
 
                     @if($corte['estado'] === 'Borrador')
-                        <x-button wire:click="abrirRegenerar" variant="secondary" class="!py-2.5 !px-4 text-xs gap-2">
+                        <button x-data type="button" @click="window.dispatchEvent(new CustomEvent('open-modal', { detail: 'confirm-regenerar', bubbles: true }))" class="inline-flex items-center justify-center px-4 py-2.5 text-xs font-bold rounded-2xl transition-all duration-200 bg-white dark:bg-white/5 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-white/10 shadow-sm hover:shadow-md hover:-translate-y-0.5 active:scale-95 gap-2">
                             <i class="fa-solid fa-rotate-right mr-1.5"></i>
                             Regenerar
-                        </x-button>
+                        </button>
                     @endif
                 </div>
             </div>
