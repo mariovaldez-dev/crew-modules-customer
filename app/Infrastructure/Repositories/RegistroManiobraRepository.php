@@ -23,8 +23,11 @@ class RegistroManiobraRepository implements RegistroManiobraRepositoryInterface
         ]);
 
         try {
+            DB::connection('maniobras')->statement("SET ANSI_NULLS ON");
+            DB::connection('maniobras')->statement("SET ANSI_WARNINGS ON");
+
             $results = DB::connection('maniobras')->select(
-                "SET NOCOUNT ON; SET ANSI_NULLS ON; SET ANSI_WARNINGS ON; EXEC proc_pdm_obtener_maniobras_ejecutadas @ClaveZona = ?, @FechaInicio = ?, @FechaFin = ?",
+                "EXEC proc_pdm_obtener_maniobras_ejecutadas @ClaveZona = ?, @FechaInicio = ?, @FechaFin = ?",
                 [
                     $claveZona,
                     $filtros['fechaInicio'] ?? null,

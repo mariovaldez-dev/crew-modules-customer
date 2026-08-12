@@ -23,15 +23,18 @@ class CuadrillaRepository implements CuadrillaRepositoryInterface
                 'filtros'     => $filtros,
             ]);
 
+            DB::connection('maniobras')->statement("SET ANSI_NULLS ON");
+            DB::connection('maniobras')->statement("SET ANSI_WARNINGS ON");
+
             $results = DB::connection('maniobras')->select(
-                "SET ANSI_NULLS ON; SET ANSI_WARNINGS ON; EXEC proc_consultar_cuadrillas @ClaveZona = ?",
+                "EXEC proc_consultar_cuadrillas @ClaveZona = ?",
                 [$claveZona]
             );
 
             if (empty($results) && $claveZona !== '') {
                 Log::info('[CuadrillaRepo::list] Reintentando consulta con @ClaveZona vacía');
                 $results = DB::connection('maniobras')->select(
-                    "SET ANSI_NULLS ON; SET ANSI_WARNINGS ON; EXEC proc_consultar_cuadrillas @ClaveZona = ''"
+                    "EXEC proc_consultar_cuadrillas @ClaveZona = ''"
                 );
             }
 
@@ -136,14 +139,17 @@ class CuadrillaRepository implements CuadrillaRepositoryInterface
 
             Log::debug('[CuadrillaRepo::findById] Parámetro de zona', ['claveZona' => $claveZona]);
 
+            DB::connection('maniobras')->statement("SET ANSI_NULLS ON");
+            DB::connection('maniobras')->statement("SET ANSI_WARNINGS ON");
+
             $results = DB::connection('maniobras')->select(
-                "SET ANSI_NULLS ON; SET ANSI_WARNINGS ON; EXEC proc_consultar_cuadrillas @ClaveZona = ?",
+                "EXEC proc_consultar_cuadrillas @ClaveZona = ?",
                 [$claveZona]
             );
 
             if (empty($results) && $claveZona !== '') {
                 $results = DB::connection('maniobras')->select(
-                    "SET ANSI_NULLS ON; SET ANSI_WARNINGS ON; EXEC proc_consultar_cuadrillas @ClaveZona = ''"
+                    "EXEC proc_consultar_cuadrillas @ClaveZona = ''"
                 );
             }
 

@@ -6,52 +6,47 @@ use App\Domain\Shared\Repositories\SucursalRepositoryInterface;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Exception;
 
 class SucursalRepository implements SucursalRepositoryInterface
 {
     public function listaPuntosDeVentaPorZona(string $zona): array
     {
-        return Cache::remember("pvs_zona_{$zona}", 300, function () use ($zona) {
+        return Cache::remember("pvs_zona_{$zona}", 3600, function () use ($zona) {
             Log::debug('[SucursalRepo::listaPuntosDeVentaPorZona] INICIO CONSULTA SP', ['zona' => $zona]);
 
             try {
                 $paramZona = ($zona === 'TODAS') ? '' : $zona;
-                $response = DB::connection('maniobras')->select(
+
+                DB::connection('maniobras')->statement("SET ANSI_NULLS ON");
+                DB::connection('maniobras')->statement("SET ANSI_WARNINGS ON");
+
+                $results = DB::connection('maniobras')->select(
                     "EXEC proc_pdm_cosultar_combos 1, ?",
                     [$paramZona]
                 );
 
-                if (empty($response)) {
-                    Log::warning('[SucursalRepo::listaPuntosDeVentaPorZona] Respuesta vacía de DB');
+                if (empty($results)) {
                     return [];
                 }
 
-                Log::info('[SucursalRepo::listaPuntosDeVentaPorZona] Respuesta cruda del SP', ['response' => $response]);
+                $response = $results[0];
 
-                $rawFirst = (array) $response[0];
-                $first = [];
-                foreach ($rawFirst as $k => $v) {
-                    $first[strtolower($k)] = $v;
-                }
-
-                if (isset($first['estado']) && (int) $first['estado'] !== 0) {
-                    Log::warning('[SucursalRepo::listaPuntosDeVentaPorZona] SP devolvió estado distinto de 0', ['row' => $first]);
+                if (!isset($response->estado) || (int) $response->estado !== 0) {
                     return [];
                 }
 
-                $comboData = $first['combo'] ?? null;
-                if (is_string($comboData)) {
-                    $comboData = json_decode($comboData, true);
+                if (empty($response->combo)) {
+                    return [];
                 }
 
-                if (empty($comboData) || !is_array($comboData)) {
-                    $comboData = $response;
+                $comboData = is_string($response->combo) ? json_decode($response->combo, true) : $response->combo;
+                if (!is_array($comboData)) {
+                    return [];
                 }
 
                 $mapped = [];
                 foreach ($comboData as $item) {
-                    $item   = is_array($item) ? $item : (array) $item;
+                    $item   = (array) $item;
                     $codigo = trim($item['codigo'] ?? $item['CODIGO'] ?? '');
                     $nombre = trim($item['nombre'] ?? $item['NOMBRE'] ?? '');
 
@@ -60,13 +55,11 @@ class SucursalRepository implements SucursalRepositoryInterface
                     }
                 }
 
-                Log::info('[SucursalRepo::listaPuntosDeVentaPorZona] Puntos de venta mapeados exitosamente', ['count' => count($mapped)]);
                 return $mapped;
             } catch (\Throwable $e) {
                 Log::error('Error en SucursalRepository@listaPuntosDeVentaPorZona', [
                     'zona'  => $zona,
                     'error' => $e->getMessage(),
-                    'trace' => $e->getTraceAsString(),
                 ]);
                 return [];
             }
@@ -75,50 +68,42 @@ class SucursalRepository implements SucursalRepositoryInterface
 
     public function listaLideresPorZona(string $zona): array
     {
-        return Cache::remember("lideres_zona_{$zona}", 300, function () use ($zona) {
+        return Cache::remember("lideres_zona_{$zona}", 3600, function () use ($zona) {
             Log::debug('[SucursalRepo::listaLideresPorZona] INICIO CONSULTA SP', ['zona' => $zona]);
 
             try {
-                $query = "EXEC proc_pdm_cosultar_combos 4";
-                $bindings = [];
-                
-                if ($zona !== '' && $zona !== 'TODAS') {
-                    $query .= ", ?";
-                    $bindings[] = $zona;
-                }
+                $paramZona = ($zona === 'TODAS') ? '' : $zona;
 
-                $response = DB::connection('maniobras')->select($query, $bindings);
+                DB::connection('maniobras')->statement("SET ANSI_NULLS ON");
+                DB::connection('maniobras')->statement("SET ANSI_WARNINGS ON");
 
-                if (empty($response)) {
-                    Log::warning('[SucursalRepo::listaLideresPorZona] Respuesta vacía de DB');
+                $results = DB::connection('maniobras')->select(
+                    "EXEC proc_pdm_cosultar_combos 4, ?",
+                    [$paramZona]
+                );
+
+                if (empty($results)) {
                     return [];
                 }
 
-                Log::info('[SucursalRepo::listaLideresPorZona] Respuesta cruda del SP', ['response' => $response]);
+                $response = $results[0];
 
-                $rawFirst = (array) $response[0];
-                $first = [];
-                foreach ($rawFirst as $k => $v) {
-                    $first[strtolower($k)] = $v;
-                }
-
-                if (isset($first['estado']) && (int) $first['estado'] !== 0) {
-                    Log::warning('[SucursalRepo::listaLideresPorZona] SP devolvió estado distinto de 0', ['row' => $first]);
+                if (!isset($response->estado) || (int) $response->estado !== 0) {
                     return [];
                 }
 
-                $comboData = $first['combo'] ?? null;
-                if (is_string($comboData)) {
-                    $comboData = json_decode($comboData, true);
+                if (empty($response->combo)) {
+                    return [];
                 }
 
-                if (empty($comboData) || !is_array($comboData)) {
-                    $comboData = $response;
+                $comboData = is_string($response->combo) ? json_decode($response->combo, true) : $response->combo;
+                if (!is_array($comboData)) {
+                    return [];
                 }
 
                 $mapped = [];
                 foreach ($comboData as $item) {
-                    $item   = is_array($item) ? $item : (array) $item;
+                    $item   = (array) $item;
                     $nombre = trim($item['nombre'] ?? $item['NOMBRE'] ?? '');
 
                     if ($nombre !== '') {
@@ -126,13 +111,11 @@ class SucursalRepository implements SucursalRepositoryInterface
                     }
                 }
 
-                Log::info('[SucursalRepo::listaLideresPorZona] Líderes mapeados exitosamente', ['count' => count($mapped)]);
                 return $mapped;
             } catch (\Throwable $e) {
                 Log::error('Error en SucursalRepository@listaLideresPorZona', [
                     'zona'  => $zona,
                     'error' => $e->getMessage(),
-                    'trace' => $e->getTraceAsString(),
                 ]);
                 return [];
             }
