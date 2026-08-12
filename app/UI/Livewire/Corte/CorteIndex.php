@@ -25,24 +25,15 @@ class CorteIndex extends Component
     public bool $isPrimerCorte = true;
     public bool $mostrandoFormularioNuevo = false;
 
-    public function mount(\App\Domain\Corte\ObtenerUltimaFechaFinCorteUseCase $ultimaFechaUseCase)
+    public function mount()
     {
         $context = session()->get('usuario_contexto');
         if (!$context || $context->tipo !== 'CO') {
             abort(403, 'No tienes permisos para acceder a esta sección.');
         }
 
-        $ultimaFecha = $ultimaFechaUseCase->execute($this->zonaUsuario);
-        
-        if ($ultimaFecha) {
-            $this->isPrimerCorte = false;
-            $this->fechaInicio = explode(' ', $ultimaFecha)[0];
-            $this->fechaFin = date('Y-m-d');
-        } else {
-            $this->isPrimerCorte = true;
-            $this->fechaInicio = date('Y-m-d');
-            $this->fechaFin = date('Y-m-d');
-        }
+        $this->fechaInicio = date('Y-m-d');
+        $this->fechaFin = date('Y-m-d');
     }
 
     public function loadData(\App\Domain\Corte\ListarCortesUseCase $useCase)
@@ -59,6 +50,23 @@ class CorteIndex extends Component
                 }
                 return $c;
             }, $cortesRaw);
+
+            // Extract ultima fecha fin from already loaded cortes in memory
+            $ultimaFecha = null;
+            foreach ($this->cortes as $c) {
+                if (($c['estado'] ?? '') === 'Confirmado' || ($c['opc_estatus'] ?? 0) == 2) {
+                    $ultimaFecha = $c['fechaFin'] ?? $c['fec_fin'] ?? null;
+                    break;
+                }
+            }
+
+            if ($ultimaFecha) {
+                $this->isPrimerCorte = false;
+                $this->fechaInicio = explode(' ', $ultimaFecha)[0];
+            } else {
+                $this->isPrimerCorte = true;
+            }
+
             Log::info("[CORTE-LIQUIDACION] [UI-Index] Cortes cargados correctamente. Total: " . count($this->cortes));
         } catch (\Throwable $e) {
             Log::error("[CORTE-LIQUIDACION] [UI-Index] Error listando cortes: " . $e->getMessage(), ['exception' => $e]);

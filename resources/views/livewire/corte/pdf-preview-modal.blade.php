@@ -26,10 +26,14 @@
                             </h3>
                         </div>
                         <div class="flex items-center gap-3">
-                            <a href="{{ route('corte-liquidacion.pdf', ['id' => $corte['corteId']]) }}" download class="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-green-600 hover:bg-green-700 text-white text-xs font-bold shadow-md shadow-green-900/10 hover:shadow-lg transition-all duration-200 cursor-pointer">
+                            <a 
+                                href="{{ route('corte-liquidacion.pdf', ['id' => $corteId, 'download' => 1]) }}" 
+                                class="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-green-600 hover:bg-green-700 text-white text-xs font-bold shadow-md shadow-green-900/10 hover:shadow-lg transition-all duration-200 cursor-pointer"
+                            >
                                 <i class="fa-solid fa-download text-xs"></i>
-                                Descargar
+                                Descargar PDF
                             </a>
+
                             <button @click="open = false" class="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors p-2 bg-gray-100 dark:bg-white/10 rounded-xl">
                                 <i class="fa-solid fa-xmark text-lg leading-none"></i>
                             </button>
@@ -40,12 +44,10 @@
                     <div class="flex-1 min-h-0 bg-gray-100 dark:bg-gray-900 w-full p-4">
                         <template x-if="open">
                             <iframe 
-                                src="{{ route('corte-liquidacion.pdf', ['id' => $corte['corteId']]) }}#toolbar=1" 
+                                src="{{ route('corte-liquidacion.pdf', ['id' => $corteId]) }}#toolbar=1" 
                                 class="w-full h-full rounded-2xl border-none shadow-sm bg-white"
                             ></iframe>
                         </template>
-                    </div>
-                </div>
                     </div>
                 </div>
             </div>

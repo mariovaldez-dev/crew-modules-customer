@@ -17,7 +17,14 @@ $maxWidthClass = match ($maxWidth) {
         loading: false,
         checkName(detail) {
             const name = '{{ $name }}';
-            return detail === name || (Array.isArray(detail) && detail[0] === name) || (detail && detail.name === name);
+            if (!detail) return false;
+            if (detail === name) return true;
+            if (typeof detail === 'string' && detail === name) return true;
+            if (Array.isArray(detail) && (detail[0] === name || detail.includes(name))) return true;
+            if (typeof detail === 'object') {
+                if (detail[0] === name || detail.name === name || detail.id === name) return true;
+            }
+            return false;
         },
         init() {
             const setLoad = (val) => { this.loading = val; };
@@ -51,7 +58,7 @@ $maxWidthClass = match ($maxWidth) {
     <!-- Backdrop -->
     <div
         x-show="show"
-        class="fixed inset-0 bg-gray-900/75"
+        class="fixed inset-0 bg-gray-900/40"
         x-on:click="!loading ? show = false : null"
     ></div>
 

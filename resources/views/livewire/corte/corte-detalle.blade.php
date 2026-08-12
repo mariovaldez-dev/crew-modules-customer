@@ -43,18 +43,18 @@
                             Imprimir PDF
                         </button>
                     @elseif($this->todasConfirmadas)
-                        <x-button @click="$dispatch('open-modal', 'confirm-corte-general')" variant="secondary" class="!py-2 !px-4 text-xs bg-white text-green-700 hover:bg-gray-100 border-white font-bold">
+                        <x-button wire:click="abrirConfirmarGeneral" variant="primary" class="!py-2 !px-4 text-xs font-bold">
                             <i class="fa-solid fa-check-double mr-1.5"></i>
                             Confirmar Corte
                         </x-button>
                     @else
-                        <span class="text-xs font-bold uppercase tracking-wider text-green-100">
+                        <span class="text-xs font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500">
                             Confirme todas las cuadrillas para habilitar el corte
                         </span>
                     @endif
 
                     @if($corte['estado'] === 'Borrador')
-                        <x-button @click="$dispatch('open-modal', 'confirm-regenerar')" variant="secondary" class="!py-2.5 !px-4 text-xs gap-2">
+                        <x-button wire:click="abrirRegenerar" variant="secondary" class="!py-2.5 !px-4 text-xs gap-2">
                             <i class="fa-solid fa-rotate-right mr-1.5"></i>
                             Regenerar
                         </x-button>
@@ -143,28 +143,11 @@
                 </div>
             @endif
         </div>
-        <!-- Modales -->
-        @include('livewire.corte.resumen-maniobras-modal')
-        @include('livewire.corte.pdf-preview-modal')
-
-        <!-- Modal Confirmación General -->
-        <x-confirm-modal 
-            name="confirm-corte-general"
-            title="Confirmar Corte de Liquidación"
-            message="¿Estás seguro que deseas confirmar el corte general? Una vez confirmado, se asignarán folios formales y no podrás regenerarlo ni modificar las maniobras incluidas."
-            confirmAction="confirmarCorteGeneral"
-            confirmText="Confirmar Corte"
-            variant="primary"
-        />
-
-        <!-- Modal Regenerar -->
-        <x-confirm-modal 
-            name="confirm-regenerar"
-            title="Regenerar Corte"
-            message="¿Estás seguro que deseas regenerar el corte? Esto recalculará los importes e incluirá nuevas maniobras que cumplan con los criterios de fecha."
-            confirmAction="regenerar"
-            confirmText="Sí, Regenerar"
-            variant="secondary"
-        />
     @endif
+
+    <!-- Modales -->
+    @include('livewire.corte.resumen-maniobras-modal')
+    @include('livewire.corte.pdf-preview-modal')
+    @include('livewire.corte.confirmar-corte-modal')
+    @include('livewire.corte.regenerar-corte-modal')
 </div>

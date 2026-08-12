@@ -22,7 +22,11 @@ class ListRegistroManiobrasUseCase
         // o crear un clon. La hice mutable en el DTO para este propósito.
 
         foreach ($maniobras as $maniobra) {
-            $maniobra->estado = $maniobra->corteId ? 'Liquidada' : 'En proceso';
+            $maniobra->estado = match ($maniobra->estatusCiclo) {
+                2       => 'Liquidada',
+                1       => 'Confirmada',
+                default => 'En proceso',
+            };
         }
 
         return $maniobras;

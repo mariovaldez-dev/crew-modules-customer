@@ -16,6 +16,11 @@ class ManiobraRepository implements ManiobraRepositoryInterface
     public function list(?string $search = null): array
     {
         try {
+            Log::info("CONSULTA REAL A BD (SP): proc_consultar_tipos_maniobras");
+
+            DB::connection('maniobras')->statement("SET ANSI_NULLS ON");
+            DB::connection('maniobras')->statement("SET ANSI_WARNINGS ON");
+
             $results = DB::connection('maniobras')->select(
                 "EXEC proc_consultar_tipos_maniobras"
             );
@@ -24,23 +29,31 @@ class ManiobraRepository implements ManiobraRepositoryInterface
                 return [];
             }
 
-            $row = $results[0];
-            if ((int) $row->estado !== 0) {
+            $response = $results[0];
+
+            if (!isset($response->estado) || (int) $response->estado !== 0) {
                 return [];
             }
 
-            $maniobrasJson = json_decode($row->listaTipoManiobras, true);
+            $rawLista = $response->listaTipoManiobras ?? $response->listatipomaniobras ?? $response->LISTATIPOMANIOBRAS ?? null;
+
+            if (empty($rawLista)) {
+                return [];
+            }
+
+            $maniobrasJson = is_string($rawLista) ? json_decode($rawLista, true) : $rawLista;
             if (!is_array($maniobrasJson)) {
                 return [];
             }
 
             $maniobras = [];
             foreach ($maniobrasJson as $item) {
+                $itemArray = (array) $item;
                 $dto = new ManiobraDTO(
-                    id:          (int) $item['idTipoManiobra'],
-                    nombre:      $item['nombreTipoManiobra'],
-                    descripcion: $item['descripcionTipoManiobra'] ?? null,
-                    estatus:     $item['estatus']
+                    id:          (int) ($itemArray['idTipoManiobra'] ?? $itemArray['IDTIPOMANIOBRA'] ?? 0),
+                    nombre:      (string) ($itemArray['nombreTipoManiobra'] ?? $itemArray['NOMBRETIPOMANIOBRA'] ?? ''),
+                    descripcion: $itemArray['descripcionTipoManiobra'] ?? $itemArray['DESCRIPCIONTIPOMANIOBRA'] ?? null,
+                    estatus:     (string) ($itemArray['estatus'] ?? $itemArray['ESTATUS'] ?? 'Activo')
                 );
 
                 if ($search !== null && $search !== '') {
@@ -55,7 +68,7 @@ class ManiobraRepository implements ManiobraRepositoryInterface
             }
 
             return $maniobras;
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             Log::error('Error en ManiobraRepository@list', ['error' => $e->getMessage()]);
             return [];
         }
@@ -65,6 +78,9 @@ class ManiobraRepository implements ManiobraRepositoryInterface
     {
         try {
             $usuarioId = (int) (auth()->user()?->id ?? 0);
+
+            DB::connection('maniobras')->statement("SET ANSI_NULLS ON");
+            DB::connection('maniobras')->statement("SET ANSI_WARNINGS ON");
 
             $results = DB::connection('maniobras')->select(
                 "EXEC proc_pdm_administrar_tipos_maniobras
@@ -83,12 +99,12 @@ class ManiobraRepository implements ManiobraRepositoryInterface
                 throw new Exception('No se recibió respuesta de la base de datos.');
             }
 
-            $row = $results[0];
-            if ((int) $row->estado !== 0) {
-                throw new Exception($row->mensaje);
+            $response = $results[0];
+            if (!isset($response->estado) || (int) $response->estado !== 0) {
+                throw new Exception($response->mensaje ?? 'Error al crear la maniobra');
             }
 
-            $idGenerado = isset($row->idTipoManiobra) ? (int) $row->idTipoManiobra : (isset($row->id) ? (int) $row->id : null);
+            $idGenerado = isset($response->idTipoManiobra) ? (int) $response->idTipoManiobra : (isset($response->id) ? (int) $response->id : null);
 
             return new ManiobraDTO(
                 id:          $idGenerado,
@@ -96,7 +112,7 @@ class ManiobraRepository implements ManiobraRepositoryInterface
                 descripcion: $maniobra->descripcion,
                 estatus:     'Activo'
             );
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             Log::error('Error en ManiobraRepository@create', ['error' => $e->getMessage()]);
             throw new Exception('Error al crear la maniobra: ' . $e->getMessage());
         }
@@ -106,8 +122,10 @@ class ManiobraRepository implements ManiobraRepositoryInterface
     {
         try {
             $usuarioId = (int) (auth()->user()?->id ?? 0);
-
             $estatusBit = $this->estatusToBit($maniobra->estatus);
+
+            DB::connection('maniobras')->statement("SET ANSI_NULLS ON");
+            DB::connection('maniobras')->statement("SET ANSI_WARNINGS ON");
 
             $results = DB::connection('maniobras')->select(
                 "EXEC proc_pdm_administrar_tipos_maniobras
@@ -130,9 +148,9 @@ class ManiobraRepository implements ManiobraRepositoryInterface
                 throw new Exception('No se recibió respuesta de la base de datos.');
             }
 
-            $row = $results[0];
-            if ((int) $row->estado !== 0) {
-                throw new Exception($row->mensaje);
+            $response = $results[0];
+            if (!isset($response->estado) || (int) $response->estado !== 0) {
+                throw new Exception($response->mensaje ?? 'Error al actualizar maniobra');
             }
 
             return new ManiobraDTO(
@@ -141,7 +159,7 @@ class ManiobraRepository implements ManiobraRepositoryInterface
                 descripcion: $maniobra->descripcion,
                 estatus:     $maniobra->estatus
             );
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             Log::error('Error en ManiobraRepository@update', ['error' => $e->getMessage()]);
             throw new Exception('Error al actualizar la maniobra: ' . $e->getMessage());
         }
@@ -165,7 +183,7 @@ class ManiobraRepository implements ManiobraRepositoryInterface
                 }
             }
             return false;
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             Log::error('Error en ManiobraRepository@existsByNombre', ['error' => $e->getMessage()]);
             return false;
         }

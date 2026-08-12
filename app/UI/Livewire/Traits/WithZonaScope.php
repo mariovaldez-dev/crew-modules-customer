@@ -10,6 +10,9 @@ trait WithZonaScope
     {
         $context = session()->get('usuario_contexto');
         if ($context instanceof UsuarioContexto) {
+            if ($context->isAdministrador() || $context->tipo === 'AM') {
+                return 'TODAS';
+            }
             return $context->zona;
         }
         

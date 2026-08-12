@@ -6,7 +6,8 @@ CREATE OR ALTER PROCEDURE proc_pdm_administrar_maniobras_ejecutadas
     @serieDocumento     SMALLINT = 0,
     @documentoSap       INT = 0,
     @toneladas          NUMERIC(10,2) = 0,
-    @usuario            INT = 0
+    @usuario            INT = 0,
+    @fecha              DATETIME = NULL
 )
 AS
 /**********************************************************************************
@@ -17,7 +18,8 @@ EXEC dbo.proc_pdm_administrar_maniobras_ejecutadas
     @serieDocumento = 0,
     @documentoSap = '0',
     @toneladas = 24.50,
-    @usuario = 15;
+    @usuario = 15,
+    @fecha = '2026-08-10';
 
 *********************************************************************************/
 BEGIN
@@ -29,17 +31,10 @@ BEGIN
 
     BEGIN TRY
 		
-		--
-		--
-		--
-
 		SET @tarifas = COALESCE((SELECT num_tarifa 
 						FROM ctl_pdm_tarifas_cuadrillas 
 						WHERE idu_cuadrilla = @idCuadrilla 
 						AND idu_tipomaniobra = @idTipoManiobra),0)
-		--
-		--
-		--
 
 		IF @tarifas > 0
 		BEGIN
@@ -70,7 +65,7 @@ BEGIN
 				1,
 				@usuario,
 				@usuario,
-				GETDATE(),
+				COALESCE(@fecha, GETDATE()),
 				GETDATE()
 			);
 
@@ -95,4 +90,3 @@ BEGIN
 
     END CATCH
 END
-GO

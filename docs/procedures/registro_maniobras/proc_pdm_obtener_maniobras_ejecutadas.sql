@@ -22,14 +22,20 @@ BEGIN
 				TM.nom_maniobra as nombreManiobra,
 				M.num_tarifa_maniobra as numeroTarifaManiobra,
 				M.idu_punto_venta as idPuntoVenta,
+				pun.WhsName as nombrePuntoVenta,
 				M.idu_cuadrilla as idCuadrilla,
 				C.nom_cuadrilla as nombreCuadrilla,
 				C.nom_lider_cuadrilla as nombreLiderCuadrilla,
 				M.num_tipodocumento as numeroTipoDocumento,
 				M.num_documentosap as numeroDocumentoSAP,
 				M.num_toneladas as numeroToneladas,
-				M.opc_estatus as estatus,
 				M.idu_corte as idCorte,
+				-- 0 = En proceso | 1 = Confirmada (cuadrilla confirmada, corte en borrador) | 2 = Liquidada (corte general confirmado)
+				CASE
+					WHEN ISNULL(CL.opc_estatus, 0) = 1 THEN 2
+					WHEN CC.idu_corte IS NOT NULL        THEN 1
+					ELSE                                      0
+				END AS estatusCiclo,
                 M.fec_registro as fecha
 			FROM dbo.mov_pdm_maniobras_ejecutadas M
 			INNER JOIN dbo.cat_pdm_tipos_maniobras TM
@@ -38,6 +44,10 @@ BEGIN
 				ON M.idu_cuadrilla = C.idu_cuadrilla
 			INNER JOIN SAP.SBO_Impulsora_PROD.dbo.OWHS AS pun 
 				ON pun.WhsCode = C.idu_punto_venta COLLATE SQL_Latin1_General_CP850_CI_AS
+			LEFT JOIN dbo.mae_pdm_cortes_liquidacion CL
+				ON M.idu_corte = CL.idu_corte
+			LEFT JOIN dbo.mov_pdm_cortes_cuadrillas_confirmacion CC
+				ON M.idu_corte = CC.idu_corte AND M.idu_cuadrilla = CC.idu_cuadrilla
 			WHERE
 				M.opc_estatus = 1
 				AND C.opc_estatus = 1 

@@ -64,19 +64,7 @@
                 <div class="{{ $readyToLoad ? 'hidden' : 'w-full h-[42px] bg-gray-200 dark:bg-white/5 rounded-xl animate-pulse' }}"></div>
             </div>
 
-            <!-- Almacén -->
-            <div class="w-full md:w-56">
-                <x-label value="Almacén" />
-                <div class="{{ !$readyToLoad ? 'hidden' : 'block' }}">
-                    @if($readyToLoad)
-                        <x-select wire:model.live="filters.almacenId" 
-                                  :options="['' => 'Todos los Almacenes'] + $almacenes" 
-                                  placeholder="Todos los Almacenes" />
-                    @endif
-                </div>
-                <!-- Skeleton Almacén -->
-                <div class="{{ $readyToLoad ? 'hidden' : 'w-full h-[42px] bg-gray-200 dark:bg-white/5 rounded-xl animate-pulse' }}"></div>
-            </div>
+
 
             <!-- Estado -->
             <div class="w-full md:w-44">
@@ -84,7 +72,7 @@
                 <div class="{{ !$readyToLoad ? 'hidden' : 'block' }}">
                     @if($readyToLoad)
                         <x-select wire:model.live="filters.estado" 
-                                  :options="['' => 'Todos', 'En proceso' => 'En proceso', 'Liquidada' => 'Liquidada']" 
+                                  :options="['' => 'Todos', 'En proceso' => 'En proceso', 'Confirmada' => 'Confirmada', 'Liquidada' => 'Liquidada']" 
                                   placeholder="Todos" />
                     @endif
                 </div>
