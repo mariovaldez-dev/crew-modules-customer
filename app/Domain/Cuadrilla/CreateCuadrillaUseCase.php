@@ -27,7 +27,7 @@ class CreateCuadrillaUseCase
         if (empty($puntoVentaId)) throw new Exception('Debe seleccionar un punto de venta válido.');
 
         if ($this->repository->exists($nombre, $lider, $puntoVentaId)) {
-            throw new Exception("Ya existe una cuadrilla con el mismo nombre y líder en este punto de venta.");
+            throw new Exception("Ya existe una cuadrilla con el mismo nombre en este punto de venta.");
         }
 
         $dto = new CuadrillaDTO(

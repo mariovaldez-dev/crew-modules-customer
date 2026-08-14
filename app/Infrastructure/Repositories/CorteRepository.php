@@ -9,63 +9,35 @@ use Exception;
 
 class CorteRepository implements CorteRepositoryInterface
 {
-    private function executeSp(string $spCall, array $params = [], string $spNombre = 'SP'): ?array
-    {
-        Log::info("[CORTE-LIQUIDACION] Executing $spNombre", ['call' => $spCall, 'params' => $params]);
-        try {
-            DB::connection('maniobras')->statement("SET ANSI_NULLS ON");
-            DB::connection('maniobras')->statement("SET ANSI_WARNINGS ON");
-
-            $pdo = DB::connection('maniobras')->getPdo();
-            $stmt = $pdo->prepare($spCall);
-            $stmt->execute($params);
-
-            $row = null;
-            do {
-                $rawRow = $stmt->fetch(\PDO::FETCH_ASSOC);
-                if ($rawRow) {
-                    $normalized = [];
-                    foreach ($rawRow as $k => $v) {
-                        $normalized[strtolower($k)] = $v;
-                    }
-                    if (array_key_exists('estatus', $normalized) || array_key_exists('resultado', $normalized)) {
-                        $row = $normalized;
-                        break;
-                    }
-                }
-            } while ($stmt->nextRowset());
-
-            Log::info("[CORTE-LIQUIDACION] Raw row from $spNombre", ['row' => $row]);
-            return $row;
-        } catch (\Throwable $e) {
-            Log::error("[CORTE-LIQUIDACION] Exception executing $spNombre: " . $e->getMessage(), ['exception' => $e]);
-            throw $e;
-        }
-    }
-
     public function generar(string $zona, string $fechaInicio, string $fechaFin, bool $reemplazarBorrador = false): array
     {
-        $row = $this->executeSp(
-            "EXEC proc_pdm_corte_generar @Zona = :zona, @FechaInicio = :inicio, @FechaFin = :fin, @ReemplazarBorrador = :reemplazar",
-            ['zona' => $zona, 'inicio' => $fechaInicio, 'fin' => $fechaFin, 'reemplazar' => $reemplazarBorrador ? 1 : 0],
-            'proc_pdm_corte_generar'
+        DB::connection('maniobras')->statement("SET ANSI_NULLS ON");
+        DB::connection('maniobras')->statement("SET ANSI_WARNINGS ON");
+
+        $results = DB::connection('maniobras')->select(
+            "EXEC proc_pdm_corte_generar @Zona = ?, @FechaInicio = ?, @FechaFin = ?, @ReemplazarBorrador = ?",
+            [$zona, $fechaInicio, $fechaFin, $reemplazarBorrador ? 1 : 0]
         );
 
-        return $this->parsePdoResult($row, 'proc_pdm_corte_generar');
+        return $this->parsePdoResult($results, 'proc_pdm_corte_generar');
     }
 
     public function consultar(string $zona): ?array
     {
-        $row = $this->executeSp(
-            "EXEC proc_pdm_corte_consultar @Zona = :zona",
-            ['zona' => $zona],
-            'proc_pdm_corte_consultar'
+        DB::connection('maniobras')->statement("SET ANSI_NULLS ON");
+        DB::connection('maniobras')->statement("SET ANSI_WARNINGS ON");
+
+        $results = DB::connection('maniobras')->select(
+            "EXEC proc_pdm_corte_consultar @Zona = ?",
+            [$zona]
         );
 
-        if (!$row) {
+        if (empty($results)) {
             Log::warning("[CORTE-LIQUIDACION] proc_pdm_corte_consultar did not return any row for zona: {$zona}");
             return null;
         }
+
+        $row = (array) $results[0];
 
         if (isset($row['estatus']) && $row['estatus'] == 0 && !empty($row['resultado']) && $row['resultado'] !== '{}' && $row['resultado'] !== '[]') {
             $data = json_decode($row['resultado'], true);
@@ -82,92 +54,108 @@ class CorteRepository implements CorteRepositoryInterface
 
     public function confirmarCuadrilla(int $corteId, int $cuadrillaId): array
     {
-        $row = $this->executeSp(
-            "EXEC proc_pdm_corte_confirmar_cuadrilla @CorteID = :corte, @CuadrillaID = :cuadrilla",
-            ['corte' => $corteId, 'cuadrilla' => $cuadrillaId],
-            'proc_pdm_corte_confirmar_cuadrilla'
+        DB::connection('maniobras')->statement("SET ANSI_NULLS ON");
+        DB::connection('maniobras')->statement("SET ANSI_WARNINGS ON");
+
+        $results = DB::connection('maniobras')->select(
+            "EXEC proc_pdm_corte_confirmar_cuadrilla @CorteID = ?, @CuadrillaID = ?",
+            [$corteId, $cuadrillaId]
         );
 
-        return $this->parsePdoResult($row, 'proc_pdm_corte_confirmar_cuadrilla');
+        return $this->parsePdoResult($results, 'proc_pdm_corte_confirmar_cuadrilla');
     }
 
     public function confirmarGeneral(int $corteId): array
     {
-        $row = $this->executeSp(
-            "EXEC proc_pdm_corte_confirmar_general @CorteID = :corte",
-            ['corte' => $corteId],
-            'proc_pdm_corte_confirmar_general'
+        DB::connection('maniobras')->statement("SET ANSI_NULLS ON");
+        DB::connection('maniobras')->statement("SET ANSI_WARNINGS ON");
+
+        $results = DB::connection('maniobras')->select(
+            "EXEC proc_pdm_corte_confirmar_general @CorteID = ?",
+            [$corteId]
         );
 
-        return $this->parsePdoResult($row, 'proc_pdm_corte_confirmar_general');
+        return $this->parsePdoResult($results, 'proc_pdm_corte_confirmar_general');
     }
 
     public function regenerar(int $corteId): array
     {
-        $row = $this->executeSp(
-            "EXEC proc_pdm_corte_regenerar @CorteID = :corte",
-            ['corte' => $corteId],
-            'proc_pdm_corte_regenerar'
+        DB::connection('maniobras')->statement("SET ANSI_NULLS ON");
+        DB::connection('maniobras')->statement("SET ANSI_WARNINGS ON");
+
+        $results = DB::connection('maniobras')->select(
+            "EXEC proc_pdm_corte_regenerar @CorteID = ?",
+            [$corteId]
         );
 
-        return $this->parsePdoResult($row, 'proc_pdm_corte_regenerar');
+        return $this->parsePdoResult($results, 'proc_pdm_corte_regenerar');
     }
 
     public function eliminarBorrador(int $corteId): array
     {
-        $row = $this->executeSp(
-            "EXEC proc_pdm_corte_eliminar @CorteID = :corte",
-            ['corte' => $corteId],
-            'proc_pdm_corte_eliminar'
+        DB::connection('maniobras')->statement("SET ANSI_NULLS ON");
+        DB::connection('maniobras')->statement("SET ANSI_WARNINGS ON");
+
+        $results = DB::connection('maniobras')->select(
+            "EXEC proc_pdm_corte_eliminar @CorteID = ?",
+            [$corteId]
         );
 
-        return $this->parsePdoResult($row, 'proc_pdm_corte_eliminar');
+        return $this->parsePdoResult($results, 'proc_pdm_corte_eliminar');
     }
 
     public function consultarCortePorId(int $corteId): array
     {
-        $row = $this->executeSp(
-            "EXEC proc_pdm_corte_consultar_por_id @CorteID = :corteId",
-            ['corteId' => $corteId],
-            'proc_pdm_corte_consultar_por_id'
+        DB::connection('maniobras')->statement("SET ANSI_NULLS ON");
+        DB::connection('maniobras')->statement("SET ANSI_WARNINGS ON");
+
+        $results = DB::connection('maniobras')->select(
+            "EXEC proc_pdm_corte_consultar_por_id @CorteID = ?",
+            [$corteId]
         );
 
-        return $this->parsePdoResult($row, 'proc_pdm_corte_consultar_por_id');
+        return $this->parsePdoResult($results, 'proc_pdm_corte_consultar_por_id');
     }
 
-    private function parsePdoResult($row, string $spNombre = 'SP'): array
+    private function parsePdoResult($results, string $spNombre = 'SP'): array
     {
-        if (!$row) {
+        if (empty($results)) {
             Log::error("[CORTE-LIQUIDACION] [$spNombre] Stored Procedure returned no results.");
             throw new Exception("[$spNombre] El Stored Procedure no devolvió ningún resultado.");
         }
 
-        Log::info("[CORTE-LIQUIDACION] [$spNombre] Parsing result: Estatus=" . ($row['estatus'] ?? 'NULL') . ", Mensaje=" . ($row['mensaje'] ?? 'NULL'));
+        $row = (array) $results[0];
+        $normalized = [];
+        foreach ($row as $k => $v) {
+            $normalized[strtolower($k)] = $v;
+        }
 
-        if (!isset($row['estatus'])) {
-            Log::error("[CORTE-LIQUIDACION] [$spNombre] Malformed SP response: missing estatus.", ['row' => $row]);
+        Log::info("[CORTE-LIQUIDACION] [$spNombre] Parsing result: Estatus=" . ($normalized['estatus'] ?? 'NULL') . ", Mensaje=" . ($normalized['mensaje'] ?? 'NULL'));
+
+        if (!isset($normalized['estatus'])) {
+            Log::error("[CORTE-LIQUIDACION] [$spNombre] Malformed SP response: missing estatus.", ['row' => $normalized]);
             throw new Exception("[$spNombre] Respuesta malformada del SP: no contiene estatus.");
         }
 
-        if ($row['estatus'] != 0 && $row['estatus'] != 409) {
-            Log::warning("[CORTE-LIQUIDACION] [$spNombre] SP returned business error: " . ($row['mensaje'] ?? 'Sin mensaje'));
-            throw new Exception($row['mensaje'] ?? 'Error desconocido en la base de datos.');
+        if ($normalized['estatus'] != 0 && $normalized['estatus'] != 409) {
+            Log::warning("[CORTE-LIQUIDACION] [$spNombre] SP returned business error: " . ($normalized['mensaje'] ?? 'Sin mensaje'));
+            throw new Exception($normalized['mensaje'] ?? 'Error desconocido en la base de datos.');
         }
 
         $payload = [];
-        if (!empty($row['resultado']) && $row['resultado'] !== '{}') {
-            $payload = json_decode($row['resultado'], true) ?? [];
+        if (!empty($normalized['resultado']) && $normalized['resultado'] !== '{}') {
+            $payload = json_decode($normalized['resultado'], true) ?? [];
         }
 
         Log::info("[CORTE-LIQUIDACION] [$spNombre] Successfully processed.", [
-            'estatus' => $row['estatus'],
-            'mensaje' => $row['mensaje'],
+            'estatus' => $normalized['estatus'],
+            'mensaje' => $normalized['mensaje'],
             'payload' => $payload
         ]);
 
         return [
-            'estatus' => $row['estatus'],
-            'mensaje' => $row['mensaje'],
+            'estatus' => $normalized['estatus'],
+            'mensaje' => $normalized['mensaje'],
             'resultado' => $payload
         ];
     }

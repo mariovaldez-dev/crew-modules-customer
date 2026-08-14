@@ -87,9 +87,9 @@ BEGIN
         IF @Opcion = 1
         BEGIN
 
-            IF EXISTS(SELECT 1 FROM mae_pdm_cuadrillas WHERE nom_cuadrilla = @nombreCuadrilla AND opc_estatus =  1)
+            IF EXISTS(SELECT 1 FROM mae_pdm_cuadrillas WHERE nom_cuadrilla = @nombreCuadrilla AND idu_punto_venta = @puntoVenta AND opc_estatus = 1)
             BEGIN
-                SET @mensaje = 'Ya existe una cuadrilla con el mismo nombre.'
+                SET @mensaje = 'Ya existe una cuadrilla con el mismo nombre en este punto de venta.'
 				SET @estado = -100;
             END
 			ELSE
@@ -157,9 +157,9 @@ BEGIN
         ELSE IF @Opcion = 2
         BEGIN
 
-            IF EXISTS(SELECT 1 FROM mae_pdm_cuadrillas WHERE nom_cuadrilla = @nombreCuadrilla AND opc_estatus = 1 AND idu_cuadrilla <> @idCuadrilla)
+            IF EXISTS(SELECT 1 FROM mae_pdm_cuadrillas WHERE nom_cuadrilla = @nombreCuadrilla AND idu_punto_venta = @puntoVenta AND opc_estatus = 1 AND idu_cuadrilla <> @idCuadrilla)
             BEGIN
-                SET @mensaje = 'Ya existe una cuadrilla con el mismo nombre.'
+                SET @mensaje = 'Ya existe otra cuadrilla con el mismo nombre en este punto de venta.'
 				SET @estado = -101;
             END
 			ELSE
@@ -286,7 +286,7 @@ BEGIN
         ELSE
         BEGIN
         
-			SET @mensaje = 'La opciÛn especificada no es v·lida.';
+			SET @mensaje = 'La opci√≥n especificada no es v√°lida.';
 			SET @estado = -102;
         END
 
