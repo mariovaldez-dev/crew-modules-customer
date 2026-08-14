@@ -30,6 +30,7 @@ BEGIN
 				M.num_documentosap as numeroDocumentoSAP,
 				M.num_toneladas as numeroToneladas,
 				M.idu_corte as idCorte,
+				CASE WHEN ISNULL(CL.opc_estatus, 0) = 1 THEN CL.folio_corte ELSE NULL END as folioCorte,
 				-- 0 = En proceso | 1 = Confirmada (cuadrilla confirmada, corte en borrador) | 2 = Liquidada (corte general confirmado)
 				CASE
 					WHEN ISNULL(CL.opc_estatus, 0) = 1 THEN 2

@@ -75,12 +75,13 @@ class CorteIndex extends Component
         $this->cargando = false;
     }
 
-    public function generarCorte(GenerarCorteUseCase $useCase, \App\Domain\Corte\ListarCortesUseCase $listarUseCase)
+    public function generarCorte(GenerarCorteUseCase $useCase, \App\Domain\Corte\ListarCortesUseCase $listarUseCase, bool $reemplazar = false)
     {
         Log::info("[CORTE-LIQUIDACION] [UI-Index] Solicitando generar corte", [
             'fechaInicio' => $this->fechaInicio,
             'fechaFin' => $this->fechaFin,
-            'zona' => $this->zonaUsuario
+            'zona' => $this->zonaUsuario,
+            'reemplazar' => $reemplazar
         ]);
 
         $this->validate([
@@ -93,17 +94,31 @@ class CorteIndex extends Component
         ]);
 
         try {
-            $useCase->execute($this->fechaInicio, $this->fechaFin, $this->zonaUsuario);
+            $res = $useCase->execute($this->fechaInicio, $this->fechaFin, $this->zonaUsuario, $reemplazar);
+
+            if (isset($res['estatus']) && $res['estatus'] == 409) {
+                Log::info("[CORTE-LIQUIDACION] [UI-Index] Borrador activo detectado. Abriendo modal de confirmación de reemplazo.");
+                $this->dispatch('close-modal', 'nuevo-corte-modal');
+                $this->dispatch('open-confirmar-reemplazo');
+                return;
+            }
+
             Log::info("[CORTE-LIQUIDACION] [UI-Index] Corte generado exitosamente.");
             
             $this->dispatch('notify', ['message' => 'Corte generado exitosamente', 'type' => 'success']);
             $this->mostrandoFormularioNuevo = false;
             $this->loadData($listarUseCase);
             $this->dispatch('close-modal', 'nuevo-corte-modal');
+            $this->dispatch('close-confirmar-reemplazo');
         } catch (\Exception $e) {
             Log::error("[CORTE-LIQUIDACION] [UI-Index] Error al generar corte: " . $e->getMessage());
             $this->dispatch('notify', ['message' => $e->getMessage(), 'type' => 'error']);
         }
+    }
+
+    public function generarCorteConReemplazo(GenerarCorteUseCase $useCase, \App\Domain\Corte\ListarCortesUseCase $listarUseCase)
+    {
+        $this->generarCorte($useCase, $listarUseCase, reemplazar: true);
     }
 
     public function prepararNuevoCorte()

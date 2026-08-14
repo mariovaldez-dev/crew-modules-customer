@@ -147,8 +147,8 @@
                             </td>
                             <!-- Corte -->
                             <td class="px-6 py-4 whitespace-nowrap text-gray-600 dark:text-gray-400">
-                                @if($maniobra->corteId)
-                                    LIQ-{{ str_pad($maniobra->corteId, 4, '0', STR_PAD_LEFT) }}
+                                @if(($maniobra->estatusCiclo ?? 0) === 2)
+                                    {{ ($maniobra->folioCorte ?? null) ?: ('LIQ-' . str_pad($maniobra->corteId ?? 0, 4, '0', STR_PAD_LEFT)) }}
                                 @endif
                             </td>
                         </tr>

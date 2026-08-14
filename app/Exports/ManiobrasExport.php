@@ -49,8 +49,13 @@ class ManiobrasExport implements FromArray, WithHeadings, WithMapping, ShouldAut
         $docSap = $isObj ? ($maniobra->documentoSap ?? '') : ($maniobra['documentoSap'] ?? '');
         $estado = $isObj ? $maniobra->estado : ($maniobra['estado'] ?? '');
         
+        $estatusCiclo = $isObj ? ($maniobra->estatusCiclo ?? 0) : ($maniobra['estatusCiclo'] ?? 0);
+        $folioCorte = $isObj ? ($maniobra->folioCorte ?? null) : ($maniobra['folioCorte'] ?? null);
         $corteId = $isObj ? $maniobra->corteId : ($maniobra['corteId'] ?? null);
-        $corte = $corteId ? 'LIQ-' . str_pad((string)$corteId, 4, '0', STR_PAD_LEFT) : '';
+
+        $corte = ($estatusCiclo === 2)
+            ? ($folioCorte ?: ($corteId ? 'LIQ-' . str_pad((string)$corteId, 4, '0', STR_PAD_LEFT) : ''))
+            : '';
 
         return [
             $folio,

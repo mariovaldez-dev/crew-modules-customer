@@ -7,6 +7,7 @@ use App\Domain\Cuadrilla\CuadrillaRepositoryInterface;
 use App\Domain\Cuadrilla\TarifasManiobra;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Exception;
 
 class CuadrillaRepository implements CuadrillaRepositoryInterface
 {
@@ -320,7 +321,7 @@ class CuadrillaRepository implements CuadrillaRepositoryInterface
     {
         $lista = [];
         foreach ($tarifas->dynamic as $tipoId => $valor) {
-            if ($valor !== null && $valor !== '' && (float) $valor > 0) {
+            if ($valor !== null && $valor !== '' && (float) $valor >= 0) {
                 $lista[] = [
                     'tipoManiobra' => (int) $tipoId,
                     'tarifa'       => round((float) $valor, 2),

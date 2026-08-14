@@ -58,6 +58,9 @@
                             <i class="fa-solid fa-rotate-right mr-1.5"></i>
                             Regenerar
                         </x-button>
+                        <x-button wire:click="abrirEliminarBorrador" variant="danger" class="!py-2.5 !px-4 text-xs gap-2" title="Eliminar Borrador">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </x-button>
                     @endif
                 </div>
             </div>
@@ -150,4 +153,5 @@
     @include('livewire.corte.pdf-preview-modal')
     @include('livewire.corte.confirmar-corte-modal')
     @include('livewire.corte.regenerar-corte-modal')
+    @include('livewire.corte.eliminar-corte-modal')
 </div>

@@ -366,6 +366,7 @@ input[type=number] {
 .z-50 { z-index: 50 !important; }
 .z-\[60\] { z-index: 60 !important; }
 .z-\[100\] { z-index: 100 !important; }
+.z-\[9999\] { z-index: 9999 !important; }
 
 /* =============================================================================
    12. OVERFLOW

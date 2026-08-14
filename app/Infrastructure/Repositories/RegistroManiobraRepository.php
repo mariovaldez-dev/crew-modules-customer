@@ -101,9 +101,10 @@ class RegistroManiobraRepository implements RegistroManiobraRepositoryInterface
                 $estatusCiclo = (int) ($item['estatusCiclo'] ?? $item['ESTATUSCICLO'] ?? 0);
 
                 $idManiobra = (int) ($item['idManiobra'] ?? $item['IDMANIOBRA'] ?? 0);
-                $folioFormatted = !empty($item['folio']) ? $item['folio'] : ($idManiobra > 0 ? 'MAN-' . str_pad((string)$idManiobra, 6, '0', STR_PAD_LEFT) : 'S/F');
+                $folioFormatted = !empty($item['folio']) ? $item['folio'] : ($idManiobra > 0 ? 'MAN-' . str_pad((string)$idManiobra, 6, '000', STR_PAD_LEFT) : 'S/F');
 
                 $nombrePuntoVenta = $item['nombrePuntoVenta'] ?? $item['NOMBREPUNTOVENTA'] ?? $item['nombreAlmacen'] ?? $item['NOMBREALMACEN'] ?? null;
+                $folioCorteVal = $item['folioCorte'] ?? $item['FOLIOCORTE'] ?? null;
 
                 $dto = new RegistroManiobraDTO(
                     id: $idManiobra,
@@ -117,6 +118,7 @@ class RegistroManiobraRepository implements RegistroManiobraRepositoryInterface
                     tipoManiobraNombre: $item['nombreManiobra'] ?? $item['NOMBREMANIOBRA'] ?? '',
                     toneladas: (float) ($item['numeroToneladas'] ?? $item['NUMEROTONELADAS'] ?? 0),
                     corteId: $corteId,
+                    folioCorte: $folioCorteVal,
                     estatusCiclo: $estatusCiclo,
                     origen: $item['origen'] ?? $item['ORIGEN'] ?? 'APP',
                     documentoSap: $item['numeroDocumentoSAP'] ?? $item['NUMERODOCUMENTOSAP'] ?? null

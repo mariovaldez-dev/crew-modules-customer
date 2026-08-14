@@ -156,6 +156,8 @@ class RegistroIndex extends Component
         $maniobras = array_map(function($item) {
             $obj = (object) $item;
             $obj->fecha = new \DateTimeImmutable($obj->fecha);
+            $obj->estatusCiclo = (int) ($item['estatusCiclo'] ?? 0);
+            $obj->folioCorte = $item['folioCorte'] ?? null;
             return $obj;
         }, $paginated->items());
         
