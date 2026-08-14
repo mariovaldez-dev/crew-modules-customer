@@ -106,15 +106,48 @@ class CorteRepository implements CorteRepositoryInterface
 
     public function consultarCortePorId(int $corteId): array
     {
-        DB::connection('maniobras')->statement("SET ANSI_NULLS ON");
-        DB::connection('maniobras')->statement("SET ANSI_WARNINGS ON");
+        try {
+            DB::connection('maniobras')->statement("SET ANSI_NULLS ON");
+            DB::connection('maniobras')->statement("SET ANSI_WARNINGS ON");
 
-        $results = DB::connection('maniobras')->select(
-            "EXEC proc_pdm_corte_consultar_por_id @CorteID = ?",
-            [$corteId]
-        );
+            $results = DB::connection('maniobras')->select(
+                "EXEC proc_pdm_corte_consultar_por_id @CorteID = ?",
+                [$corteId]
+            );
 
-        return $this->parsePdoResult($results, 'proc_pdm_corte_consultar_por_id');
+            $parsed = $this->parsePdoResult($results, 'proc_pdm_corte_consultar_por_id');
+            if (isset($parsed['estatus']) && $parsed['estatus'] === 0 && !empty($parsed['resultado'])) {
+                return $parsed;
+            }
+        } catch (\Throwable $e) {
+            Log::warning("[CORTE-LIQUIDACION] proc_pdm_corte_consultar_por_id error o 404: " . $e->getMessage());
+        }
+
+        // Fallback: Si proc_pdm_corte_consultar_por_id falla o no devuelve datos,
+        // buscar el corte en la lista general de la zona del usuario.
+        $context = session()->get('usuario_contexto');
+        $zona = $context->zona ?? '';
+
+        if ($zona) {
+            Log::info("[CORTE-LIQUIDACION] Fallback a proc_pdm_corte_consultar para corteId: {$corteId} en zona: {$zona}");
+            $cortes = $this->listarCortes($zona);
+            foreach ($cortes as $c) {
+                $idVal = (int) ($c['corteId'] ?? $c['id'] ?? 0);
+                if ($idVal === $corteId) {
+                    return [
+                        'estatus' => 0,
+                        'mensaje' => 'Consulta exitosa (vía fallback)',
+                        'resultado' => $c
+                    ];
+                }
+            }
+        }
+
+        return [
+            'estatus' => 404,
+            'mensaje' => 'No se encontró el corte solicitado.',
+            'resultado' => []
+        ];
     }
 
     private function parsePdoResult($results, string $spNombre = 'SP'): array

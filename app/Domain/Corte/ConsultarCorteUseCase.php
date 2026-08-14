@@ -11,7 +11,7 @@ class ConsultarCorteUseCase
     public function execute(int $corteId): ?array
     {
         $result = $this->repository->consultarCortePorId($corteId);
-        if ($result['estatus'] === 0 && !empty($result['resultado'])) {
+        if (($result['estatus'] === 0 || isset($result['resultado']['corteId']) || isset($result['resultado']['id'])) && !empty($result['resultado'])) {
             return $result['resultado'];
         }
         
