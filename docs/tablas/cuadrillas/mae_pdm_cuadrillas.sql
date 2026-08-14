@@ -15,6 +15,6 @@ CREATE TABLE mae_pdm_cuadrillas
 	CONSTRAINT PK_mae_pdm_cuadrillas
 		PRIMARY KEY CLUSTERED (idu_cuadrilla),
 
-	CONSTRAINT UQ_mae_pdm_cuadrillas_nom_cuadrilla
-		UNIQUE (nom_cuadrilla)
+	CONSTRAINT UQ_mae_pdm_cuadrillas_nom_cuadrilla_puntoventa
+		UNIQUE (nom_cuadrilla, idu_punto_venta)
 );
