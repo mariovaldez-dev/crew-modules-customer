@@ -105,9 +105,9 @@ class CuadrillaFormModal extends Component
         }
     }
 
-    private function parseTarifa($val): ?float
+    private function parseTarifa($val): float
     {
-        if ($val === '' || $val === null) return null;
+        if ($val === '' || $val === null) return 0.0;
         return (float) $val;
     }
 

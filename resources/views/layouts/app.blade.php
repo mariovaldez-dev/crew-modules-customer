@@ -134,9 +134,19 @@
                         window.Livewire.on('notify', (data) => handleNotify({ detail: data }));
                     });
                 }
+
+                @if(session()->has('notify'))
+                    handleNotify({ detail: @json(session('notify')) });
+                @elseif(session()->has('message'))
+                    handleNotify({ detail: { message: @json(session('message')), type: 'success' } });
+                @elseif(session()->has('success'))
+                    handleNotify({ detail: { message: @json(session('success')), type: 'success' } });
+                @elseif(session()->has('error'))
+                    handleNotify({ detail: { message: @json(session('error')), type: 'error' } });
+                @endif
             }
         }"
-        class="fixed top-[90px] left-0 right-0 md:left-auto md:right-6 z-[100] px-4 pointer-events-none flex justify-center md:justify-end"
+        class="fixed top-[90px] left-0 right-0 md:left-auto md:right-6 z-[9999] px-4 pointer-events-none flex justify-center md:justify-end"
         x-cloak>
 
         <div x-show="show" x-transition:enter="transition ease-out duration-500"
@@ -147,9 +157,9 @@
             x-transition:leave-end="opacity-0 -translate-y-4 scale-95"
             class="pointer-events-auto w-full max-w-sm overflow-hidden rounded-[1.25rem] border shadow-[0_20px_50px_-12px_rgba(0,0,0,0.15)] flex items-stretch transition-all duration-300 dark:border-white/10"
             :class="{
-                'bg-white/90 dark:bg-[#1A2227]/90 border-green-100 shadow-green-900/5 dark:shadow-green-900/20': type === 'success',
-                'bg-white/90 dark:bg-[#1A2227]/90 border-red-100 shadow-red-900/5 dark:shadow-red-900/20': type === 'error',
-                'bg-white/90 dark:bg-[#1A2227]/90 border-blue-100 shadow-blue-900/5 dark:shadow-blue-900/20': type === 'info'
+                'bg-white dark:bg-[#1A2227] border-green-100 shadow-green-900/5 dark:shadow-green-900/20': type === 'success',
+                'bg-white dark:bg-[#1A2227] border-red-100 shadow-red-900/5 dark:shadow-red-900/20': type === 'error',
+                'bg-white dark:bg-[#1A2227] border-blue-100 shadow-blue-900/5 dark:shadow-blue-900/20': type === 'info'
             }">
 
             <div class="w-1.5 shrink-0" :class="{

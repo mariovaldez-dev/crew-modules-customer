@@ -94,6 +94,29 @@ class CorteDetalle extends Component
         $this->dispatch('open-confirmar-regenerar', corteId: $this->corteId);
     }
 
+    public function abrirEliminarBorrador(): void
+    {
+        \Illuminate\Support\Facades\Log::info("[CORTE-LIQUIDACION] [UI-Detalle] Abriendo modal eliminar-borrador");
+        $this->dispatch('open-eliminar-borrador', corteId: $this->corteId);
+    }
+
+    public function eliminarBorrador(\App\Domain\Corte\EliminarBorradorCorteUseCase $useCase)
+    {
+        \Illuminate\Support\Facades\Log::info("[CORTE-LIQUIDACION] [UI-Detalle] Eliminando borrador de corte ID: {$this->corteId}");
+        try {
+            if ($this->corte && isset($this->corte['corteId'])) {
+                $res = $useCase->execute($this->corte['corteId']);
+                \Illuminate\Support\Facades\Log::info("[CORTE-LIQUIDACION] [UI-Detalle] Borrador de corte ID: {$this->corteId} eliminado exitosamente.", ['res' => $res]);
+                session()->flash('notify', ['message' => 'El borrador de corte fue eliminado exitosamente', 'type' => 'success']);
+                $this->dispatch('notify', ['message' => 'El borrador de corte fue eliminado exitosamente', 'type' => 'success']);
+                return redirect()->route('corte-liquidacion.index');
+            }
+        } catch (Exception $e) {
+            \Illuminate\Support\Facades\Log::error("[CORTE-LIQUIDACION] [UI-Detalle] Error al eliminar borrador de corte ID: {$this->corteId}: " . $e->getMessage());
+            $this->dispatch('notify', ['message' => $e->getMessage(), 'type' => 'error']);
+        }
+    }
+
     public function confirmarCorteGeneral(ConfirmarCorteGeneralUseCase $useCase, ConsultarCorteUseCase $consultarUseCase)
     {
         \Illuminate\Support\Facades\Log::info("[CORTE-LIQUIDACION] [UI-Detalle] Confirmando corte general ID: {$this->corteId}");
@@ -101,6 +124,7 @@ class CorteDetalle extends Component
             if ($this->corte && isset($this->corte['corteId'])) {
                 $res = $useCase->execute($this->corte['corteId'], $this->zonaUsuario);
                 \Illuminate\Support\Facades\Log::info("[CORTE-LIQUIDACION] [UI-Detalle] Corte general ID: {$this->corteId} confirmado exitosamente.", ['res' => $res]);
+                session()->flash('notify', ['message' => 'Corte confirmado y folios asignados', 'type' => 'success']);
                 $this->dispatch('notify', ['message' => 'Corte confirmado y folios asignados', 'type' => 'success']);
                 return redirect()->route('corte-liquidacion.index');
             }

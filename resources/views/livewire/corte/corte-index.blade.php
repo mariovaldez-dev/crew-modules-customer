@@ -118,4 +118,6 @@
             </div>
         </form>
     </x-modal>
+
+    @include('livewire.corte.reemplazar-borrador-modal')
 </div>

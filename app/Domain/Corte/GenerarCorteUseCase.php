@@ -8,12 +8,12 @@ class GenerarCorteUseCase
     {
     }
 
-    public function execute(string $fechaInicio, string $fechaFin, string $zona): void
+    public function execute(string $fechaInicio, string $fechaFin, string $zona, bool $reemplazarBorrador = false): array
     {
         if (strtotime($fechaFin) < strtotime($fechaInicio)) {
             throw new \Exception("La fecha final no puede ser menor a la inicial.");
         }
 
-        $this->repository->generar($zona, $fechaInicio, $fechaFin);
+        return $this->repository->generar($zona, $fechaInicio, $fechaFin, $reemplazarBorrador);
     }
 }

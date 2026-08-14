@@ -43,11 +43,11 @@ class CorteRepository implements CorteRepositoryInterface
         }
     }
 
-    public function generar(string $zona, string $fechaInicio, string $fechaFin): array
+    public function generar(string $zona, string $fechaInicio, string $fechaFin, bool $reemplazarBorrador = false): array
     {
         $row = $this->executeSp(
-            "EXEC proc_pdm_corte_generar @Zona = :zona, @FechaInicio = :inicio, @FechaFin = :fin",
-            ['zona' => $zona, 'inicio' => $fechaInicio, 'fin' => $fechaFin],
+            "EXEC proc_pdm_corte_generar @Zona = :zona, @FechaInicio = :inicio, @FechaFin = :fin, @ReemplazarBorrador = :reemplazar",
+            ['zona' => $zona, 'inicio' => $fechaInicio, 'fin' => $fechaFin, 'reemplazar' => $reemplazarBorrador ? 1 : 0],
             'proc_pdm_corte_generar'
         );
 
@@ -113,6 +113,17 @@ class CorteRepository implements CorteRepositoryInterface
         return $this->parsePdoResult($row, 'proc_pdm_corte_regenerar');
     }
 
+    public function eliminarBorrador(int $corteId): array
+    {
+        $row = $this->executeSp(
+            "EXEC proc_pdm_corte_eliminar @CorteID = :corte",
+            ['corte' => $corteId],
+            'proc_pdm_corte_eliminar'
+        );
+
+        return $this->parsePdoResult($row, 'proc_pdm_corte_eliminar');
+    }
+
     public function consultarCortePorId(int $corteId): array
     {
         $row = $this->executeSp(
@@ -138,7 +149,7 @@ class CorteRepository implements CorteRepositoryInterface
             throw new Exception("[$spNombre] Respuesta malformada del SP: no contiene estatus.");
         }
 
-        if ($row['estatus'] != 0) {
+        if ($row['estatus'] != 0 && $row['estatus'] != 409) {
             Log::warning("[CORTE-LIQUIDACION] [$spNombre] SP returned business error: " . ($row['mensaje'] ?? 'Sin mensaje'));
             throw new Exception($row['mensaje'] ?? 'Error desconocido en la base de datos.');
         }

@@ -1,19 +1,35 @@
 -- ==============================================================================
--- 2. SP: GENERAR BORRADOR
+-- 2. SP: GENERAR BORRADOR (Con soporte opcional para reemplazar borrador activo)
 -- ==============================================================================
 CREATE OR ALTER PROCEDURE proc_pdm_corte_generar
     @Zona VARCHAR(20),
     @FechaInicio DATE,
-    @FechaFin DATE
+    @FechaFin DATE,
+    @ReemplazarBorrador BIT = 0
 AS
 BEGIN
     SET NOCOUNT ON;
     BEGIN TRY
         -- 1. Validar si ya hay un borrador activo para la zona
-        IF EXISTS (SELECT 1 FROM mae_pdm_cortes_liquidacion WHERE clv_zona = @Zona AND opc_estatus = 0)
+        DECLARE @BorradorExistenteID INT;
+
+        SELECT @BorradorExistenteID = idu_corte 
+        FROM mae_pdm_cortes_liquidacion 
+        WHERE clv_zona = @Zona AND opc_estatus = 0;
+
+        IF @BorradorExistenteID IS NOT NULL
         BEGIN
-            SELECT 400 AS estatus, 'Ya existe un corte en borrador para esta zona.' AS mensaje, '{}' AS resultado;
-            RETURN;
+            IF @ReemplazarBorrador = 1
+            BEGIN
+                -- Eliminar el borrador antiguo desvinculando sus maniobras y confirmaciones
+                EXEC proc_pdm_corte_eliminar @CorteID = @BorradorExistenteID;
+            END
+            ELSE
+            BEGIN
+                SELECT 409 AS estatus, 'Ya existe un corte en borrador para esta zona.' AS mensaje, 
+                (SELECT @BorradorExistenteID AS idu_corte_borrador FOR JSON PATH, WITHOUT_ARRAY_WRAPPER) AS resultado;
+                RETURN;
+            END
         END
 
         -- 2. Insertar encabezado de corte en borrador
