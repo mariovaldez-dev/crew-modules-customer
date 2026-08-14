@@ -193,8 +193,12 @@
         @endphp
 
         @foreach($cuadrillasPorPV as $pvId => $cuadrillasDelPv)
+            @php
+                $primeraCuadrilla = $cuadrillasDelPv->first();
+                $nombrePv = $primeraCuadrilla['almacenNombre'] ?? $pvId;
+            @endphp
             <div style="margin-top: 20px; border-bottom: 2px solid #e2e8f0; margin-bottom: 15px;">
-                <h2 style="font-size: 16px; color: #0f172a; margin: 0 0 10px 0;">Punto de Venta: {{ $pvId }}</h2>
+                <h2 style="font-size: 16px; color: #0f172a; margin: 0 0 10px 0;">Punto de Venta: {{ $nombrePv }}</h2>
             </div>
             
             @foreach($cuadrillasDelPv as $cuadrilla)

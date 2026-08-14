@@ -24,12 +24,14 @@ class GenerarPdfCorteUseCase
         }
 
         $context = session()->get('usuario_contexto');
-        $zona = ($context instanceof \App\Domain\Shared\UsuarioContexto) ? $context->zona : 'FA';
+        $zonaNombre = ($corte['zonaNombre'] ?? null)
+            ?? (($context instanceof \App\Domain\Shared\UsuarioContexto && !empty($context->zonaNombre)) ? $context->zonaNombre : null)
+            ?? ($corte['clv_zona'] ?? $corte['zona'] ?? 'Zona');
 
-        // Cargar la vista Blade de dompdf con los datos del corte
+        // Cargar la vista Blade de dompdf con los datos del corte y el nombre real de la zona
         $pdf = Pdf::loadView('pdf.corte-liquidacion', [
             'corte' => $corte,
-            'zona' => $zona
+            'zona' => $zonaNombre,
         ]);
 
         // Ajustar el papel (Carta, vertical)
