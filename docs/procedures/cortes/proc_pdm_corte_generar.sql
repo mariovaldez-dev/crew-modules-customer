@@ -41,7 +41,7 @@ BEGIN
         SET @NuevoCorteID = SCOPE_IDENTITY();
 
         -- 3. Asignar el corte a las maniobras de la zona que no tengan corte (idu_corte = 0) y estén activas (opc_estatus = 1)
-        -- y cuyo fec_registro caiga entre @FechaInicio y @FechaFin.
+        -- y cuyo fec_registro sea menor o igual a @FechaFin (para incluir maniobras liberadas de cortes anteriores).
         UPDATE m
         SET m.idu_corte = @NuevoCorteID
         FROM mov_pdm_maniobras_ejecutadas m
@@ -49,7 +49,7 @@ BEGIN
         WHERE c.clv_zona = @Zona
           AND m.idu_corte = 0
           AND m.opc_estatus = 1
-          AND CAST(m.fec_registro AS DATE) BETWEEN @FechaInicio AND @FechaFin;
+          AND CAST(m.fec_registro AS DATE) <= @FechaFin;
 
         -- 4. Calcular el monto leyendo las tarifas vigentes (ctl_pdm_tarifas_cuadrillas)
         -- Hacemos la suma total y actualizamos el encabezado

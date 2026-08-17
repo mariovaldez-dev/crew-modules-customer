@@ -91,7 +91,6 @@
                         <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Fecha Inicio</label>
                         <x-date-input 
                             wire:model.live="fechaInicio" 
-                            disabled="{{ !$isPrimerCorte }}"
                         />
                         @error('fechaInicio') <span class="text-xs text-red-500 mt-2 block">{{ $message }}</span> @enderror
                     </div>
