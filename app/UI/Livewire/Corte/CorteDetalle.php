@@ -51,6 +51,21 @@ class CorteDetalle extends Component
         $this->cargando = false;
     }
 
+    public function getTieneAlMenosUnaConfirmadaProperty(): bool
+    {
+        if (!$this->corte || empty($this->corte['cuadrillas'])) {
+            return false;
+        }
+
+        foreach ($this->corte['cuadrillas'] as $cuadrilla) {
+            if (!empty($cuadrilla['estaConfirmada'])) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public function getTodasConfirmadasProperty(): bool
     {
         if (!$this->corte || empty($this->corte['cuadrillas'])) {

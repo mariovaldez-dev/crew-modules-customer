@@ -42,14 +42,14 @@
                             <i class="fa-solid fa-file-pdf text-xs"></i>
                             Imprimir PDF
                         </button>
-                    @elseif($this->todasConfirmadas)
+                    @elseif($this->tieneAlMenosUnaConfirmada)
                         <x-button wire:click="abrirConfirmarGeneral" variant="primary" class="!py-2 !px-4 text-xs font-bold">
                             <i class="fa-solid fa-check-double mr-1.5"></i>
                             Confirmar Corte
                         </x-button>
                     @else
                         <span class="text-xs font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500">
-                            Confirme todas las cuadrillas para habilitar el corte
+                            Confirme al menos una cuadrilla para habilitar el corte
                         </span>
                     @endif
 

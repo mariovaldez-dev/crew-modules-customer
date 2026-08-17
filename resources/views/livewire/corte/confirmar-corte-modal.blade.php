@@ -47,7 +47,12 @@
                     <!-- Body -->
                     <div class="px-6 py-5 space-y-4">
                         <p class="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
-                            Al confirmar el corte general se asignarán folios formales, las maniobras quedarán como <strong class="text-gray-800 dark:text-gray-200">Liquidadas</strong> y el PDF estará disponible para descarga.
+                            Al confirmar el corte general se asignarán folios formales, las maniobras confirmadas quedarán como <strong class="text-gray-800 dark:text-gray-200">Liquidadas</strong> y el PDF estará disponible para descarga.
+                        </p>
+
+                        <p class="text-xs text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 p-3 rounded-xl border border-amber-200 dark:border-amber-900/40 leading-relaxed">
+                            <i class="fa-solid fa-info-circle mr-1 text-amber-500"></i>
+                            Las cuadrillas que <strong>no hayan sido confirmadas</strong> serán descartadas de este borrador y quedarán disponibles para ser liquidadas en un corte posterior.
                         </p>
 
                         <!-- Advertencia -->
