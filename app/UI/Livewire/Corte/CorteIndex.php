@@ -14,9 +14,11 @@ use Illuminate\Support\Facades\Log;
 use Exception;
 use Livewire\Component;
 
+use Livewire\WithPagination;
+
 class CorteIndex extends Component
 {
-    use WithZonaScope;
+    use WithZonaScope, WithPagination;
 
     public string $fechaInicio = '';
     public string $fechaFin = '';
@@ -85,12 +87,14 @@ class CorteIndex extends Component
         ]);
 
         $this->validate([
-            'fechaInicio' => 'required|date',
-            'fechaFin' => 'required|date|after_or_equal:fechaInicio'
+            'fechaInicio' => 'required|date|before_or_equal:today',
+            'fechaFin' => 'required|date|after_or_equal:fechaInicio|before_or_equal:today'
         ], [
             'fechaInicio.required' => 'La fecha de inicio es requerida',
+            'fechaInicio.before_or_equal' => 'La fecha de inicio no puede ser posterior a hoy',
             'fechaFin.required' => 'La fecha final es requerida',
-            'fechaFin.after_or_equal' => 'La fecha fin no puede ser menor a la fecha inicio'
+            'fechaFin.after_or_equal' => 'La fecha fin no puede ser menor a la fecha inicio',
+            'fechaFin.before_or_equal' => 'La fecha fin no puede ser posterior a hoy'
         ]);
 
         try {
@@ -129,7 +133,22 @@ class CorteIndex extends Component
 
     public function render()
     {
-        session()->save(); 
-        return view('livewire.corte.corte-index')->layout('layouts.app', ['title' => 'Cortes de Liquidación']);
+        session()->save();
+
+        $currentPage = $this->paginators['page'] ?? 1;
+        $perPage = 10;
+        $items = $this->cargando ? [] : $this->cortes;
+
+        $paginated = new \Illuminate\Pagination\LengthAwarePaginator(
+            array_slice($items, ($currentPage - 1) * $perPage, $perPage),
+            count($items),
+            $perPage,
+            $currentPage,
+            ['path' => \Illuminate\Pagination\LengthAwarePaginator::resolveCurrentPath()]
+        );
+
+        return view('livewire.corte.corte-index', [
+            'cortesList' => $paginated
+        ])->layout('layouts.app', ['title' => 'Cortes de Liquidación']);
     }
 }

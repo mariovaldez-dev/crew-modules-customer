@@ -1,9 +1,14 @@
 <div class="space-y-6" wire:init="loadData">
-    <div class="mb-8">
-        <h1 class="text-3xl font-black tracking-tight text-gray-900 dark:text-white">Consulta de tarifas</h1>
-            <p class="text-lg text-gray-400 dark:text-gray-500 font-bold tracking-widest mt-1">
-            Revisión de precios por concepto de maniobras y cuadrilla
-        </p>
+    <div class="mb-8 flex items-center gap-4 bg-white dark:bg-[#131B20] border border-gray-100 dark:border-white/5 rounded-2xl p-4 shadow-sm">
+        <div class="w-12 h-12 bg-orange-50 dark:bg-orange-950/30 rounded-2xl flex items-center justify-center text-orange-600 dark:text-orange-400 shrink-0">
+            <i class="fa-solid fa-hand-holding-dollar text-lg"></i>
+        </div>
+        <div>
+            <h1 class="text-2xl font-black tracking-tight text-gray-900 dark:text-white">Consulta de tarifas</h1>
+            <p class="text-sm text-gray-400 dark:text-gray-500 font-medium mt-0.5">
+                Revisión de precios por concepto de maniobras y cuadrilla
+            </p>
+        </div>
     </div>
 
     {{-- Skeleton de carga --}}

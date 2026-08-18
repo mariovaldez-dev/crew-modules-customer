@@ -1,11 +1,16 @@
 <div class="space-y-6" wire:init="loadData" x-on:cuadrilla-saved.window="$wire.refreshData()">
     <!-- Header Page -->
-    <div class="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-            <h1 class="text-3xl font-black tracking-tight text-gray-900 dark:text-white">Cuentas de cuadrillas</h1>
-            <p class="text-lg text-gray-400 dark:text-gray-500 font-bold tracking-widest mt-1">
-                Administración de equipos de trabajo y asignación de puntos de venta
-            </p>
+    <div class="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white dark:bg-[#131B20] border border-gray-100 dark:border-white/5 rounded-2xl p-4 shadow-sm">
+        <div class="flex items-center gap-4">
+            <div class="w-12 h-12 bg-blue-50 dark:bg-blue-950/30 rounded-2xl flex items-center justify-center text-blue-600 dark:text-blue-400 shrink-0">
+                <i class="fa-solid fa-users-gear text-lg"></i>
+            </div>
+            <div>
+                <h1 class="text-2xl font-black tracking-tight text-gray-900 dark:text-white">Cuentas de cuadrillas</h1>
+                <p class="text-sm text-gray-400 dark:text-gray-500 font-medium mt-0.5">
+                    Administración de equipos de trabajo y asignación de puntos de venta
+                </p>
+            </div>
         </div>
         
         @if($this->rolUsuario === 'CO')
@@ -73,23 +78,23 @@
     <!-- Table Card -->
     <div class="bg-white dark:bg-[#131B20] border border-gray-100 dark:border-white/5 rounded-3xl shadow-sm overflow-hidden">
         <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse">
+            <table class="w-full min-w-[700px] text-left border-collapse">
                 <thead>
                     <tr class="bg-green-600 text-white text-[11px] font-bold uppercase tracking-wider">
-                        <th class="px-6 py-4">Cuadrilla</th>
-                        <th class="px-6 py-4">Líder</th>
-                        <th class="px-6 py-4 text-center">Miembros</th>
-                        <th class="px-6 py-4">Punto de Venta</th>
+                        <th class="px-6 py-4 whitespace-nowrap">Cuadrilla</th>
+                        <th class="px-6 py-4 whitespace-nowrap">Líder</th>
+                        <th class="px-6 py-4 whitespace-nowrap text-center">Miembros</th>
+                        <th class="px-6 py-4 whitespace-nowrap">Punto de Venta</th>
                         @if($this->rolUsuario === 'CO')
-                            <th class="px-6 py-4 text-right">Acción</th>
+                            <th class="px-6 py-4 whitespace-nowrap text-right">Acciones</th>
                         @endif
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-100 dark:divide-white/5 text-sm">
+                <tbody class="divide-y divide-gray-100 dark:divide-white/5 text-[13px]">
                     {{-- Filas de datos --}}
                     @forelse($cuadrillas as $cuadrilla)
                         <tr wire:loading.class.add="hidden" wire:target="loadData,refreshData,delete" class="hover:bg-gray-50/40 dark:hover:bg-white/5 transition-colors duration-150">
-                            <td class="px-6 py-4 whitespace-nowrap">
+                            <td class="px-4 py-3 whitespace-nowrap">
                                 <div class="flex items-center gap-3">
                                     <div class="w-8 h-8 rounded-full bg-gradient-to-br from-green-500/10 to-emerald-500/10 dark:from-emerald-500/20 dark:to-teal-500/10 border border-green-500/20 text-green-700 dark:text-green-400 shadow-sm shrink-0 flex items-center justify-center font-bold text-xs">
                                         {{ substr(trim($cuadrilla['nombre']), 0, 1) }}
@@ -99,17 +104,17 @@
                                     </div>
                                 </div>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-gray-600 dark:text-gray-400 font-medium">
+                            <td class="px-4 py-3 whitespace-nowrap text-gray-600 dark:text-gray-400 font-medium">
                                 {{ $cuadrilla['lider'] }}
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-center font-mono font-bold text-gray-800 dark:text-white">
+                            <td class="px-4 py-3 whitespace-nowrap text-center font-mono font-bold text-gray-800 dark:text-white">
                                 {{ $cuadrilla['miembros'] }}
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-gray-600 dark:text-gray-400 font-semibold text-xs">
-                                {{ $puntosVenta[$cuadrilla['puntoVentaId']] ?? $cuadrilla['puntoVentaId'] }}
+                            <td class="px-4 py-3 whitespace-nowrap text-gray-600 dark:text-gray-400 font-semibold text-xs">
+                                {{ $cuadrilla['puntoVentaNombre'] ?? $puntosVenta[$cuadrilla['puntoVentaId']] ?? $cuadrilla['puntoVentaId'] }}
                             </td>
                             @if($this->rolUsuario === 'CO')
-                            <td class="px-6 py-4 whitespace-nowrap text-right space-x-1">
+                            <td class="px-4 py-3 whitespace-nowrap text-right space-x-1">
                                 <!-- Tooltip Editar -->
                                 <div class="relative group inline-block">
                                     <button @click="$dispatch('open-cuadrilla-modal', { cuadrilla: {{ json_encode($cuadrilla) }} })"
@@ -182,7 +187,7 @@
         {{-- Paginación premium --}}
         @if($cuadrillas->hasPages())
             <div class="px-6 py-4 border-t border-gray-100 dark:border-white/5 bg-gray-50/30 dark:bg-white/2">
-                {{ $cuadrillas->links() }}
+                {{ $cuadrillas->links('components.pagination') }}
             </div>
         @endif
     </div>

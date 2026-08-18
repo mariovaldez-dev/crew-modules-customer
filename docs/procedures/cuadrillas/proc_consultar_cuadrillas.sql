@@ -24,7 +24,8 @@ BEGIN
 					C.nom_cuadrilla AS nombreCuadrilla,
 					C.nom_lider_cuadrilla AS liderCuadrilla,
 					C.num_miembros AS miembros,
-					C.idu_punto_venta AS puntoVenta,					
+					C.idu_punto_venta AS puntoVenta,
+					pun.WhsName AS nombrePuntoVenta,					
 					JSON_QUERY
 					(
 						(
@@ -49,7 +50,7 @@ BEGIN
 				FOR JSON PATH
 			);
 
-			SET @mensaje = 'Información obtenida correctamente.';
+			SET @mensaje = 'InformaciÃ³n obtenida correctamente.';
 			SET @estado = 0;
 			
 		END

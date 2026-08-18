@@ -1,11 +1,16 @@
 <div class="space-y-6" wire:init="loadData">
     <!-- Header Page -->
-    <div class="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-            <h1 class="text-3xl font-black tracking-tight text-gray-900 dark:text-white">Bitácora de maniobras</h1>
-            <p class="text-lg text-gray-400 dark:text-gray-500 font-bold tracking-widest mt-1">
-                Consulta de operaciones registradas, carga por dispositivo y asignación manual
-            </p>
+    <div class="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white dark:bg-[#131B20] border border-gray-100 dark:border-white/5 rounded-2xl p-4 shadow-sm">
+        <div class="flex items-center gap-4">
+            <div class="w-12 h-12 bg-purple-50 dark:bg-purple-950/30 rounded-2xl flex items-center justify-center text-purple-600 dark:text-purple-400 shrink-0">
+                <i class="fa-solid fa-clipboard-list text-lg"></i>
+            </div>
+            <div>
+                <h1 class="text-2xl font-black tracking-tight text-gray-900 dark:text-white">Bitácora de maniobras</h1>
+                <p class="text-sm text-gray-400 dark:text-gray-500 font-medium mt-0.5">
+                    Consulta de operaciones registradas, carga por dispositivo y asignación manual
+                </p>
+            </div>
         </div>
         
         <div class="flex gap-2 w-full sm:w-auto justify-end">
@@ -50,7 +55,7 @@
             <div class="w-full md:w-40">
                 <x-label value="Fecha Inicio" />
                 <div class="{{ !$readyToLoad ? 'hidden' : 'block' }}">
-                    <x-date-input wire:model.live="filters.fechaInicio" />
+                    <x-date-input wire:model.change="filters.fechaInicio" :max="date('Y-m-d')" />
                 </div>
                 <!-- Skeleton Fecha -->
                 <div class="{{ $readyToLoad ? 'hidden' : 'w-full h-[42px] bg-gray-200 dark:bg-white/5 rounded-xl animate-pulse' }}"></div>
@@ -58,7 +63,7 @@
             <div class="w-full md:w-40">
                 <x-label value="Fecha Fin" />
                 <div class="{{ !$readyToLoad ? 'hidden' : 'block' }}">
-                    <x-date-input wire:model.live="filters.fechaFin" />
+                    <x-date-input wire:model.change="filters.fechaFin" :max="date('Y-m-d')" />
                 </div>
                 <!-- Skeleton Fecha -->
                 <div class="{{ $readyToLoad ? 'hidden' : 'w-full h-[42px] bg-gray-200 dark:bg-white/5 rounded-xl animate-pulse' }}"></div>
@@ -109,44 +114,44 @@
 
     <!-- Table Card -->
     <div class="bg-white dark:bg-[#131B20] border border-gray-100 dark:border-white/5 rounded-3xl shadow-sm overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse">
+        <div class="overflow-x-auto custom-scrollbar">
+            <table class="w-full min-w-[1050px] text-left border-collapse">
                 <thead>
                     <tr class="bg-green-600 text-white text-[11px] font-bold uppercase tracking-wider">
-                        <th class="px-6 py-4">Folio</th>
-                        <th class="px-6 py-4">Fecha</th>
-                        <th class="px-6 py-4">Tipo</th>
-                        <th class="px-6 py-4">Almacen</th>
-                        <th class="px-6 py-4">Cuadrilla</th>
-                        <th class="px-6 py-4 text-center">Toneladas</th>
-                        <th class="px-6 py-4">Doc SAP</th>
-                        <th class="px-6 py-4 text-center">Estado</th>
-                        <th class="px-6 py-4">Corte</th>
+                        <th class="px-4 py-3 whitespace-nowrap">Folio</th>
+                        <th class="px-4 py-3 whitespace-nowrap">Fecha</th>
+                        <th class="px-4 py-3 whitespace-nowrap">Tipo</th>
+                        <th class="px-4 py-3 whitespace-nowrap">Almacén</th>
+                        <th class="px-4 py-3 whitespace-nowrap">Cuadrilla</th>
+                        <th class="px-4 py-3 whitespace-nowrap text-center">Toneladas</th>
+                        <th class="px-4 py-3 whitespace-nowrap">Doc SAP</th>
+                        <th class="px-4 py-3 whitespace-nowrap text-center">Estado</th>
+                        <th class="px-4 py-3 whitespace-nowrap">Corte</th>
                     </tr>
                 </thead>
-                <tbody wire:loading.class="hidden" class="{{ !$readyToLoad ? 'hidden' : '' }} divide-y divide-gray-100 dark:divide-white/5 text-sm">
+                <tbody wire:loading.class="hidden" class="{{ !$readyToLoad ? 'hidden' : '' }} divide-y divide-gray-100 dark:divide-white/5 text-[13px]">
                     @forelse($maniobras as $maniobra)
                         <tr class="group hover:bg-gray-50 dark:hover:bg-white/5 transition-colors duration-200">
                             <!-- Folio -->
-                            <td class="px-6 py-4 whitespace-nowrap text-gray-900 dark:text-white">{{ $maniobra->folio }}</td>
+                            <td class="px-4 py-3 whitespace-nowrap font-bold text-gray-900 dark:text-white">{{ $maniobra->folio }}</td>
                             <!-- Fecha -->
-                            <td class="px-6 py-4 whitespace-nowrap text-gray-600 dark:text-gray-400">{{ $maniobra->fecha->format('d-m-Y') }}</td>
+                            <td class="px-4 py-3 whitespace-nowrap text-gray-600 dark:text-gray-400">{{ $maniobra->fecha->format('d-m-Y') }}</td>
                             <!-- Tipo -->
-                            <td class="px-6 py-4 whitespace-nowrap text-gray-700 dark:text-gray-300">{{ $maniobra->tipoManiobraNombre }}</td>
+                            <td class="px-4 py-3 whitespace-nowrap text-gray-700 dark:text-gray-300 font-medium">{{ $maniobra->tipoManiobraNombre }}</td>
                             <!-- Almacen -->
-                            <td class="px-6 py-4 whitespace-nowrap text-gray-700 dark:text-gray-300">{{ $maniobra->almacenNombre }}</td>
+                            <td class="px-4 py-3 whitespace-nowrap text-gray-700 dark:text-gray-300">{{ $maniobra->almacenNombre }}</td>
                             <!-- Cuadrilla -->
-                            <td class="px-6 py-4 whitespace-nowrap text-gray-700 dark:text-gray-300">{{ $maniobra->cuadrillaNombre }}</td>
+                            <td class="px-4 py-3 whitespace-nowrap text-gray-700 dark:text-gray-300 font-medium">{{ $maniobra->cuadrillaNombre }}</td>
                             <!-- Toneladas -->
-                            <td class="px-6 py-4 whitespace-nowrap text-center text-gray-900 dark:text-white">{{ rtrim(rtrim(number_format($maniobra->toneladas, 3, '.', ''), '0'), '.') }}</td>
+                            <td class="px-4 py-3 whitespace-nowrap text-center font-bold text-gray-900 dark:text-white">{{ rtrim(rtrim(number_format($maniobra->toneladas, 3, '.', ''), '0'), '.') }}</td>
                             <!-- Doc SAP -->
-                            <td class="px-6 py-4 whitespace-nowrap text-gray-600 dark:text-gray-400">{{ $maniobra->documentoSap ?? '' }}</td>
+                            <td class="px-4 py-3 whitespace-nowrap text-gray-600 dark:text-gray-400 font-mono text-xs">{{ $maniobra->documentoSap ?? '' }}</td>
                             <!-- Estado (Badge) -->
-                            <td class="px-6 py-4 whitespace-nowrap text-center">
+                            <td class="px-4 py-3 whitespace-nowrap text-center">
                                 <x-status-badge :status="$maniobra->estado" />
                             </td>
                             <!-- Corte -->
-                            <td class="px-6 py-4 whitespace-nowrap text-gray-600 dark:text-gray-400">
+                            <td class="px-4 py-3 whitespace-nowrap text-gray-600 dark:text-gray-400 font-mono text-xs">
                                 @if(($maniobra->estatusCiclo ?? 0) === 2)
                                     {{ ($maniobra->folioCorte ?? null) ?: ('LIQ-' . str_pad($maniobra->corteId ?? 0, 4, '0', STR_PAD_LEFT)) }}
                                 @endif
@@ -155,9 +160,9 @@
                     @empty
                         @if($readyToLoad)
                             <tr>
-                                <td colspan="9" class="px-6 py-20 text-center text-gray-400 dark:text-gray-500">
+                                <td colspan="9" class="px-4 py-16 text-center text-gray-400 dark:text-gray-500">
                                     <div class="flex flex-col items-center gap-3">
-                                        <div class="w-16 h-16 rounded-full bg-gray-50 dark:bg-white/5 flex items-center justify-center text-2xl text-gray-300 dark:text-gray-600 mb-2 border border-gray-100 dark:border-white/5">
+                                        <div class="w-14 h-14 rounded-full bg-gray-50 dark:bg-white/5 flex items-center justify-center text-xl text-gray-300 dark:text-gray-600 mb-1 border border-gray-100 dark:border-white/5">
                                             <i class="fa-solid fa-inbox"></i>
                                         </div>
                                         <p class="font-bold text-gray-700 dark:text-gray-300">No se encontraron registros</p>
@@ -168,18 +173,18 @@
                         @endif
                     @endforelse
                 </tbody>
-                <tbody wire:loading.class.remove="hidden" class="{{ $readyToLoad ? 'hidden' : '' }} divide-y divide-gray-100 dark:divide-white/5 text-sm">
+                <tbody wire:loading.class.remove="hidden" class="{{ $readyToLoad ? 'hidden' : '' }} divide-y divide-gray-100 dark:divide-white/5 text-[13px]">
                     @for($i = 0; $i < 3; $i++)
                         <tr class="animate-pulse">
-                            <td class="px-6 py-4"><div class="h-4 bg-gray-200 dark:bg-white/10 rounded w-16"></div></td>
-                            <td class="px-6 py-4"><div class="h-4 bg-gray-200 dark:bg-white/10 rounded w-20"></div></td>
-                            <td class="px-6 py-4"><div class="h-4 bg-gray-200 dark:bg-white/10 rounded w-16"></div></td>
-                            <td class="px-6 py-4"><div class="h-4 bg-gray-200 dark:bg-white/10 rounded w-24"></div></td>
-                            <td class="px-6 py-4"><div class="h-4 bg-gray-200 dark:bg-white/10 rounded w-16"></div></td>
-                            <td class="px-6 py-4"><div class="h-4 bg-gray-200 dark:bg-white/10 rounded w-12 mx-auto"></div></td>
-                            <td class="px-6 py-4"><div class="h-4 bg-gray-200 dark:bg-white/10 rounded w-16"></div></td>
-                            <td class="px-6 py-4"><div class="h-6 bg-gray-200 dark:bg-white/10 rounded-full w-20 mx-auto"></div></td>
-                            <td class="px-6 py-4"><div class="h-4 bg-gray-200 dark:bg-white/10 rounded w-16"></div></td>
+                            <td class="px-4 py-3"><div class="h-4 bg-gray-200 dark:bg-white/10 rounded w-16"></div></td>
+                            <td class="px-4 py-3"><div class="h-4 bg-gray-200 dark:bg-white/10 rounded w-20"></div></td>
+                            <td class="px-4 py-3"><div class="h-4 bg-gray-200 dark:bg-white/10 rounded w-16"></div></td>
+                            <td class="px-4 py-3"><div class="h-4 bg-gray-200 dark:bg-white/10 rounded w-24"></div></td>
+                            <td class="px-4 py-3"><div class="h-4 bg-gray-200 dark:bg-white/10 rounded w-16"></div></td>
+                            <td class="px-4 py-3"><div class="h-4 bg-gray-200 dark:bg-white/10 rounded w-12 mx-auto"></div></td>
+                            <td class="px-4 py-3"><div class="h-4 bg-gray-200 dark:bg-white/10 rounded w-16"></div></td>
+                            <td class="px-4 py-3"><div class="h-5 bg-gray-200 dark:bg-white/10 rounded-full w-20 mx-auto"></div></td>
+                            <td class="px-4 py-3"><div class="h-4 bg-gray-200 dark:bg-white/10 rounded w-16"></div></td>
                         </tr>
                     @endfor
                 </tbody>
@@ -187,7 +192,7 @@
         </div>
         @if(method_exists($maniobras, 'hasPages') && $maniobras->hasPages())
             <div class="px-6 py-4 border-t border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-white/5">
-                {{ $maniobras->links() }}
+                {{ $maniobras->links('components.pagination') }}
             </div>
         @endif
     </div>
