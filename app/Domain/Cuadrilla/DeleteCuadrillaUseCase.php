@@ -12,8 +12,8 @@ class DeleteCuadrillaUseCase
 
     public function execute(int $id): bool
     {
-        if ($this->repository->hasManiobrasEnProceso($id)) {
-            throw new Exception("No se puede eliminar la cuadrilla porque tiene maniobras en proceso.");
+        if ($this->repository->hasManiobrasEnProceso($id) || $this->repository->hasLiquidacionesEnProceso($id)) {
+            throw new Exception("No se puede eliminar la cuadrilla porque tiene maniobras registradas o cortes liquidados asociados.");
         }
 
         return $this->repository->delete($id);
