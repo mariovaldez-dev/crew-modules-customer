@@ -48,6 +48,14 @@ class RegistroIndex extends Component
 
     public function updatedFilters($value, $key)
     {
+        $hoy = date('Y-m-d');
+        if (!empty($this->filters['fechaInicio']) && $this->filters['fechaInicio'] > $hoy) {
+            $this->filters['fechaInicio'] = $hoy;
+        }
+        if (!empty($this->filters['fechaFin']) && $this->filters['fechaFin'] > $hoy) {
+            $this->filters['fechaFin'] = $hoy;
+        }
+
         if ($key === 'fechaInicio' || $key === 'fechaFin') {
             if (!empty($this->filters['fechaFin']) && !empty($this->filters['fechaInicio'])) {
                 if ($this->filters['fechaFin'] < $this->filters['fechaInicio']) {

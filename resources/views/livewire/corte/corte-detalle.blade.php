@@ -1,14 +1,24 @@
 <div class="px-4 sm:px-6 lg:px-8 py-8 w-full max-w-9xl mx-auto" wire:init="loadData">
     <!-- Header -->
-    <div class="sm:flex sm:justify-between sm:items-center mb-8">
-        <div>
-            <a href="{{ route('corte-liquidacion.index') }}" class="text-sm font-bold text-green-600 hover:text-green-700 flex items-center gap-2 mb-2">
-                <i class="fa-solid fa-arrow-left"></i> Volver a Cortes
+    <div class="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-[#131B20] border border-gray-100 dark:border-white/5 rounded-2xl p-4 shadow-sm">
+        <div class="flex items-center gap-3 sm:gap-4">
+            <!-- Botón Volver (Izquierda) -->
+            <a href="{{ route('corte-liquidacion.index') }}" 
+               class="w-10 h-10 rounded-xl bg-gray-100 hover:bg-gray-200 dark:bg-white/10 dark:hover:bg-white/20 text-gray-600 dark:text-gray-300 flex items-center justify-center transition-all duration-200 shrink-0 border border-gray-200/50 dark:border-white/5 shadow-sm group" 
+               title="Volver a Cortes">
+                <i class="fa-solid fa-arrow-left text-sm group-hover:-translate-x-0.5 transition-transform"></i>
             </a>
-            <h1 class="text-2xl md:text-3xl font-black text-gray-900 dark:text-white flex items-center gap-3">
-                <i class="fa-solid fa-file-invoice-dollar text-green-600"></i>
-                Detalle del Corte
-            </h1>
+
+            <!-- Icon Box -->
+            <div class="w-12 h-12 bg-teal-50 dark:bg-teal-950/30 rounded-2xl flex items-center justify-center text-teal-600 dark:text-teal-400 shrink-0">
+                <i class="fa-solid fa-file-invoice-dollar text-lg"></i>
+            </div>
+
+            <!-- Título y Subtítulo -->
+            <div>
+                <h1 class="text-2xl font-black tracking-tight text-gray-900 dark:text-white">Detalle del Corte</h1>
+                <p class="text-sm text-gray-400 dark:text-gray-500 font-medium mt-0.5">Información detallada y resumen por cuadrilla</p>
+            </div>
         </div>
     </div>
 
@@ -113,7 +123,7 @@
                                         {{ $cuadrilla['nombreCuadrilla'] }}
                                     </td>
                                     <td class="px-6 py-4 text-gray-600 dark:text-gray-400 font-semibold text-xs">
-                                        {{ $cuadrilla['almacenId'] }}
+                                        {{ $cuadrilla['almacenNombre'] ?? $cuadrilla['puntoVentaNombre'] ?? $cuadrilla['almacenId'] }}
                                     </td>
                                     <td class="px-6 py-4 text-right font-medium text-gray-700 dark:text-gray-300">
                                         {{ number_format($cuadrilla['totalToneladas'], 2) }}

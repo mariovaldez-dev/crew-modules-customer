@@ -1,11 +1,16 @@
 <div class="space-y-6" wire:init="loadData">
     <!-- Header Page -->
-    <div class="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-            <h1 class="text-3xl font-black tracking-tight text-gray-900 dark:text-white">Catálogo de maniobras</h1>
-            <p class="text-lg text-gray-400 dark:text-gray-500 font-bold tracking-widest mt-1">
-                Administra los tipos de maniobra autorizados en el sistema
-            </p>
+    <div class="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white dark:bg-[#131B20] border border-gray-100 dark:border-white/5 rounded-2xl p-4 shadow-sm">
+        <div class="flex items-center gap-4">
+            <div class="w-12 h-12 bg-green-50 dark:bg-green-950/30 rounded-2xl flex items-center justify-center text-green-600 dark:text-green-400 shrink-0">
+                <i class="fa-solid fa-boxes-stacked text-lg"></i>
+            </div>
+            <div>
+                <h1 class="text-2xl font-black tracking-tight text-gray-900 dark:text-white">Catálogo de maniobras</h1>
+                <p class="text-sm text-gray-400 dark:text-gray-500 font-medium mt-0.5">
+                    Administra los tipos de maniobra autorizados en el sistema
+                </p>
+            </div>
         </div>
         
         <div>
@@ -112,7 +117,7 @@
         {{-- Paginación premium --}}
         @if($maniobras->hasPages())
             <div class="px-6 py-4 border-t border-gray-100 dark:border-white/5 bg-gray-50/30 dark:bg-white/2">
-                {{ $maniobras->links() }}
+                {{ $maniobras->links('components.pagination') }}
             </div>
         @endif
     </div>

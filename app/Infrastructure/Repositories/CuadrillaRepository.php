@@ -365,13 +365,14 @@ class CuadrillaRepository implements CuadrillaRepositoryInterface
         }
 
         return new CuadrillaDTO(
-            id:           (int) ($item['idCuadrilla'] ?? $item['IDCUADRILLAS'] ?? $item['IDCUADRILLA'] ?? 0),
-            nombre:       (string) ($item['nombreCuadrilla'] ?? $item['NOMBRECUADRILLA'] ?? ''),
-            lider:        (string) ($item['liderCuadrilla'] ?? $item['LIDERCUADRILLA'] ?? ''),
-            miembros:     (int) ($item['miembros'] ?? $item['MIEMBROS'] ?? 0),
-            puntoVentaId: (string) ($item['puntoVenta'] ?? $item['PUNTOVENTA'] ?? ''),
-            zona:         '',
-            tarifas:      TarifasManiobra::fromDynamic($tarifasMap)
+            id:               (int) ($item['idCuadrilla'] ?? $item['IDCUADRILLAS'] ?? $item['IDCUADRILLA'] ?? 0),
+            nombre:           (string) ($item['nombreCuadrilla'] ?? $item['NOMBRECUADRILLA'] ?? ''),
+            lider:            (string) ($item['liderCuadrilla'] ?? $item['LIDERCUADRILLA'] ?? ''),
+            miembros:         (int) ($item['miembros'] ?? $item['MIEMBROS'] ?? 0),
+            puntoVentaId:     (string) ($item['puntoVenta'] ?? $item['PUNTOVENTA'] ?? ''),
+            zona:             '',
+            tarifas:          TarifasManiobra::fromDynamic($tarifasMap),
+            puntoVentaNombre: (string) ($item['nombrePuntoVenta'] ?? $item['NOMBREPUNTOVENTA'] ?? $item['puntoVentaNombre'] ?? '')
         );
     }
 }

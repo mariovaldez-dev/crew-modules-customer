@@ -11,7 +11,8 @@ class CuadrillaDTO
         public readonly int $miembros,
         public readonly string $puntoVentaId, // WhsCode de OWHS (ej. 'ANGOS02')
         public readonly string $zona,
-        public readonly TarifasManiobra $tarifas
+        public readonly TarifasManiobra $tarifas,
+        public readonly ?string $puntoVentaNombre = null
     ) {}
 
     public function toArray(): array
@@ -22,6 +23,7 @@ class CuadrillaDTO
             'lider' => $this->lider,
             'miembros' => $this->miembros,
             'puntoVentaId' => $this->puntoVentaId,
+            'puntoVentaNombre' => $this->puntoVentaNombre ?: $this->puntoVentaId,
             'zona' => $this->zona,
             'tarifas' => $this->tarifas->toArray(),
         ];
