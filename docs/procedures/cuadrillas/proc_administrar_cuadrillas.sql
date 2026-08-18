@@ -268,20 +268,43 @@ BEGIN
         END
 
         ---------------------------------------------------------
-        -- OPCION 3 - INHABILITAR
+        -- OPCION 3 - INHABILITAR / ELIMINAR CUADRILLA
         ---------------------------------------------------------
         ELSE IF @Opcion = 3
         BEGIN
+            IF EXISTS (SELECT 1 FROM mov_pdm_maniobras_ejecutadas WHERE idu_cuadrilla = @idCuadrilla AND opc_estatus = 1)
+            BEGIN
+                SET @mensaje = 'No se puede eliminar la cuadrilla porque tiene maniobras registradas o cortes liquidados asociados.';
+                SET @estado = -103;
+            END
+            ELSE
+            BEGIN
+                UPDATE mae_pdm_cuadrillas
+                SET
+                    opc_estatus = 0,
+                    num_usuario_modifico = @usuario,
+                    fec_actualizacion = GETDATE()
+                WHERE idu_cuadrilla = @idCuadrilla;
 
-            UPDATE mae_pdm_cuadrillas
-            SET
-                opc_estatus = 0,
-                num_usuario_modifico = @usuario,
-                fec_actualizacion = GETDATE()
-            WHERE idu_cuadrilla = @idCuadrilla;
-
-            SET @mensaje = 'Cuadrilla inhabilitada correctamente.';
-			SET @estado = 0;
+                SET @mensaje = 'Cuadrilla inhabilitada correctamente.';
+                SET @estado = 0;
+            END
+        END
+        ---------------------------------------------------------
+        -- OPCION 4 - VALIDAR SI TIENE MANIOBRAS O LIQUIDACIONES ASOCIADAS
+        ---------------------------------------------------------
+        ELSE IF @Opcion = 4
+        BEGIN
+            IF EXISTS (SELECT 1 FROM mov_pdm_maniobras_ejecutadas WHERE idu_cuadrilla = @idCuadrilla AND opc_estatus = 1)
+            BEGIN
+                SET @estado = 1; -- Tiene maniobras o liquidaciones
+                SET @mensaje = 'La cuadrilla tiene maniobras registradas o cortes liquidados asociados.';
+            END
+            ELSE
+            BEGIN
+                SET @estado = 0; -- No tiene
+                SET @mensaje = 'Sin maniobras asociadas.';
+            END
         END
         ELSE
         BEGIN

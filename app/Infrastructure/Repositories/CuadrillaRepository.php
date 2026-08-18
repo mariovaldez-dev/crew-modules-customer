@@ -288,12 +288,30 @@ class CuadrillaRepository implements CuadrillaRepositoryInterface
 
     public function hasLiquidacionesEnProceso(int $cuadrillaId): bool
     {
-        return false;
+        return $this->hasManiobrasEnProceso($cuadrillaId);
     }
 
     public function hasManiobrasEnProceso(int $cuadrillaId): bool
     {
-        return false;
+        try {
+            DB::connection('maniobras')->statement("SET ANSI_NULLS ON");
+            DB::connection('maniobras')->statement("SET ANSI_WARNINGS ON");
+
+            $results = DB::connection('maniobras')->select(
+                "EXEC proc_pdm_administrar_cuadrillas @Opcion = 4, @idCuadrilla = ?",
+                [$cuadrillaId]
+            );
+
+            if (empty($results)) {
+                return false;
+            }
+
+            $response = $results[0];
+            return isset($response->estado) && (int) $response->estado === 1;
+        } catch (\Throwable $e) {
+            Log::error('Error en CuadrillaRepository@hasManiobrasEnProceso', ['id' => $cuadrillaId, 'error' => $e->getMessage()]);
+            return false;
+        }
     }
 
     public function exists(string $nombre, string $lider, string $puntoVentaId, ?int $excludeId = null): bool
