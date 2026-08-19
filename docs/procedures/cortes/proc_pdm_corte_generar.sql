@@ -32,7 +32,22 @@ BEGIN
             END
         END
 
-        -- 2. Insertar encabezado de corte en borrador
+        -- 2. Validar que existan maniobras pendientes para incluir en el corte
+        IF NOT EXISTS (
+            SELECT 1 
+            FROM mov_pdm_maniobras_ejecutadas m
+            INNER JOIN mae_pdm_cuadrillas c ON m.idu_cuadrilla = c.idu_cuadrilla
+            WHERE c.clv_zona = @Zona
+              AND m.idu_corte = 0
+              AND m.opc_estatus = 1
+              AND CAST(m.fec_registro AS DATE) <= @FechaFin
+        )
+        BEGIN
+            SELECT 404 AS estatus, 'No hay movimientos para generar corte en la fecha establecida' AS mensaje, '{}' AS resultado;
+            RETURN;
+        END
+
+        -- 3. Insertar encabezado de corte en borrador
         DECLARE @NuevoCorteID INT;
         
         INSERT INTO mae_pdm_cortes_liquidacion (clv_zona, fec_inicio, fec_fin, opc_estatus)

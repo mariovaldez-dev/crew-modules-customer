@@ -46,6 +46,7 @@ class NuevaManiobraForm extends Component
 
     public function openModal()
     {
+        $this->resetErrorBag();
         $this->resetValidation();
         $this->fecha = date('Y-m-d');
         $this->almacenId = '';
@@ -69,6 +70,8 @@ class NuevaManiobraForm extends Component
         }
     }
 
+    public string $mensajeConfirmacionZero = '¿Estás seguro de guardar la maniobra en $0?';
+
     public function save(CreateManiobraManualUseCase $createUseCase)
     {
         $this->validate([
@@ -76,7 +79,7 @@ class NuevaManiobraForm extends Component
             'almacenId' => 'required',
             'cuadrillaId' => 'required',
             'tipoManiobraId' => 'required',
-            'toneladas' => 'required|numeric|min:0.001',
+            'toneladas' => 'nullable|numeric|min:0',
             'documentoSap' => 'nullable|string|max:50',
         ], [
             'fecha.required' => 'La fecha es obligatoria.',
@@ -85,27 +88,82 @@ class NuevaManiobraForm extends Component
             'almacenId.required' => 'El almacén es obligatorio.',
             'cuadrillaId.required' => 'La cuadrilla es obligatoria.',
             'tipoManiobraId.required' => 'El tipo de maniobra es obligatorio.',
-            'toneladas.required' => 'Las toneladas son obligatorias.',
             'toneladas.numeric' => 'Las toneladas deben ser un valor numérico.',
-            'toneladas.min' => 'Las toneladas deben ser mayores a 0.',
+            'toneladas.min' => 'Las toneladas no pueden ser negativas.',
             'documentoSap.max' => 'El documento SAP no debe exceder 50 caracteres.',
         ]);
 
+        $precioTarifa = $this->obtenerPrecioTarifa();
+        $toneladasNum = (float) ($this->toneladas ?: 0);
+
+        if ($precioTarifa <= 0) {
+            $this->mensajeConfirmacionZero = '¿Estás seguro de guardar la maniobra en $0?';
+            $this->dispatch('open-modal', 'confirmar-maniobra-cero-modal');
+            return;
+        }
+
+        if ($toneladasNum <= 0) {
+            $this->mensajeConfirmacionZero = '¿Estás seguro de guardar la maniobra en 0 toneladas?';
+            $this->dispatch('open-modal', 'confirmar-maniobra-cero-modal');
+            return;
+        }
+
+        $this->ejecutarGuardado($createUseCase);
+    }
+
+    public function confirmarSaveZero(CreateManiobraManualUseCase $createUseCase)
+    {
+        $this->ejecutarGuardado($createUseCase);
+    }
+
+    private function obtenerPrecioTarifa(): float
+    {
+        if (empty($this->cuadrillaId) || empty($this->tipoManiobraId)) {
+            return 0.0;
+        }
+
         try {
-            // Mock de ID de usuario
+            $cuadrillaRepo = app(\App\Domain\Cuadrilla\CuadrillaRepositoryInterface::class);
+            $cuadrilla = $cuadrillaRepo->findById((int) $this->cuadrillaId);
+
+            if (!$cuadrilla || !$cuadrilla->tarifas) {
+                return 0.0;
+            }
+
+            $dynamicMap = $cuadrilla->tarifas->dynamic;
+            $tipoId = (int) $this->tipoManiobraId;
+
+            if (array_key_exists($tipoId, $dynamicMap) && $dynamicMap[$tipoId] !== null) {
+                return (float) $dynamicMap[$tipoId];
+            }
+
+            if (array_key_exists((string) $tipoId, $dynamicMap) && $dynamicMap[(string) $tipoId] !== null) {
+                return (float) $dynamicMap[(string) $tipoId];
+            }
+
+            return 0.0;
+        } catch (\Throwable $e) {
+            return 0.0;
+        }
+    }
+
+    private function ejecutarGuardado(CreateManiobraManualUseCase $createUseCase)
+    {
+        try {
             $usuarioId = Auth::user()?->id ?? 'TEST_USER_01';
-            
+
             $mensaje = $createUseCase->execute(
                 fecha: $this->fecha,
                 almacenId: (string) $this->almacenId,
                 cuadrillaId: (int) $this->cuadrillaId,
                 tipoManiobraId: (int) $this->tipoManiobraId,
-                toneladas: (float) $this->toneladas,
+                toneladas: (float) ($this->toneladas ?: 0),
                 usuarioId: $usuarioId,
                 documentoSap: $this->documentoSap ?: null
             );
 
             $this->dispatch('notify', ['message' => $mensaje, 'type' => 'success']);
+            $this->dispatch('close-modal', 'confirmar-maniobra-cero-modal');
             $this->dispatch('close-modal', 'nueva-maniobra-modal');
             $this->dispatch('maniobra-registrada');
 

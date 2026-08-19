@@ -23,10 +23,23 @@
         .header td {
             vertical-align: top;
         }
+        .logo-cell {
+            width: 130px;
+            vertical-align: middle;
+            padding-right: 15px;
+        }
+        .logo-img {
+            max-height: 75px;
+            max-width: 180px;
+            height: auto;
+            width: auto;
+            margin-bottom: 8px;
+            display: block;
+        }
         .title {
-            font-size: 24px;
+            font-size: 18px;
             font-weight: bold;
-            color: #16a34a;
+            color: #10162B;
             margin: 0 0 5px 0;
         }
         .subtitle {
@@ -148,11 +161,15 @@
     <div class="header">
         <table>
             <tr>
-                <td>
+                
+                <td style="vertical-align: middle;">
+                    @if(file_exists(public_path('logo.png')))
+                        <img src="data:image/png;base64,{{ base64_encode(file_get_contents(public_path('logo.png'))) }}" class="logo-img" alt="Logo">
+                    @endif
                     <h1 class="title">Corte de Liquidación</h1>
-                    <p class="subtitle">Grupo Impulsora - Módulo de Operaciones</p>
+                    <p class="subtitle">Grupo Impulsora - Módulo de Maniobras</p>
                 </td>
-                <td class="meta-info">
+                <td class="meta-info" style="vertical-align: middle;">
                     <p><strong>Folio:</strong> {{ $corte['folio'] ?? 'Borrador' }}</p>
                     <p><strong>Estado:</strong> {{ $corte['estado'] ?? 'Desconocido' }}</p>
                     <p><strong>Zona:</strong> {{ $zona }}</p>

@@ -170,7 +170,7 @@ class CorteRepository implements CorteRepositoryInterface
             throw new Exception("[$spNombre] Respuesta malformada del SP: no contiene estatus.");
         }
 
-        if ($normalized['estatus'] != 0 && $normalized['estatus'] != 409) {
+        if ($normalized['estatus'] != 0 && $normalized['estatus'] != 409 && $normalized['estatus'] != 404) {
             Log::warning("[CORTE-LIQUIDACION] [$spNombre] SP returned business error: " . ($normalized['mensaje'] ?? 'Sin mensaje'));
             throw new Exception($normalized['mensaje'] ?? 'Error desconocido en la base de datos.');
         }

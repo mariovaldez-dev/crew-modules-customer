@@ -159,12 +159,14 @@
             :class="{
                 'bg-white dark:bg-[#1A2227] border-green-100 shadow-green-900/5 dark:shadow-green-900/20': type === 'success',
                 'bg-white dark:bg-[#1A2227] border-red-100 shadow-red-900/5 dark:shadow-red-900/20': type === 'error',
+                'bg-white dark:bg-[#1A2227] border-amber-100 shadow-amber-900/5 dark:shadow-amber-900/20': type === 'warning',
                 'bg-white dark:bg-[#1A2227] border-blue-100 shadow-blue-900/5 dark:shadow-blue-900/20': type === 'info'
             }">
 
             <div class="w-1.5 shrink-0" :class="{
                 'bg-green-500': type === 'success',
                 'bg-red-500': type === 'error',
+                'bg-amber-500': type === 'warning',
                 'bg-blue-500': type === 'info'
             }"></div>
 
@@ -175,9 +177,19 @@
                             <i class="fa-solid fa-check"></i>
                         </div>
                     </template>
+                    <template x-if="type === 'warning'">
+                        <div class="w-8 h-8 rounded-full bg-amber-50 dark:bg-amber-500/10 flex items-center justify-center text-amber-600 dark:text-amber-400" style="background-color: #FEF3C7; color: #D97706;">
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                        </div>
+                    </template>
                     <template x-if="type === 'error'">
                         <div class="w-8 h-8 rounded-full bg-red-50 dark:bg-red-500/10 flex items-center justify-center text-red-600 dark:text-red-400">
-                            <i class="fa-solid fa-triangle-exclamation"></i>
+                            <i class="fa-solid fa-circle-exclamation"></i>
+                        </div>
+                    </template>
+                    <template x-if="type === 'info'">
+                        <div class="w-8 h-8 rounded-full bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center text-blue-600 dark:text-blue-400">
+                            <i class="fa-solid fa-circle-info"></i>
                         </div>
                     </template>
                 </div>
@@ -185,9 +197,10 @@
                 <div class="flex-1 min-w-0">
                     <h4 class="text-[13px] font-black uppercase tracking-widest leading-none mb-1" :class="{
                         'text-green-600 dark:text-green-400': type === 'success',
+                        'text-amber-600 dark:text-amber-400': type === 'warning',
                         'text-red-600 dark:text-red-400': type === 'error',
                         'text-blue-600 dark:text-blue-400': type === 'info'
-                    }" x-text="type === 'success' ? 'Éxito' : (type === 'error' ? 'Error' : 'Aviso')"></h4>
+                    }" x-text="type === 'success' ? 'Éxito' : (type === 'warning' ? 'Advertencia' : (type === 'error' ? 'Error' : 'Aviso'))"></h4>
                     <p class="text-[14px] text-gray-700 dark:text-gray-300 font-medium leading-snug" x-text="message"></p>
                 </div>
 
