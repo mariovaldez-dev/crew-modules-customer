@@ -1,4 +1,4 @@
-DROP TABLE mov_pdm_maniobras_ejecutadas
+DROP TABLE IF EXISTS dbo.mov_pdm_maniobras_ejecutadas;
 CREATE TABLE dbo.mov_pdm_maniobras_ejecutadas
 (
     idu_maniobra            INT IDENTITY(1,1) NOT NULL,
@@ -8,6 +8,7 @@ CREATE TABLE dbo.mov_pdm_maniobras_ejecutadas
     idu_cuadrilla           INT NOT NULL DEFAULT 0,
     num_tipodocumento       SMALLINT NOT NULL DEFAULT 0,
     num_documentosap        VARCHAR(10) NOT NULL DEFAULT '',
+    num_linea_documento     INT NULL DEFAULT -1,
     num_toneladas           NUMERIC(10,2) NOT NULL DEFAULT 0.00,
     opc_estatus             SMALLINT NOT NULL DEFAULT 0,
     idu_corte               INT NOT NULL DEFAULT 0,
