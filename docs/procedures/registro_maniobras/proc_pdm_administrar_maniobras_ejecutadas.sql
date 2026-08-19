@@ -36,7 +36,7 @@ BEGIN
 						WHERE idu_cuadrilla = @idCuadrilla 
 						AND idu_tipomaniobra = @idTipoManiobra),0)
 
-		IF @tarifas > 0
+		IF @tarifas >= 0
 		BEGIN
 			INSERT INTO dbo.mov_pdm_maniobras_ejecutadas
 			(

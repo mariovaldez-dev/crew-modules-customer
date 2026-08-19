@@ -107,6 +107,18 @@ class CorteIndex extends Component
                 return;
             }
 
+            if (isset($res['estatus']) && (int) $res['estatus'] === 404) {
+                $mensajeWarning = $res['mensaje'] ?? 'No hay movimientos para generar corte en la fecha establecida';
+                $this->dispatch('notify', ['message' => $mensajeWarning, 'type' => 'warning']);
+                return;
+            }
+
+            if (isset($res['estatus']) && (int) $res['estatus'] !== 0) {
+                $mensajeError = $res['mensaje'] ?? 'No se pudo generar el corte.';
+                $this->dispatch('notify', ['message' => $mensajeError, 'type' => 'warning']);
+                return;
+            }
+
             Log::info("[CORTE-LIQUIDACION] [UI-Index] Corte generado exitosamente.");
             
             $this->dispatch('notify', ['message' => 'Corte generado exitosamente', 'type' => 'success']);
@@ -116,7 +128,8 @@ class CorteIndex extends Component
             $this->dispatch('close-confirmar-reemplazo');
         } catch (\Exception $e) {
             Log::error("[CORTE-LIQUIDACION] [UI-Index] Error al generar corte: " . $e->getMessage());
-            $this->dispatch('notify', ['message' => $e->getMessage(), 'type' => 'error']);
+            $tipoNotificacion = (str_contains($e->getMessage(), 'No hay movimientos') || str_contains($e->getMessage(), 'movimientos')) ? 'warning' : 'error';
+            $this->dispatch('notify', ['message' => $e->getMessage(), 'type' => $tipoNotificacion]);
         }
     }
 

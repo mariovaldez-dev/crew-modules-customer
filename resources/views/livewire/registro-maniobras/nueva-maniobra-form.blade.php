@@ -1,3 +1,4 @@
+<div>
 <x-modal name="nueva-maniobra-modal" title="Alta Manual de Maniobra" maxWidth="lg">
     <form wire:submit.prevent="save" wire:init="loadData">
         
@@ -49,12 +50,12 @@
                     </div>
 
                     <div>
-                        <x-label for="toneladas" value="Toneladas *" />
+                        <x-label for="toneladas" value="Toneladas" />
                         <div class="relative w-full">
                             <input 
                                 type="number" 
                                 id="toneladas" 
-                                wire:model="toneladas" 
+                                wire:model.live.debounce.300ms="toneladas" 
                                 step="0.001" 
                                 min="0.001"
                                 class="w-full h-12 border-gray-200 dark:border-white/10 bg-white dark:bg-[#1E293B] rounded-2xl pr-12 pl-4 text-sm text-gray-900 dark:text-white focus:border-green-500 focus:ring-2 focus:ring-green-500/50 dark:focus:ring-green-500/30 shadow-sm transition-all duration-300 hover:border-gray-300 dark:hover:border-white/20 placeholder:text-gray-400 dark:placeholder:text-gray-500"
@@ -86,3 +87,14 @@
         </x-slot>
     </form>
 </x-modal>
+
+<x-confirm-modal 
+    name="confirmar-maniobra-cero-modal"
+    title="Alerta de Confirmación"
+    :message="$mensajeConfirmacionZero"
+    confirmText="Sí"
+    confirmColor="warning"
+    confirmAction="confirmarSaveZero"
+    :autoClose="false"
+/>
+</div>

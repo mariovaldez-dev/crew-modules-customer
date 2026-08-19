@@ -103,7 +103,7 @@ class CuadrillaRepository implements CuadrillaRepositoryInterface
 
             $results = DB::connection('maniobras')->select(
                 "EXEC proc_consultar_cuadrillas @ClaveZona = ?",
-                [$claveZona]
+                ['']
             );
 
             if (empty($results)) {
@@ -357,8 +357,8 @@ class CuadrillaRepository implements CuadrillaRepositoryInterface
         $tarifasMap = [];
         foreach ((array) $tarifasArray as $t) {
             $tArr = (array) $t;
-            $tipoId = (int) ($tArr['idTipoManiobra'] ?? $tArr['IDTIPOMANIOBRA'] ?? 0);
-            $tarifaVal = (float) ($tArr['tarifa'] ?? $tArr['TARIFA'] ?? 0);
+            $tipoId = (int) ($tArr['idTipoManiobra'] ?? $tArr['IDTIPOMANIOBRA'] ?? $tArr['idu_tipomaniobra'] ?? $tArr['IDU_TIPOMANIOBRA'] ?? 0);
+            $tarifaVal = (float) ($tArr['tarifa'] ?? $tArr['TARIFA'] ?? $tArr['num_tarifa'] ?? $tArr['NUM_TARIFA'] ?? $tArr['precio'] ?? $tArr['PRECIO'] ?? 0);
             if ($tipoId > 0) {
                 $tarifasMap[$tipoId] = $tarifaVal;
             }

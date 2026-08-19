@@ -23,7 +23,6 @@ class CreateManiobraManualUseCase
         if (empty($almacenId)) throw new Exception("El almacén es obligatorio.");
         if ($cuadrillaId <= 0) throw new Exception("La cuadrilla es obligatoria.");
         if ($tipoManiobraId <= 0) throw new Exception("El tipo de maniobra es obligatorio.");
-        if ($toneladas <= 0) throw new Exception("Las toneladas deben ser mayores a 0.");
 
         $fechaObj = \DateTimeImmutable::createFromFormat('Y-m-d', $fecha);
         if (!$fechaObj) throw new Exception("Formato de fecha inválido.");
