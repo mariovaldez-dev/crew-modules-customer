@@ -7,7 +7,8 @@ CREATE OR ALTER PROCEDURE proc_pdm_administrar_maniobras_ejecutadas
     @documentoSap       INT = 0,
     @toneladas          NUMERIC(10,2) = 0,
     @usuario            INT = 0,
-    @fecha              DATETIME = NULL
+    @fecha              DATETIME = NULL,
+    @numLineaDocumento  INT = -1
 )
 AS
 /**********************************************************************************
@@ -19,7 +20,8 @@ EXEC dbo.proc_pdm_administrar_maniobras_ejecutadas
     @documentoSap = '0',
     @toneladas = 24.50,
     @usuario = 15,
-    @fecha = '2026-08-10';
+    @fecha = '2026-08-10',
+    @numLineaDocumento = 1;
 
 *********************************************************************************/
 BEGIN
@@ -51,7 +53,8 @@ BEGIN
 				num_usuario_registro,
 				num_usuario_modifico,
 				fec_registro,
-				fec_actualizacion
+				fec_actualizacion,
+				num_linea_documento
 			)
 			VALUES
 			(
@@ -66,7 +69,8 @@ BEGIN
 				@usuario,
 				@usuario,
 				COALESCE(@fecha, GETDATE()),
-				GETDATE()
+				GETDATE(),
+				@numLineaDocumento
 			);
 
 			SET @mensaje = 'Maniobra registrada correctamente.';
