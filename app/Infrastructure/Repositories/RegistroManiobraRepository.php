@@ -106,6 +106,10 @@ class RegistroManiobraRepository implements RegistroManiobraRepositoryInterface
                 $nombrePuntoVenta = $item['nombrePuntoVenta'] ?? $item['NOMBREPUNTOVENTA'] ?? $item['nombreAlmacen'] ?? $item['NOMBREALMACEN'] ?? null;
                 $folioCorteVal = $item['folioCorte'] ?? $item['FOLIOCORTE'] ?? null;
 
+                $tarifaManiobra = (float) ($item['numeroTarifaManiobra'] ?? $item['NUMEROTARIFAMANIOBRA'] ?? 0);
+                $toneladasVal = (float) ($item['numeroToneladas'] ?? $item['NUMEROTONELADAS'] ?? 0);
+                $montoTotalVal = round($toneladasVal * $tarifaManiobra, 2);
+
                 $dto = new RegistroManiobraDTO(
                     id: $idManiobra,
                     folio: $folioFormatted,
@@ -116,12 +120,14 @@ class RegistroManiobraRepository implements RegistroManiobraRepositoryInterface
                     cuadrillaNombre: $item['nombreCuadrilla'] ?? $item['NOMBRECUADRILLA'] ?? '',
                     tipoManiobraId: (int) ($item['idTipoManiobra'] ?? $item['IDTIPOMANIOBRA'] ?? 0),
                     tipoManiobraNombre: $item['nombreManiobra'] ?? $item['NOMBREMANIOBRA'] ?? '',
-                    toneladas: (float) ($item['numeroToneladas'] ?? $item['NUMEROTONELADAS'] ?? 0),
+                    toneladas: $toneladasVal,
                     corteId: $corteId,
                     folioCorte: $folioCorteVal,
                     estatusCiclo: $estatusCiclo,
                     origen: $item['origen'] ?? $item['ORIGEN'] ?? 'APP',
-                    documentoSap: $item['numeroDocumentoSAP'] ?? $item['NUMERODOCUMENTOSAP'] ?? null
+                    documentoSap: $item['numeroDocumentoSAP'] ?? $item['NUMERODOCUMENTOSAP'] ?? null,
+                    tarifaManiobra: $tarifaManiobra,
+                    montoTotal: $montoTotalVal
                 );
 
                 if (!empty($filtros['estado'])) {
@@ -166,6 +172,8 @@ class RegistroManiobraRepository implements RegistroManiobraRepositoryInterface
 
             $results = DB::connection('maniobras')->select(
                 "EXEC dbo.proc_pdm_administrar_maniobras_ejecutadas
+                    @Opcion = 1,
+                    @IdManiobra = 0,
                     @idTipoManiobra = ?,
                     @idPuntoVenta = ?,
                     @idCuadrilla = ?,
@@ -179,7 +187,7 @@ class RegistroManiobraRepository implements RegistroManiobraRepositoryInterface
                     $maniobra->almacenId,
                     $maniobra->cuadrillaId,
                     0,
-                    (int) $maniobra->documentoSap,
+                    (string) ($maniobra->documentoSap ?? ''),
                     $maniobra->toneladas,
                     (int) $usuarioId,
                     $fechaString
@@ -199,6 +207,107 @@ class RegistroManiobraRepository implements RegistroManiobraRepositoryInterface
             return $response->mensaje ?? 'Maniobra registrada correctamente.';
         } catch (\Throwable $e) {
             Log::error("Exception en RegistroManiobraRepository@create: " . $e->getMessage(), ['exception' => $e]);
+            throw new Exception($e->getMessage());
+        }
+    }
+
+    public function update(int $id, ManiobraManualDTO $maniobra): string
+    {
+        $usuarioId = auth()->user()?->id ?? 0;
+        $fechaString = $maniobra->fecha->format('Y-m-d H:i:s');
+
+        Log::info("CONSULTA REAL A BD (SP): proc_pdm_administrar_maniobras_ejecutadas (Edición)", [
+            'id' => $id,
+            'tipoManiobraId' => $maniobra->tipoManiobraId,
+            'almacenId' => $maniobra->almacenId,
+            'cuadrillaId' => $maniobra->cuadrillaId,
+            'documentoSap' => $maniobra->documentoSap,
+            'toneladas' => $maniobra->toneladas,
+            'usuarioId' => $usuarioId,
+            'fecha' => $fechaString
+        ]);
+
+        try {
+            DB::connection('maniobras')->statement("SET ANSI_NULLS ON");
+            DB::connection('maniobras')->statement("SET ANSI_WARNINGS ON");
+
+            $results = DB::connection('maniobras')->select(
+                "EXEC dbo.proc_pdm_administrar_maniobras_ejecutadas
+                    @Opcion = 2,
+                    @IdManiobra = ?,
+                    @idTipoManiobra = ?,
+                    @idPuntoVenta = ?,
+                    @idCuadrilla = ?,
+                    @serieDocumento = ?,
+                    @documentoSap = ?,
+                    @toneladas = ?,
+                    @usuario = ?,
+                    @fecha = ?",
+                [
+                    $id,
+                    $maniobra->tipoManiobraId,
+                    $maniobra->almacenId,
+                    $maniobra->cuadrillaId,
+                    0,
+                    (string) ($maniobra->documentoSap ?? ''),
+                    $maniobra->toneladas,
+                    (int) $usuarioId,
+                    $fechaString
+                ]
+            );
+
+            if (empty($results)) {
+                throw new Exception("No se recibió respuesta de la base de datos.");
+            }
+
+            $response = $results[0];
+
+            if (!isset($response->estado) || (int) $response->estado !== 0) {
+                throw new Exception($response->mensaje ?? 'Error al actualizar maniobra');
+            }
+
+            return $response->mensaje ?? 'Maniobra actualizada correctamente.';
+        } catch (\Throwable $e) {
+            Log::error("Exception en RegistroManiobraRepository@update: " . $e->getMessage(), ['exception' => $e]);
+            throw new Exception($e->getMessage());
+        }
+    }
+
+    public function delete(int $id, int|string $usuarioId): string
+    {
+        Log::info("CONSULTA REAL A BD (SP): proc_pdm_administrar_maniobras_ejecutadas (Eliminar Lógico)", [
+            'id' => $id,
+            'usuarioId' => $usuarioId
+        ]);
+
+        try {
+            DB::connection('maniobras')->statement("SET ANSI_NULLS ON");
+            DB::connection('maniobras')->statement("SET ANSI_WARNINGS ON");
+
+            $results = DB::connection('maniobras')->select(
+                "EXEC dbo.proc_pdm_administrar_maniobras_ejecutadas
+                    @Opcion = 3,
+                    @IdManiobra = ?,
+                    @usuario = ?",
+                [
+                    $id,
+                    (int) $usuarioId
+                ]
+            );
+
+            if (empty($results)) {
+                throw new Exception("No se recibió respuesta de la base de datos.");
+            }
+
+            $response = $results[0];
+
+            if (!isset($response->estado) || (int) $response->estado !== 0) {
+                throw new Exception($response->mensaje ?? 'Error al eliminar maniobra');
+            }
+
+            return $response->mensaje ?? 'Maniobra eliminada correctamente.';
+        } catch (\Throwable $e) {
+            Log::error("Exception en RegistroManiobraRepository@delete: " . $e->getMessage(), ['exception' => $e]);
             throw new Exception($e->getMessage());
         }
     }

@@ -17,6 +17,7 @@ class RegistroIndex extends Component
 
     public bool $readyToLoad = false;
     public array $maniobrasAll = [];
+    public ?int $maniobraToDeleteId = null;
 
     protected $listeners = [
         'maniobra-registrada' => 'refreshData'
@@ -74,6 +75,47 @@ class RegistroIndex extends Component
         ];
         $dtos = $useCase->execute($filtrosFechas, $this->zonaUsuario, $this->rolUsuario);
         $this->maniobrasAll = array_map(fn($dto) => $dto->toArray(), $dtos);
+    }
+
+    public function editarManiobra(int $id)
+    {
+        foreach ($this->maniobrasAll as $item) {
+            if ((int) $item['id'] === $id) {
+                // Verificar que no esté liquidada
+                if ((int) ($item['estatusCiclo'] ?? 0) === 2) {
+                    $this->dispatch('notify', ['message' => 'No se puede editar una maniobra liquidada.', 'type' => 'error']);
+                    return;
+                }
+                $this->dispatch('open-editar-maniobra-modal', $item);
+                return;
+            }
+        }
+    }
+
+    public function confirmarEliminar(int $id)
+    {
+        $this->maniobraToDeleteId = $id;
+        $this->dispatch('open-modal', 'confirmar-eliminar-maniobra-modal');
+    }
+
+    public function eliminarManiobra(\App\Domain\RegistroManiobra\DeleteManiobraUseCase $deleteUseCase, ListRegistroManiobrasUseCase $listUseCase)
+    {
+        if (!$this->maniobraToDeleteId) {
+            return;
+        }
+
+        try {
+            $usuarioId = Auth::user()?->id ?? 1;
+            $mensaje = $deleteUseCase->execute($this->maniobraToDeleteId, $usuarioId);
+            
+            $this->dispatch('close-modal', 'confirmar-eliminar-maniobra-modal');
+            $this->dispatch('notify', ['message' => $mensaje, 'type' => 'success']);
+            $this->maniobraToDeleteId = null;
+            $this->refreshData($listUseCase);
+        } catch (Exception $e) {
+            $this->dispatch('close-modal', 'confirmar-eliminar-maniobra-modal');
+            $this->dispatch('notify', ['message' => $e->getMessage(), 'type' => 'error']);
+        }
     }
 
     public function export(ExportManiobrasUseCase $exportUseCase)
@@ -166,6 +208,8 @@ class RegistroIndex extends Component
             $obj->fecha = new \DateTimeImmutable($obj->fecha);
             $obj->estatusCiclo = (int) ($item['estatusCiclo'] ?? 0);
             $obj->folioCorte = $item['folioCorte'] ?? null;
+            $obj->tarifaManiobra = (float) ($item['tarifaManiobra'] ?? 0);
+            $obj->montoTotal = (float) ($item['montoTotal'] ?? 0);
             return $obj;
         }, $paginated->items());
         

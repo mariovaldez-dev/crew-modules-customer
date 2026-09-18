@@ -3,6 +3,7 @@
 namespace App\UI\Livewire\RegistroManiobras;
 
 use App\Domain\RegistroManiobra\CreateManiobraManualUseCase;
+use App\Domain\RegistroManiobra\UpdateManiobraManualUseCase;
 use App\Domain\RegistroManiobra\RegistroManiobraRepositoryInterface;
 use App\UI\Livewire\Traits\WithZonaScope;
 use Illuminate\Support\Facades\Auth;
@@ -13,6 +14,7 @@ class NuevaManiobraForm extends Component
 {
     use WithZonaScope;
 
+    public ?int $maniobraId = null;
     public string $fecha = '';
     public string $almacenId = '';
     public string $cuadrillaId = '';
@@ -25,7 +27,8 @@ class NuevaManiobraForm extends Component
     public array $tiposManiobra = [];
 
     protected $listeners = [
-        'open-nueva-maniobra-modal' => 'openModal'
+        'open-nueva-maniobra-modal' => 'openModal',
+        'open-editar-maniobra-modal' => 'openEditModal'
     ];
 
     public bool $readyToLoad = false;
@@ -48,6 +51,7 @@ class NuevaManiobraForm extends Component
     {
         $this->resetErrorBag();
         $this->resetValidation();
+        $this->maniobraId = null;
         $this->fecha = date('Y-m-d');
         $this->almacenId = '';
         $this->cuadrillaId = '';
@@ -56,6 +60,35 @@ class NuevaManiobraForm extends Component
         $this->documentoSap = '';
         $this->cuadrillas = [];
         
+        $this->dispatch('open-modal', 'nueva-maniobra-modal');
+    }
+
+    public function openEditModal(array $maniobra)
+    {
+        $this->resetErrorBag();
+        $this->resetValidation();
+        
+        if (!$this->readyToLoad) {
+            $this->loadData(app(RegistroManiobraRepositoryInterface::class));
+        }
+
+        $this->maniobraId = (int) ($maniobra['id'] ?? 0);
+        $this->fecha = !empty($maniobra['fecha']) ? substr($maniobra['fecha'], 0, 10) : date('Y-m-d');
+        $this->almacenId = (string) ($maniobra['almacenId'] ?? '');
+        $this->tipoManiobraId = (string) ($maniobra['tipoManiobraId'] ?? '');
+        $this->toneladas = (string) ($maniobra['toneladas'] ?? '');
+        $this->documentoSap = (string) ($maniobra['documentoSap'] ?? '');
+
+        // Cargar cuadrillas del almacén
+        if ($this->almacenId !== '') {
+            $repo = app(RegistroManiobraRepositoryInterface::class);
+            $this->cuadrillas = $repo->cuadrillasPorAlmacen($this->almacenId);
+        } else {
+            $this->cuadrillas = [];
+        }
+
+        $this->cuadrillaId = (string) ($maniobra['cuadrillaId'] ?? '');
+
         $this->dispatch('open-modal', 'nueva-maniobra-modal');
     }
 
@@ -93,6 +126,13 @@ class NuevaManiobraForm extends Component
             'documentoSap.max' => 'El documento SAP no debe exceder 50 caracteres.',
         ]);
 
+        // Si es edición, abrir modal de confirmación de edición (RQM03)
+        if ($this->maniobraId) {
+            $this->dispatch('open-modal', 'confirmar-editar-maniobra-modal');
+            return;
+        }
+
+        // Si es alta manual, verificar alertas de tarifa/toneladas cero
         $precioTarifa = $this->obtenerPrecioTarifa();
         $toneladasNum = (float) ($this->toneladas ?: 0);
 
@@ -109,6 +149,38 @@ class NuevaManiobraForm extends Component
         }
 
         $this->ejecutarGuardado($createUseCase);
+    }
+
+    public function confirmarEdicion(UpdateManiobraManualUseCase $updateUseCase)
+    {
+        try {
+            $usuarioId = Auth::user()?->id ?? 1;
+
+            $mensaje = $updateUseCase->execute(
+                id: $this->maniobraId,
+                fecha: $this->fecha,
+                almacenId: (string) $this->almacenId,
+                cuadrillaId: (int) $this->cuadrillaId,
+                tipoManiobraId: (int) $this->tipoManiobraId,
+                toneladas: (float) ($this->toneladas ?: 0),
+                usuarioId: $usuarioId,
+                documentoSap: $this->documentoSap ?: null
+            );
+
+            $this->dispatch('notify', ['message' => $mensaje, 'type' => 'success']);
+            $this->dispatch('close-modal', 'confirmar-editar-maniobra-modal');
+            $this->dispatch('close-modal', 'nueva-maniobra-modal');
+            $this->dispatch('maniobra-registrada');
+
+        } catch (Exception $e) {
+            $this->dispatch('close-modal', 'confirmar-editar-maniobra-modal');
+            $this->addError('form', $e->getMessage());
+        }
+    }
+
+    public function cancelarEdicion()
+    {
+        $this->dispatch('close-modal', 'confirmar-editar-maniobra-modal');
     }
 
     public function confirmarSaveZero(CreateManiobraManualUseCase $createUseCase)
@@ -150,7 +222,7 @@ class NuevaManiobraForm extends Component
     private function ejecutarGuardado(CreateManiobraManualUseCase $createUseCase)
     {
         try {
-            $usuarioId = Auth::user()?->id ?? 'TEST_USER_01';
+            $usuarioId = Auth::user()?->id ?? 1;
 
             $mensaje = $createUseCase->execute(
                 fecha: $this->fecha,
@@ -158,7 +230,7 @@ class NuevaManiobraForm extends Component
                 cuadrillaId: (int) $this->cuadrillaId,
                 tipoManiobraId: (int) $this->tipoManiobraId,
                 toneladas: (float) ($this->toneladas ?: 0),
-                usuarioId: $usuarioId,
+                usuarioId: (string) $usuarioId,
                 documentoSap: $this->documentoSap ?: null
             );
 
