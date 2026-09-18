@@ -1,5 +1,5 @@
 <div>
-<x-modal name="nueva-maniobra-modal" title="Alta Manual de Maniobra" maxWidth="lg">
+<x-modal name="nueva-maniobra-modal" :title="$maniobraId ? 'Editar Maniobra' : 'Alta Manual de Maniobra'" maxWidth="lg">
     <form wire:submit.prevent="save" wire:init="loadData">
         
         @if($errors->has('form'))
@@ -15,7 +15,7 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div class="col-span-1 sm:col-span-2">
                         <x-label for="fecha" value="Fecha *" />
-                        <x-date-input id="fecha" wire:model="fecha" disabled />
+                        <x-date-input id="fecha" wire:model="fecha" :max="date('Y-m-d')" disabled />
                         @error('fecha') <span class="text-xs text-red-500 mt-1 block font-medium">{{ $message }}</span> @enderror
                     </div>
 
@@ -81,13 +81,14 @@
                 Cancelar
             </x-button>
             <x-button type="button" wire:click="save" variant="primary">
-                <span wire:loading.remove wire:target="save">Registrar</span>
-                <span wire:loading wire:target="save">Registrando...</span>
+                <span wire:loading.remove wire:target="save">{{ $maniobraId ? 'Guardar' : 'Registrar' }}</span>
+                <span wire:loading wire:target="save">Procesando...</span>
             </x-button>
         </x-slot>
     </form>
 </x-modal>
 
+<!-- Modal confirmación maniobra cero (Alta) -->
 <x-confirm-modal 
     name="confirmar-maniobra-cero-modal"
     title="Alerta de Confirmación"
@@ -95,6 +96,17 @@
     confirmText="Sí"
     confirmColor="warning"
     confirmAction="confirmarSaveZero"
+    :autoClose="false"
+/>
+
+<!-- Modal confirmación edición (RQM03) -->
+<x-confirm-modal 
+    name="confirmar-editar-maniobra-modal"
+    title="Confirmar Edición"
+    message="¿Estás seguro de que deseas editar esta maniobra?"
+    confirmText="Confirmar"
+    confirmColor="warning"
+    confirmAction="confirmarEdicion"
     :autoClose="false"
 />
 </div>
