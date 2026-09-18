@@ -115,7 +115,7 @@
     <!-- Table Card -->
     <div class="bg-white dark:bg-[#131B20] border border-gray-100 dark:border-white/5 rounded-3xl shadow-sm overflow-hidden">
         <div class="overflow-x-auto custom-scrollbar">
-            <table class="w-full min-w-[1050px] text-left border-collapse">
+            <table class="w-full min-w-[1150px] text-left border-collapse">
                 <thead>
                     <tr class="bg-green-600 text-white text-[11px] font-bold uppercase tracking-wider">
                         <th class="px-4 py-3 whitespace-nowrap">Folio</th>
@@ -124,12 +124,14 @@
                         <th class="px-4 py-3 whitespace-nowrap">Almacén</th>
                         <th class="px-4 py-3 whitespace-nowrap">Cuadrilla</th>
                         <th class="px-4 py-3 whitespace-nowrap text-center">Toneladas</th>
+                        <th class="px-4 py-3 whitespace-nowrap text-right">Monto Total</th>
                         <th class="px-4 py-3 whitespace-nowrap">Doc SAP</th>
                         <th class="px-4 py-3 whitespace-nowrap text-center">Estado</th>
                         <th class="px-4 py-3 whitespace-nowrap">Corte</th>
+                        <th class="px-4 py-3 whitespace-nowrap text-center">Acciones</th>
                     </tr>
                 </thead>
-                <tbody wire:loading.class="hidden" class="{{ !$readyToLoad ? 'hidden' : '' }} divide-y divide-gray-100 dark:divide-white/5 text-[13px]">
+                <tbody wire:loading.class="hidden" wire:target="loadData,refreshData" class="{{ !$readyToLoad ? 'hidden' : '' }} divide-y divide-gray-100 dark:divide-white/5 text-[13px]">
                     @forelse($maniobras as $maniobra)
                         <tr class="group hover:bg-gray-50 dark:hover:bg-white/5 transition-colors duration-200">
                             <!-- Folio -->
@@ -144,6 +146,8 @@
                             <td class="px-4 py-3 whitespace-nowrap text-gray-700 dark:text-gray-300 font-medium">{{ $maniobra->cuadrillaNombre }}</td>
                             <!-- Toneladas -->
                             <td class="px-4 py-3 whitespace-nowrap text-center font-bold text-gray-900 dark:text-white">{{ rtrim(rtrim(number_format($maniobra->toneladas, 3, '.', ''), '0'), '.') }}</td>
+                            <!-- Monto Total (RQM01) -->
+                            <td class="px-4 py-3 whitespace-nowrap text-right font-bold text-gray-900 dark:text-white font-mono">$ {{ number_format($maniobra->montoTotal ?? 0, 2) }}</td>
                             <!-- Doc SAP -->
                             <td class="px-4 py-3 whitespace-nowrap text-gray-600 dark:text-gray-400 font-mono text-xs">{{ $maniobra->documentoSap ?? '' }}</td>
                             <!-- Estado (Badge) -->
@@ -151,16 +155,39 @@
                                 <x-status-badge :status="$maniobra->estado" />
                             </td>
                             <!-- Corte -->
-                            <td class="px-4 py-3 whitespace-nowrap text-gray-600 dark:text-gray-400 font-mono text-xs">
+                            <td class="px-2 py-3 whitespace-nowrap text-gray-600 dark:text-gray-400 font-mono text-xs">
                                 @if(($maniobra->estatusCiclo ?? 0) === 2)
                                     {{ ($maniobra->folioCorte ?? null) ?: ('LIQ-' . str_pad($maniobra->corteId ?? 0, 4, '0', STR_PAD_LEFT)) }}
+                                @endif
+                            </td>
+                            <!-- Acciones (RQM02 / RQM03) -->
+                            <td class="px-2 py-3 whitespace-nowrap text-center">
+                                @if(($maniobra->estatusCiclo ?? 0) === 0)
+                                    <div class="flex items-center justify-center gap-1.5">
+                                        <button 
+                                            wire:click="editarManiobra({{ $maniobra->id }})" 
+                                            class="w-8 h-8 rounded-xl bg-green-50 text-green-600 dark:bg-green-950/30 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900/50 flex items-center justify-center transition-colors shadow-xs" 
+                                            title="Editar maniobra"
+                                        >
+                                            <i class="fa-solid fa-pen text-xs"></i>
+                                        </button>
+                                        <button 
+                                            wire:click="confirmarEliminar({{ $maniobra->id }})" 
+                                            class="w-8 h-8 rounded-xl bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/50 flex items-center justify-center transition-colors shadow-xs" 
+                                            title="Eliminar maniobra"
+                                        >
+                                            <i class="fa-solid fa-trash-can text-xs"></i>
+                                        </button>
+                                    </div>
+                                @else
+                                    <span class="text-xs text-gray-300 dark:text-gray-600 select-none">—</span>
                                 @endif
                             </td>
                         </tr>
                     @empty
                         @if($readyToLoad)
                             <tr>
-                                <td colspan="9" class="px-4 py-16 text-center text-gray-400 dark:text-gray-500">
+                                <td colspan="11" class="px-4 py-16 text-center text-gray-400 dark:text-gray-500">
                                     <div class="flex flex-col items-center gap-3">
                                         <div class="w-14 h-14 rounded-full bg-gray-50 dark:bg-white/5 flex items-center justify-center text-xl text-gray-300 dark:text-gray-600 mb-1 border border-gray-100 dark:border-white/5">
                                             <i class="fa-solid fa-inbox"></i>
@@ -173,7 +200,7 @@
                         @endif
                     @endforelse
                 </tbody>
-                <tbody wire:loading.class.remove="hidden" class="{{ $readyToLoad ? 'hidden' : '' }} divide-y divide-gray-100 dark:divide-white/5 text-[13px]">
+                <tbody wire:loading.class.remove="hidden" wire:target="loadData,refreshData" class="{{ $readyToLoad ? 'hidden' : '' }} divide-y divide-gray-100 dark:divide-white/5 text-[13px]">
                     @for($i = 0; $i < 3; $i++)
                         <tr class="animate-pulse">
                             <td class="px-4 py-3"><div class="h-4 bg-gray-200 dark:bg-white/10 rounded w-16"></div></td>
@@ -182,9 +209,11 @@
                             <td class="px-4 py-3"><div class="h-4 bg-gray-200 dark:bg-white/10 rounded w-24"></div></td>
                             <td class="px-4 py-3"><div class="h-4 bg-gray-200 dark:bg-white/10 rounded w-16"></div></td>
                             <td class="px-4 py-3"><div class="h-4 bg-gray-200 dark:bg-white/10 rounded w-12 mx-auto"></div></td>
+                            <td class="px-4 py-3"><div class="h-4 bg-gray-200 dark:bg-white/10 rounded w-16 ml-auto"></div></td>
                             <td class="px-4 py-3"><div class="h-4 bg-gray-200 dark:bg-white/10 rounded w-16"></div></td>
                             <td class="px-4 py-3"><div class="h-5 bg-gray-200 dark:bg-white/10 rounded-full w-20 mx-auto"></div></td>
                             <td class="px-4 py-3"><div class="h-4 bg-gray-200 dark:bg-white/10 rounded w-16"></div></td>
+                            <td class="px-4 py-3"><div class="h-4 bg-gray-200 dark:bg-white/10 rounded w-14 mx-auto"></div></td>
                         </tr>
                     @endfor
                 </tbody>
@@ -199,4 +228,15 @@
 
     <!-- Modals -->
     @livewire('registro-maniobras.nueva-maniobra-form')
+
+    <!-- Modal confirmación eliminación (RQM02) -->
+    <x-confirm-modal 
+        name="confirmar-eliminar-maniobra-modal"
+        title="Eliminar Maniobra"
+        message="¿Estás seguro de borrar esta maniobra?"
+        confirmText="Eliminar"
+        confirmColor="danger"
+        confirmAction="eliminarManiobra"
+        :autoClose="false"
+    />
 </div>

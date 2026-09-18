@@ -11,6 +11,10 @@ interface RegistroManiobraRepositoryInterface
 
     public function create(ManiobraManualDTO $maniobra): string;
 
+    public function update(int $id, ManiobraManualDTO $maniobra): string;
+
+    public function delete(int $id, int|string $usuarioId): string;
+
     /**
      * @return array<int, string>
      */

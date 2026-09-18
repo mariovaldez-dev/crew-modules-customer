@@ -46,6 +46,9 @@ class ManiobrasExport implements FromArray, WithHeadings, WithMapping, ShouldAut
         $rawTons = $isObj ? $maniobra->toneladas : ($maniobra['toneladas'] ?? 0);
         $toneladas = rtrim(rtrim(number_format((float)$rawTons, 3, '.', ''), '0'), '.');
         
+        $montoTotalVal = $isObj ? ($maniobra->montoTotal ?? 0) : ($maniobra['montoTotal'] ?? 0);
+        $montoTotal = '$ ' . number_format((float)$montoTotalVal, 2);
+
         $docSap = $isObj ? ($maniobra->documentoSap ?? '') : ($maniobra['documentoSap'] ?? '');
         $estado = $isObj ? $maniobra->estado : ($maniobra['estado'] ?? '');
         
@@ -64,6 +67,7 @@ class ManiobrasExport implements FromArray, WithHeadings, WithMapping, ShouldAut
             $almacen,
             $cuadrilla,
             $toneladas,
+            $montoTotal,
             $docSap,
             $estado,
             $corte,
@@ -79,6 +83,7 @@ class ManiobrasExport implements FromArray, WithHeadings, WithMapping, ShouldAut
             'Almacen',
             'Cuadrilla',
             'Toneladas',
+            'Monto Total',
             'Doc SAP',
             'Estado',
             'Corte'

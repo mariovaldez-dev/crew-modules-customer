@@ -21,7 +21,9 @@ class RegistroManiobraDTO
         public readonly int $estatusCiclo = 0,
         public readonly string $origen = 'APP', // 'APP' o 'MANUAL'
         public string $estado = 'En proceso',   // Mapeado a string por el UseCase
-        public readonly ?string $documentoSap = null
+        public readonly ?string $documentoSap = null,
+        public readonly float $tarifaManiobra = 0.0,
+        public readonly float $montoTotal = 0.0
     ) {}
 
     public function toArray(): array
@@ -43,6 +45,8 @@ class RegistroManiobraDTO
             'origen' => $this->origen,
             'estado' => $this->estado,
             'documentoSap' => $this->documentoSap,
+            'tarifaManiobra' => $this->tarifaManiobra,
+            'montoTotal' => $this->montoTotal,
         ];
     }
 }
