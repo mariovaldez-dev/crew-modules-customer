@@ -22,6 +22,36 @@ return [
 
         ],
 
+
+        'loginDB' => [
+            'driver' => 'sqlsrv',
+            'host' => '192.168.1.14',
+            'port' => '1433',
+            'database' => 'Login',
+            'username' => 'LoginAppUser',
+            'password' => 'zt9iM5u3hBsj58pcMmojv',
+            'charset' => 'utf8',
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'trust_server_certificate' => true,
+        ],
+
+
+        
+        'sapImpulsoraDB' => [
+            'driver' => 'sqlsrv',
+            'host' => '192.168.1.12',
+            'database' => 'TEST_Impulsora',
+            'username' => 'ImpDigital',
+             'password' => 'IdServ.27!',
+            'charset' => 'utf8',
+            'collation' => 'utf8_unicode_ci',
+            'prefix' => ''
+        ],
+
+
+
+
         'telescope' => [
             'driver' => 'sqlite',
             'database' => database_path('telescope.sqlite'),

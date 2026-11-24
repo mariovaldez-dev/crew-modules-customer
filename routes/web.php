@@ -14,6 +14,11 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
+
+
+use App\Http\Controllers\Auth\AccesoAppController;
+
+
 /*
 |--------------------------------------------------------------------------
 | Rutas Módulo de Operaciones - Grupo Impulsora
@@ -22,6 +27,13 @@ use Illuminate\Support\Facades\Route;
 
 // Rutas Públicas (Autenticación)
 Route::get('/login', LoginForm::class)->name('login')->middleware('guest');
+
+Route::post('/acceso-app', [AccesoAppController::class, 'accesoApp'])
+    ->middleware('throttle:10,1')
+    ->name('acceso.app');
+
+
+
 
 // Rutas Protegidas (Módulo de Operaciones: AM / CO)
 Route::middleware(['auth', 'role.operaciones'])->group(function () {

@@ -535,6 +535,16 @@
                     </div>
                 </div>
 
+
+
+@if (session()->has('error'))
+    <div class="alert alert-danger" role="alert">
+        {{ session('error') }}
+    </div>
+@endif
+
+
+
                 <form wire:submit.prevent="login">
                     <div class="form-group">
                         <label class="form-label">Usuario</label>
